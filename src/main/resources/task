@@ -1,0 +1,14 @@
+Một số yêu cầu về project cuối kì:
+- Làm project về thương mại điện tử từ môn lập trình web.
+- Áp dụng:
+  + Phát sinh key (tạo mới hoặc nhập)
+  + Xác minh người mua là chính chủ. (Dùng chữ ký điện tử)
+  + Verify đơn hàng
+  + Chức năng quản lý đơn hàng:
+      => Hiển thị đơn hàng được xác thực hay chưa
+      => Có người thay đổi database khi load lên thông báo đơn hàng đã bị chỉnh sửa.
+      Nếu sai cho hủy hoặc hoàn tiền.
+  + Nếu người dùng bị lộ private key -> report:
+      => Đưa public key về trạng thái không chấp nhận xác thực mới
+      (Kể từ lúc không chấp nhận mới không xác thực, trước đó thì được)
+      => Phát sinh public key và private key mới vẫn verify bình thường
