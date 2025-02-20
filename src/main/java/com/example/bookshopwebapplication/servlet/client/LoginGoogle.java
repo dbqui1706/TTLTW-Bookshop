@@ -30,7 +30,6 @@ public class LoginGoogle extends HttpServlet {
             OauthUser oauthUser = request.getRequestURI().equals("/login-gg")
                     ? OauthLoginService.login(EOAuthProvider.GOOGLE.getName(), code).get()
                     : OauthLoginService.login(EOAuthProvider.FACEBOOK.getName(), code).get();
-
             Optional<OauthUser> insertOauth = oauthUserService.insert(oauthUser);
 
             if (insertOauth.isPresent()) {

@@ -1,7 +1,5 @@
--- create database and tables
-
 CREATE DATABASE bookshopdb;
-# DROP DATABASE IF EXISTS bookshopdb;
+-- DROP DATABASE IF EXISTS bookshopdb;
 
 USE bookshopdb;
 
@@ -20,36 +18,46 @@ CREATE TABLE bookshopdb.user
 
     PRIMARY KEY (id)
 );
-
+CREATE TABLE IF NOT exists bookshopdb.audit_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    ip_address VARCHAR(45),
+    level VARCHAR(20),
+    table_name VARCHAR(50),
+    action VARCHAR(20),
+    before_data TEXT,
+    after_data TEXT,
+    modified_by BIGINT,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    -- FOREIGN KEY (modified_by) REFERENCES user(id)
+);
 CREATE TABLE bookshopdb.user_keys
 (
     id            BIGINT       NOT NULL AUTO_INCREMENT,
     userId        BIGINT       NOT NULL,
     public_key    TEXT         NOT NULL, -- Khóa công khai
-    status        BIT          NOT NULL DEFAULT 1, -- 1: Kích hoạt, 0: Hủy kích hoạt
+    status        TINYINT      NOT NULL DEFAULT 1, -- 1: Kích hoạt, 0: Hủy kích hoạt
     createdAt     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt     DATETIME     NULL,
     PRIMARY KEY (id),
     INDEX idx_user_keys_user (userId),
     CONSTRAINT fk_user_keys_user
-        FOREIGN KEY (userId)
-            REFERENCES bookshopdb.user (id)
-            ON DELETE CASCADE
-            ON UPDATE NO ACTION
+      FOREIGN KEY (userId)
+          REFERENCES bookshopdb.user (id)
+          ON DELETE CASCADE
+          ON UPDATE NO ACTION
 );
 
-CREATE TABLE bookshopdb.oauth_user
-(
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
-    provider    VARCHAR(50)  NOT NULL, -- 'facebook' or 'google'
-    provider_id VARCHAR(100) NOT NULL, -- The ID from FB/Google
-    user_id     BIGINT       NOT NULL, -- FK to the 'user' table
-    createdAt  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt  TIMESTAMP    NULL,
+CREATE TABLE bookshopdb.oauth_user(
+      id          BIGINT       NOT NULL AUTO_INCREMENT,
+      provider    VARCHAR(50)  NOT NULL, -- 'facebook' or 'google'
+      provider_id VARCHAR(100) NOT NULL, -- The ID from FB/Google
+      user_id     BIGINT       NOT NULL, -- FK to the 'user' table
+      createdAt  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt  TIMESTAMP    NULL,
 
-    PRIMARY KEY (id),
-    UNIQUE (provider, provider_id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+      PRIMARY KEY (id),
+      UNIQUE (provider, provider_id),
+      FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
 CREATE TABLE bookshopdb.product
@@ -168,8 +176,7 @@ CREATE TABLE bookshopdb.cart_item
             ON UPDATE NO ACTION
 );
 
-CREATE TABLE bookshopdb.orders
-(
+CREATE TABLE bookshopdb.orders (
     id              BIGINT   NOT NULL AUTO_INCREMENT,
     userId          BIGINT   NOT NULL, -- Người dùng thực hiện đơn hàng
     status          TINYINT  NOT NULL, -- Trạng thái đơn hàng (pending, shipped, etc.)
@@ -182,14 +189,13 @@ CREATE TABLE bookshopdb.orders
     PRIMARY KEY (id),
     INDEX idx_orders_user (userId),
     CONSTRAINT fk_orders_user
-    FOREIGN KEY (userId)
-    REFERENCES bookshopdb.user (id)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION
+        FOREIGN KEY (userId)
+        REFERENCES bookshopdb.user (id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS bookshopdb.order_info
-(
+CREATE TABLE IF NOT EXISTS bookshopdb.order_info(
     id          BIGINT   NOT NULL AUTO_INCREMENT,
     orderId     BIGINT   NOT NULL,
     receiver    VARCHAR(100) NOT NULL,
@@ -210,7 +216,6 @@ CREATE TABLE IF NOT EXISTS bookshopdb.order_info
             ON DELETE NO ACTION
             ON UPDATE NO ACTION
 );
-
 CREATE TABLE IF NOT EXISTS bookshopdb.order_data_hash(
     id          BIGINT   NOT NULL AUTO_INCREMENT,
     orderId     BIGINT   NOT NULL,
@@ -231,7 +236,6 @@ CREATE TABLE IF NOT EXISTS bookshopdb.order_data_hash(
             ON DELETE NO ACTION
             ON UPDATE NO ACTION
 );
-
 CREATE TABLE bookshopdb.order_item
 (
     id        BIGINT   NOT NULL AUTO_INCREMENT,
@@ -279,13 +283,12 @@ CREATE TABLE bookshopdb.wishlist_item
             ON UPDATE NO ACTION
 );
 
--- insert data
 
 -- user
 INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user1','202CB962AC59075B964B07152D234B70','Dunn Mcpherson','dunnmcpherson@recrisys.com','0989894900',0,'8 Virginia Place, Troy, Norway','ADMIN');
 INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user2','202CB962AC59075B964B07152D234B70','Foreman Carter','foremancarter@recrisys.com','0993194154',0,'28 Richardson Street, Layhill, Netherlands','EMPLOYEE');
 INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user3','202CB962AC59075B964B07152D234B70','Felecia Cabrera','feleciacabrera@recrisys.com','0930174351',1,'41 Linden Street, Slovan, S. Georgia and S. Sandwich Isls.','EMPLOYEE');
-INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user4','202CB962AC59075B964B07152D234B70','Juliette Mcdowell','juliettemcdowell@recrisys.com','0911925643',1,'5 Schenck Court, Dana, Cyprus','CUSTOMER');
+INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user4','202CB962AC59075B964B07152D234B70','Juliette Mcdowell','juliettemcdowell@recrisys.com','0911925643',1,'5 Schenck Court, laptop_daily_tempDana, Cyprus','CUSTOMER');
 INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user5','202CB962AC59075B964B07152D234B70','Vilma Spencer','vilmaspencer@recrisys.com','0987509391',1,'5 Pooles Lane, Allentown, Zambia','CUSTOMER');
 
 -- product
@@ -662,104 +665,104 @@ INSERT INTO bookshopdb.product_category(`productId`,`categoryId`) VALUES (99,15)
 INSERT INTO bookshopdb.product_category(`productId`,`categoryId`) VALUES (100,8);
 
 -- cart
-# INSERT INTO bookshopdb.cart(`userId`,`createdAt`,`updatedAt`) VALUES (4,'2021-12-30 15:39:19',NULL);
-# INSERT INTO bookshopdb.cart(`userId`,`createdAt`,`updatedAt`) VALUES (5,'2021-12-18 20:35:59',NULL);
+INSERT INTO bookshopdb.cart(`userId`,`createdAt`,`updatedAt`) VALUES (4,'2021-12-30 15:39:19',NULL);
+INSERT INTO bookshopdb.cart(`userId`,`createdAt`,`updatedAt`) VALUES (5,'2021-12-18 20:35:59',NULL);
 
 -- cart_item
-# INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,55,3,'2021-07-13 10:21:51',NULL);
-# INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,36,2,'2021-07-05 07:21:45',NULL);
-# INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,7,3,'2021-04-14 19:36:26',NULL);
-# INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,70,2,'2021-02-20 18:51:20',NULL);
-# INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,27,4,'2021-11-24 00:05:40',NULL);
+INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,55,3,'2021-07-13 10:21:51',NULL);
+INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,36,2,'2021-07-05 07:21:45',NULL);
+INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,7,3,'2021-04-14 19:36:26',NULL);
+INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,70,2,'2021-02-20 18:51:20',NULL);
+INSERT INTO bookshopdb.cart_item(`cartId`,`productId`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,27,4,'2021-11-24 00:05:40',NULL);
 
 -- orders
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-12-01 08:34:38',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,2,2,50000,'2021-07-05 10:52:51',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-10-11 09:15:13',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,2,50000,'2022-01-06 15:05:11',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-09-25 14:06:36',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-09-18 02:22:12',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,1,10000,'2021-04-08 15:13:25',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-04-06 22:47:57',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,1,10000,'2021-04-03 11:40:27',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,2,50000,'2021-10-22 15:49:15',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,2,1,10000,'2021-03-29 01:04:10',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,2,50000,'2021-06-11 15:01:12',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-03-10 04:45:49',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-12-06 11:32:16',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-07-01 07:11:33',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,2,50000,'2021-10-24 17:39:58',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-02-17 19:18:55',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-09-12 00:13:50',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-02-18 11:26:18',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-04-12 02:25:34',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-12-17 08:21:32',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2022-01-28 16:19:00',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-04-14 09:36:21',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-04-05 19:56:13',NULL);
-# INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-12-08 17:07:23',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-12-01 08:34:38',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,2,2,50000,'2021-07-05 10:52:51',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-10-11 09:15:13',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,2,50000,'2022-01-06 15:05:11',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-09-25 14:06:36',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-09-18 02:22:12',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,1,10000,'2021-04-08 15:13:25',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-04-06 22:47:57',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,1,10000,'2021-04-03 11:40:27',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,2,50000,'2021-10-22 15:49:15',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,2,1,10000,'2021-03-29 01:04:10',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,2,50000,'2021-06-11 15:01:12',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-03-10 04:45:49',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-12-06 11:32:16',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,1,10000,'2021-07-01 07:11:33',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,3,2,50000,'2021-10-24 17:39:58',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-02-17 19:18:55',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,3,2,50000,'2021-09-12 00:13:50',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-02-18 11:26:18',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-04-12 02:25:34',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-12-17 08:21:32',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2022-01-28 16:19:00',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,1,1,10000,'2021-04-14 09:36:21',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (5,1,2,50000,'2021-04-05 19:56:13',NULL);
+INSERT INTO bookshopdb.orders(`userId`,`status`,`deliveryMethod`,`deliveryPrice`,`createdAt`,`updatedAt`) VALUES (4,2,1,10000,'2021-12-08 17:07:23',NULL);
 
 -- order_item
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,78,286587,0,4,'2021-06-27 03:11:05',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,21,29619,0,2,'2021-03-26 10:39:47',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,69,299814,0,4,'2021-07-31 12:54:03',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,2,181582,0,5,'2021-07-15 11:58:11',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,79,355067,20,1,'2021-08-28 20:28:16',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,41,116744,0,1,'2021-04-09 09:53:33',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,3,276065,20,5,'2021-08-16 21:48:06',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,87,421713,20,5,'2021-05-15 09:36:10',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,90,480454,20,3,'2021-09-18 01:58:18',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,82,280519,0,4,'2022-01-08 19:44:56',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (11,22,422703,20,1,'2021-12-01 00:24:12',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (12,99,89288,0,4,'2021-11-14 20:04:04',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (13,52,192906,0,1,'2021-04-08 04:50:44',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (14,84,380080,0,2,'2021-03-02 10:40:10',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (15,5,274595,20,2,'2021-10-24 21:14:35',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (16,14,51752,0,2,'2021-04-03 00:40:34',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (17,20,61648,20,4,'2021-04-23 14:29:56',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (18,42,252357,20,3,'2021-07-12 06:02:37',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (19,3,230576,0,2,'2021-08-15 14:07:26',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (20,12,186136,0,5,'2021-03-10 07:43:13',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (21,88,237111,0,1,'2021-02-28 12:28:58',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (22,17,418046,20,2,'2021-09-24 05:09:52',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (23,59,104758,20,2,'2021-10-25 00:07:51',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (24,79,392777,20,4,'2021-04-01 10:27:29',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (25,38,51737,20,2,'2021-07-30 23:59:07',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,17,403668,20,2,'2022-01-28 21:29:04',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,38,273634,0,2,'2021-11-30 09:11:39',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,64,317689,0,3,'2021-10-27 02:40:41',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,23,462258,0,3,'2021-10-04 19:29:23',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,11,213435,0,5,'2021-09-01 11:27:24',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,74,392247,0,1,'2021-07-09 01:32:06',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,53,295299,0,5,'2021-06-08 11:39:39',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,8,20188,0,3,'2021-10-26 01:08:36',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,100,328695,20,1,'2021-05-14 14:49:13',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,42,404011,0,5,'2021-05-08 19:44:21',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (11,91,452099,0,3,'2021-02-14 19:16:30',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (12,31,80569,0,2,'2021-05-05 11:50:48',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (13,66,124475,20,3,'2021-10-02 20:23:16',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (14,65,27199,0,3,'2021-03-29 10:56:01',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (15,64,126431,20,5,'2021-08-12 23:40:45',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (16,59,214278,0,2,'2021-12-30 18:44:16',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (17,86,263745,20,1,'2021-12-16 11:12:31',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (18,93,56211,20,5,'2021-02-24 23:23:00',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (19,79,205863,20,3,'2021-04-21 02:42:36',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (20,33,31030,0,5,'2021-12-19 15:20:50',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (21,59,169677,20,2,'2021-09-11 11:09:16',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (22,6,244525,0,1,'2021-08-23 10:28:37',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (23,73,116237,20,4,'2021-12-14 14:20:58',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (24,22,258094,0,4,'2021-07-08 08:20:25',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (25,82,489571,0,1,'2021-06-20 09:29:40',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,60,327711,20,4,'2021-09-25 05:43:46',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,8,400758,0,5,'2021-02-20 15:50:49',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,78,216374,20,4,'2022-01-12 07:10:44',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,46,380038,0,2,'2021-04-28 19:42:30',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,4,268748,20,2,'2021-10-02 12:30:30',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,64,408961,0,1,'2021-11-21 10:28:47',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,36,465049,0,4,'2021-09-20 11:29:11',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,96,342387,0,1,'2021-08-19 10:15:44',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,52,38093,0,1,'2021-03-07 08:17:41',NULL);
-# INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,8,230558,0,3,'2021-04-26 06:53:11',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,78,286587,0,4,'2021-06-27 03:11:05',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,21,29619,0,2,'2021-03-26 10:39:47',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,69,299814,0,4,'2021-07-31 12:54:03',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,2,181582,0,5,'2021-07-15 11:58:11',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,79,355067,20,1,'2021-08-28 20:28:16',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,41,116744,0,1,'2021-04-09 09:53:33',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,3,276065,20,5,'2021-08-16 21:48:06',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,87,421713,20,5,'2021-05-15 09:36:10',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,90,480454,20,3,'2021-09-18 01:58:18',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,82,280519,0,4,'2022-01-08 19:44:56',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (11,22,422703,20,1,'2021-12-01 00:24:12',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (12,99,89288,0,4,'2021-11-14 20:04:04',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (13,52,192906,0,1,'2021-04-08 04:50:44',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (14,84,380080,0,2,'2021-03-02 10:40:10',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (15,5,274595,20,2,'2021-10-24 21:14:35',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (16,14,51752,0,2,'2021-04-03 00:40:34',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (17,20,61648,20,4,'2021-04-23 14:29:56',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (18,42,252357,20,3,'2021-07-12 06:02:37',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (19,3,230576,0,2,'2021-08-15 14:07:26',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (20,12,186136,0,5,'2021-03-10 07:43:13',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (21,88,237111,0,1,'2021-02-28 12:28:58',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (22,17,418046,20,2,'2021-09-24 05:09:52',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (23,59,104758,20,2,'2021-10-25 00:07:51',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (24,79,392777,20,4,'2021-04-01 10:27:29',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (25,38,51737,20,2,'2021-07-30 23:59:07',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,17,403668,20,2,'2022-01-28 21:29:04',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,38,273634,0,2,'2021-11-30 09:11:39',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,64,317689,0,3,'2021-10-27 02:40:41',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,23,462258,0,3,'2021-10-04 19:29:23',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,11,213435,0,5,'2021-09-01 11:27:24',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,74,392247,0,1,'2021-07-09 01:32:06',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,53,295299,0,5,'2021-06-08 11:39:39',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,8,20188,0,3,'2021-10-26 01:08:36',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,100,328695,20,1,'2021-05-14 14:49:13',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,42,404011,0,5,'2021-05-08 19:44:21',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (11,91,452099,0,3,'2021-02-14 19:16:30',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (12,31,80569,0,2,'2021-05-05 11:50:48',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (13,66,124475,20,3,'2021-10-02 20:23:16',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (14,65,27199,0,3,'2021-03-29 10:56:01',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (15,64,126431,20,5,'2021-08-12 23:40:45',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (16,59,214278,0,2,'2021-12-30 18:44:16',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (17,86,263745,20,1,'2021-12-16 11:12:31',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (18,93,56211,20,5,'2021-02-24 23:23:00',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (19,79,205863,20,3,'2021-04-21 02:42:36',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (20,33,31030,0,5,'2021-12-19 15:20:50',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (21,59,169677,20,2,'2021-09-11 11:09:16',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (22,6,244525,0,1,'2021-08-23 10:28:37',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (23,73,116237,20,4,'2021-12-14 14:20:58',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (24,22,258094,0,4,'2021-07-08 08:20:25',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (25,82,489571,0,1,'2021-06-20 09:29:40',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (1,60,327711,20,4,'2021-09-25 05:43:46',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (2,8,400758,0,5,'2021-02-20 15:50:49',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (3,78,216374,20,4,'2022-01-12 07:10:44',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (4,46,380038,0,2,'2021-04-28 19:42:30',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (5,4,268748,20,2,'2021-10-02 12:30:30',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (6,64,408961,0,1,'2021-11-21 10:28:47',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (7,36,465049,0,4,'2021-09-20 11:29:11',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (8,96,342387,0,1,'2021-08-19 10:15:44',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (9,52,38093,0,1,'2021-03-07 08:17:41',NULL);
+INSERT INTO bookshopdb.order_item(`orderId`,`productId`,`price`,`discount`,`quantity`,`createdAt`,`updatedAt`) VALUES (10,8,230558,0,3,'2021-04-26 06:53:11',NULL);
 
 -- wishlist_item
 INSERT INTO bookshopdb.wishlist_item(`userId`,`productId`,`createdAt`) VALUES (4,1,'2021-07-21 02:09:42');
