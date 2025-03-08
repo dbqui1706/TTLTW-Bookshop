@@ -86,6 +86,17 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
         update(builderSQL.toString(), newPassword, userId);
     }
 
+    public boolean changePassword(String email, String newPassword) {
+        clearSQL();
+        builderSQL.append("UPDATE user SET password = ? WHERE email = ?");
+        try {
+            update(builderSQL.toString(), newPassword, email);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // Phương thức để lấy thông tin người dùng dựa trên địa chỉ email
     @Override
     public Optional<User> getByEmail(String email) {

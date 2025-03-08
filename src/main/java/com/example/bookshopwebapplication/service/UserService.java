@@ -7,6 +7,7 @@ import com.example.bookshopwebapplication.entities.User;
 import com.example.bookshopwebapplication.entities.UserKeys;
 import com.example.bookshopwebapplication.service._interface.IUserService;
 import com.example.bookshopwebapplication.service.transferObject.TUser;
+import com.example.bookshopwebapplication.utils.mail.EmailUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -130,4 +131,23 @@ public class UserService implements IUserService {
         userKeysDao.update(userKeys);
     }
 
+    public boolean sendPasswordResetEmail(UserDto userDto){
+        // Gửi email khôi phục mật khẩu
+        try {
+            EmailUtils.sendPasswordResetEmail(userDto);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Function sendPasswordResetEmail: " + e);
+            return false;
+        }
+    }
+    public boolean resetPassword(String email, String password){
+        try {
+            userDao.changePassword(email, password);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Function resetPassword: " + e);
+            return false;
+        }
+    }
 }

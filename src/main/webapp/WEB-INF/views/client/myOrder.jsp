@@ -8,12 +8,95 @@
 <head>
     <jsp:include page="/common/meta.jsp"/>
     <title>Đơn hàng</title>
+    <style>
+        /* Tab bar styles */
+        .history-tabs {
+            display: flex;
+            background-color: #4285f4;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .history-tab {
+            padding: 12px 24px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            text-align: center;
+            flex: 1;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .history-tab:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .history-tab.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Responsive styling */
+        @media (max-width: 768px) {
+            .history-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .history-tab {
+                padding: 12px 15px;
+            }
+        }
+
+        /* Loading spinner */
+        #loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #adb5bd;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 
 <body>
 <jsp:include page="/common/client/header.jsp"/>
 
-<section class="section-pagetop bg-light">
+<section class="section py-2 bg-light">
     <div class="container">
         <h2 class="title-page">Đơn hàng</h2>
     </div> <!-- container.// -->
@@ -29,112 +112,44 @@
                     </jsp:include>
 
                     <main class="col-md-9">
-                        <c:if test="${!requestScope.inDangerList.isEmpty()}">
-                            <div class="alert alert-danger" role="alert">
-                                Đơn hàng
-                                <c:forEach var="id" items="${requestScope.inDangerList}">
-                                    <a href="${pageContext.request.contextPath}/orderDetail?id=${id}">#${id} </a>
-                                </c:forEach>
-                                đã bị thay đổi, hãy kiểm tra lại đơn hàng và hủy đơn hàng đó
+                        <!-- Tab bar lịch sử mua hàng -->
+                        <div class="history-tabs">
+                            <div class="history-tab active" data-status="all">
+                                Tất cả
                             </div>
-                        </c:if>
-                        <div class="table-responsive-xxl">
-                            <table class="table table-bordered table-striped table-hover align-middle">
-                                <thead>
-                                <tr>
-                                    <th scope="col" style="min-width: 125px;">Mã đơn hàng</th>
-                                    <th scope="col" style="min-width: 100px;">Ngày mua</th>
-                                    <th scope="col" style="min-width: 300px;">Sản phẩm</th>
-                                    <th scope="col" style="min-width: 100px;">Tổng tiền</th>
-                                    <th scope="col" style="min-width: 175px;">Trạng thái đơn hàng</th>
-                                    <th scope="col" style="min-width: 100px;">Xác thực</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <c:forEach var="order" items="${requestScope.orders}">
-                                    <tr>
-                                        <th scope="row">${order.id}</th>
-                                        <td>${order.createdAt}</td>
-                                        <td>${order.name}</td>
-                                        <td><fmt:formatNumber pattern="#,##0" value="${order.total}"/>₫</td>
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${order.status == 1}">
-                                                    <span class="badge bg-warning text-dark">Đang giao hàng</span>
-                                                </c:when>
-                                                <c:when test="${order.status == 2}">
-                                                    <span class="badge bg-success">Giao hàng thành công</span>
-                                                </c:when>
-                                                <c:when test="${order.status == 3}">
-                                                    <span class="badge bg-danger">Hủy đơn hàng</span>
-                                                </c:when>
-                                            </c:choose>
-                                        </td>
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${order.verifyStatus.equals('NONE')}">
-                                                    <span class="badge bg-warning text-dark">Không</span>
-                                                </c:when>
-                                                <c:when test="${order.verifyStatus.equals('GOOD')}">
-                                                    <span class="badge bg-success">Đã xác thực</span>
-                                                </c:when>
-                                                <c:when test="${order.verifyStatus.equals('BAD')}">
-                                                    <span class="badge bg-danger">Đã bị thay đổi</span>
-                                                </c:when>
-                                            </c:choose>
-                                        </td>
-                                        <td class="text-center text-nowrap">
-                                            <a class="btn btn-primary me-2"
-                                               href="${pageContext.request.contextPath}/orderDetail?id=${order.id}"
-                                               role="button">
-                                                Xem đơn hàng
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
+                            <div class="history-tab" data-status="new">
+                                Đơn hàng mới
+                            </div>
+                            <div class="history-tab" data-status="confirmed">
+                                Đã xác nhận
+                            </div>
+                            <div class="history-tab" data-status="shipping">
+                                Đang vận chuyển
+                            </div>
+                            <div class="history-tab" data-status="completed">
+                                Hoàn thành
+                            </div>
+                            <div class="history-tab" data-status="canceled">
+                                Đã hủy
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-center">
 
-                            <c:if test="${requestScope.totalPages != 0}">
-                                <nav class="mt-4">
-                                    <ul class="pagination">
-                                        <li class="page-item ${requestScope.page == 1 ? 'disabled' : ''}">
-                                            <a class="page-link"
-                                               href="${pageContext.request.contextPath}/order?page=${requestScope.page - 1}">
-                                                Trang trước
-                                            </a>
-                                        </li>
+                        <!-- Loading spinner -->
+                        <div id="loading-spinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mt-2">Đang tải dữ liệu...</p>
+                        </div>
 
-                                        <c:forEach begin="1" end="${requestScope.totalPages}" var="i">
-                                            <c:choose>
-                                                <c:when test="${requestScope.page == i}">
-                                                    <li class="page-item active">
-                                                        <a class="page-link">${i}</a>
-                                                    </li>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <li class="page-item">
-                                                        <a class="page-link"
-                                                           href="${pageContext.request.contextPath}/order?page=${i}">
-                                                                ${i}
-                                                        </a>
-                                                    </li>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </c:forEach>
+                        <!-- Bảng danh sách đơn hàng -->
+                        <div id="order-table-container">
+                            <!-- Nội dung bảng đơn hàng sẽ được nạp qua Ajax -->
+                        </div>
 
-                                        <li class="page-item ${requestScope.page == requestScope.totalPages ? 'disabled' : ''}">
-                                            <a class="page-link"
-                                               href="${pageContext.request.contextPath}/order?page=${requestScope.page + 1}">
-                                                Trang sau
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </c:if>
+                        <!-- Phân trang -->
+                        <div id="pagination-container" class="d-flex justify-content-center">
+                            <!-- Phân trang sẽ được nạp qua Ajax -->
                         </div>
                     </main>
                     <!-- col.// -->
@@ -150,6 +165,8 @@
 </section> <!-- section-content.// -->
 
 <jsp:include page="/common/client/footer.jsp"/>
-</body>
 
+<!-- JavaScript cho Ajax và xử lý tab -->
+<script src="${pageContext.request.contextPath}/js/my-order.js" type="module"></script>
+</body>
 </html>

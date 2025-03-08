@@ -14,4 +14,6 @@ public interface IOrderService extends IService<OrderDto> {
     public void confirm(long id);
     public void cancel(long id);
     public void reset(long id);
+
+    List<OrderDto> getOrderedPartByUserIdAndStatus(Long id, int status, int ordersPerPage, int offset);
 }

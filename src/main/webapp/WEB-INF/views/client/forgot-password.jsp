@@ -5,45 +5,53 @@
 
 <head>
     <jsp:include page="/common/meta.jsp"/>
-    <title>Đăng nhập</title>
+    <title>Quên mật khẩu</title>
 </head>
 
 <body>
 <jsp:include page="/common/client/header.jsp"/>
 
 <section class="section-content" style="margin: 100px 0;">
-    <div class="card mx-auto" style="max-width: 380px">
+    <div class="card mx-auto" style="max-width: 500px">
         <div class="card-body">
             <h4 class="card-title mb-4">Quên mật khẩu</h4>
-            <form action="${pageContext.request.contextPath}/forgot-password" method="post">
+
+
+            <form action="${pageContext.request.contextPath}/forgot-password" method="post" id="forgotPasswordForm">
                 <div class="mb-3">
-                    <input name="username"
+                    <input name="email"
+                           id="emailInput"
                            class="form-control"
-                           placeholder="Example: xxxx@gmail.com"
+                           placeholder="example@gmail.com"
                            type="text"
-                           autocomplete="off"
-                           value="${requestScope.values.username}">
-                    <c:if test="${not empty requestScope.violations.usernameViolations}">
-                        <div class="invalid-feedback">
-                            <ul class="list-unstyled">
-                                <c:forEach var="violation" items="${requestScope.violations.usernameViolations}">
-                                    <li>${violation}</li>
-                                </c:forEach>
-                            </ul>
-                        </div>
-                    </c:if>
+                           autocomplete="off">
+                    <div class="invalid-feedback" id="emailError"></div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Gửi</button>
+
+                <!-- Hiển thị thông báo thành công nếu có -->
+                <c:if test="${not empty requestScope.message}">
+                    <div class="alert alert-success mb-4">
+                            ${requestScope.message}
+                    </div>
+                </c:if>
+
+                <!-- Hiển thị thông báo lỗi nếu có -->
+                <c:if test="${not empty requestScope.error}">
+                    <div class="alert alert-danger mb-4">
+                            ${requestScope.error}
+                    </div>
+                </c:if>
+
+                <button type="submit" class="btn btn-primary w-100">Lấy lại mật khẩu</button>
             </form>
+
 
         </div> <!-- card-body.// -->
     </div> <!-- card .// -->
     <p class="text-center mt-4">Không có tài khoản? <a href="${pageContext.request.contextPath}/signup">Đăng ký</a></p>
 </section> <!-- section-content.// -->
 
-
 <jsp:include page="/common/client/footer.jsp"/>
-
+<script src="${pageContext.request.contextPath}/js/forgot-password.js" type="module"></script>
 </body>
-
 </html>

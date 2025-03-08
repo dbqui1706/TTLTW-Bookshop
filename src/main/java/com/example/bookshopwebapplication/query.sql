@@ -33,3 +33,5 @@ select * from product_category;
 delete from product_category where productId = 107 and categoryId = 2;
 delete from order_item where id in (84, 85);
 delete from orders where id in (46, 47);
+
+SELECT * FROM audit_log;

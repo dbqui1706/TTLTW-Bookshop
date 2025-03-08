@@ -19,7 +19,7 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css
 <body>
 <jsp:include page="/common/client/header.jsp"/>
 
-<section class="section-pagetop bg-light">
+<section class="section py-2 bg-light">
     <div class="container">
         <h2 class="title-page">Sinh khóa</h2>
     </div> <!-- container.// -->

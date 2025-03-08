@@ -4,8 +4,8 @@ import com.example.bookshopwebapplication.dao.OrderItemDao;
 import com.example.bookshopwebapplication.dto.OrderItemDto;
 import com.example.bookshopwebapplication.entities.OrderItem;
 import com.example.bookshopwebapplication.service._interface.IOrderItemService;
-import com.example.bookshopwebapplication.service.transferObject.TCartItem;
 import com.example.bookshopwebapplication.service.transferObject.TOrderItem;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,14 +13,11 @@ import java.util.stream.Collectors;
 
 public class OrderItemService implements IOrderItemService {
 
-    private OrderItemDao orderItemDao = new OrderItemDao();
+    private final OrderItemDao orderItemDao = new OrderItemDao();
 
-    private TOrderItem tOrderItem = new TOrderItem();
+    private final TOrderItem tOrderItem = new TOrderItem();
+    @Getter
     private static OrderItemService instance = new OrderItemService();
-
-    public static OrderItemService getInstance() {
-        return instance;
-    }
 
 
     // Phương thức để chèn danh sách các đối tượng OrderItemDto
@@ -34,11 +31,16 @@ public class OrderItemService implements IOrderItemService {
     // Phương thức để lấy danh sách tên sản phẩm dựa trên orderId
     @Override
     public String getProductNamesByOrderId(long orderId) {
-        List<String> names = orderItemDao.getProductNamesByOrderId(orderId);
-        if (names.size() == 1){
-            return names.get(0);
+        try {
+            List<String> names = orderItemDao.getProductNamesByOrderId(orderId);
+            if (names.size() == 1){
+                return names.get(0);
+            }
+            return names.get(0) + " và " + (names.size() - 1) + " sản phẩm khác";
+        }catch (Exception e){
+            System.out.println("Lỗi khi lấy tên sản phẩm từ orderId: " + orderId);
+            return orderId + " Không xác định";
         }
-        return names.get(0) + " và " + (names.size() - 1) + " sản phẩm khác";
     }
 
     // Phương thức để lấy danh sách các đối tượng OrderItemDto dựa trên orderId

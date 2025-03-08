@@ -13,7 +13,7 @@
 <body>
 <jsp:include page="/common/client/header.jsp"/>
 
-<section class="section-pagetop bg-light">
+<section class="section py-2 bg-light">
     <div class="container">
         <h2 class="title-page">Đổi mật khẩu</h2>
     </div> <!-- container.// -->

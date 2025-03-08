@@ -135,6 +135,7 @@ public class OrderService implements IOrderService {
         orderDao.reset(id);
     }
 
+
     public List<OrderDto> getOrderPartServerSide(int limit, int offset, String orderBy, String sort, String searchValue) {
         return orderDao.getOrderPartServerSide(limit, offset, orderBy, sort, searchValue).stream()
                 .map(order -> getById(order.getId()))
@@ -143,7 +144,7 @@ public class OrderService implements IOrderService {
                 .collect(Collectors.toList());
     }
 
-    public List<OrderDto>getOrderPartServerSideByTampered(
+    public List<OrderDto> getOrderPartServerSideByTampered(
             int limit, int offset, String orderBy, String sort, String searchValue, int isTampered) {
         return orderDao.getOrderPartServerSideByTampered(limit, offset, orderBy, sort, searchValue, isTampered).stream()
                 .map(order -> getById(order.getId()))
@@ -154,5 +155,18 @@ public class OrderService implements IOrderService {
 
     public int countByTampered(int isTampered) {
         return orderDao.countByTampered(isTampered);
+    }
+
+    public int countByUserIdAndStatus(long userId, int status) {
+        return orderDao.countByUserIdAndStatus(userId, status);
+    }
+
+    @Override
+    public List<OrderDto> getOrderedPartByUserIdAndStatus(Long id, int status, int ordersPerPage, int offset) {
+        return orderDao.getOrderedPartByUserIdAndStatus(id, status, ordersPerPage, offset).stream()
+                .map(order -> getById(order.getId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
     }
 }

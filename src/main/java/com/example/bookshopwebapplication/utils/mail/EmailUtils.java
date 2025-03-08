@@ -91,6 +91,29 @@ public class EmailUtils {
         return emailContent;
     }
 
+    /**
+     * Gửi email đặt lại mật khẩu cho người dùng
+     * @param user Thông tin người dùng cần đặt lại mật khẩu
+     */
+    public static void sendPasswordResetEmail(UserDto user) {
+        // Tạo mã xác minh ngẫu nhiên
+        String code = UUID.randomUUID().toString();
+
+        // Gửi email chứa mã xác minh
+        sendEmail(user, code, (email, fullName, hashCode) -> {
+            String resetLink = "http://localhost:8080/reset-password?email=" + email + "&code=" + code;
+            return "<html><body>" +
+                    "<p>Xin chào, " + fullName + "</p>" +
+                    "<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại BookShopWeb. Để đặt lại mật khẩu, vui lòng nhấn vào liên kết bên dưới:</p>" +
+                    "<p><a href=\"" + resetLink + "\" style=\"text-decoration:none; color: #3498db; font-weight: bold;\">Đặt lại mật khẩu</a></p>" +
+                    "<p>Liên kết này sẽ hết hạn sau 5 phút.</p>" +
+                    "<p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua thư này và đảm bảo rằng bạn vẫn có thể đăng nhập vào tài khoản của mình.</p>" +
+                    "<p>Trân trọng,</p>" +
+                    "<p>BookShopWeb Team</p>" +
+                    "</body></html>";
+        });
+    }
+
     public static boolean isValidVerificationCode(String email, String code) {
         for (VerificationToken token : verificationTokenSet) {
             if (token.getEmail().equals(email)
@@ -107,5 +130,6 @@ public class EmailUtils {
     @FunctionalInterface
     private interface IContent {
         String getContent(String address, String fullName, String code);
+
     }
 }

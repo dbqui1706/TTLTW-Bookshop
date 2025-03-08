@@ -28,59 +28,74 @@ import java.util.Optional;
 public class OrderServlet extends HttpServlet {
     private final OrderService orderService = new OrderService();
     private final OrderItemService orderItemService = new OrderItemService();
-    private static final int ORDERS_PER_PAGE = 3;
+    private static final int ORDERS_PER_PAGE = 10;
+
+//    @Override
+//    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        UserDto user = (UserDto) request.getSession().getAttribute("currentUser");
+//        if (user != null) {
+//            int totalOrders = orderService.countByUserId(user.getId());
+//
+//            // Lấy trang hiện tại, gặp ngoại lệ (chuỗi không phải số, nhỏ hơn 1, lớn hơn tổng số trang) thì gán bằng 1
+//            String pageParam = Optional.ofNullable(request.getParameter("page")).orElse("1");
+//            int page = Integer.parseInt(pageParam);
+//
+//            // Tính tổng số trang (= tổng số total / số sản phẩm trên mỗi trang)
+//            int totalPages = Paging.totalPages(totalOrders, ORDERS_PER_PAGE);
+//
+//            // Tính mốc truy vấn (offset)
+//            int offset = Paging.offset(page, totalOrders, ORDERS_PER_PAGE);
+//
+//            // Lấy danh sách order, lấy với số lượng là ORDERS_PER_PAGE và tính từ mốc offset
+//            List<OrderDto> orders = orderService.getOrderedPartByUserId(
+//                    user.getId(), ORDERS_PER_PAGE, offset
+//            );
+//
+//            // Tạo response order để show
+//            List<OrderResponse> orderResponses = new ArrayList<>();
+//            OrderHashService orderHashService = new OrderHashService();
+//            for (OrderDto order : orders) {
+//                // set orderItems for Order
+//                order.setOrderItems(orderItemService.getByOrderId(order.getId()));
+//
+//                double totalPrice = orderService.totalPrice(order);
+//
+//                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy");
+//                String verifyStatus = "NONE";
+//                if(order.getIsVerified() == 1){
+//                    verifyStatus = (orderHashService.verifyOrderById(order.getId())) ? "GOOD" : "BAD";
+//                }
+//                OrderResponse orderResponse = new OrderResponse(
+//                        order.getId(),
+//                        simpleDateFormat.format(order.getCreatedAt()),
+//                        orderItemService.getProductNamesByOrderId(order.getId()),
+//                        order.getStatus(),
+//                        verifyStatus,
+//                        totalPrice + order.getDeliveryPrice());
+//
+//                orderResponses.add(orderResponse);
+//            }
+//            request.setAttribute("totalPages", totalPages);
+//            request.setAttribute("page", page);
+//            request.setAttribute("orders", orderResponses);
+//            request.setAttribute("inDangerList", orderHashService.getUncanceledOrderHaveDangerByUserId(user.getId()));
+//        }
+//
+//        request.getRequestDispatcher("/WEB-INF/views/client/myOrder.jsp").forward(request, response);
+//    }
+
+    private final OrderHashService orderHashService = new OrderHashService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         UserDto user = (UserDto) request.getSession().getAttribute("currentUser");
-        if (user != null) {
-            int totalOrders = orderService.countByUserId(user.getId());
+//        if (user != null) {
+//            // Chỉ lấy danh sách đơn hàng có vấn đề để hiển thị thông báo
+//            List<Integer> inDangerList = orderHashService.getUncanceledOrderHaveDangerByUserId(user.getId());
+//            request.setAttribute("inDangerList", inDangerList);
+//        }
 
-            // Lấy trang hiện tại, gặp ngoại lệ (chuỗi không phải số, nhỏ hơn 1, lớn hơn tổng số trang) thì gán bằng 1
-            String pageParam = Optional.ofNullable(request.getParameter("page")).orElse("1");
-            int page = Integer.parseInt(pageParam);
-
-            // Tính tổng số trang (= tổng số total / số sản phẩm trên mỗi trang)
-            int totalPages = Paging.totalPages(totalOrders, ORDERS_PER_PAGE);
-
-            // Tính mốc truy vấn (offset)
-            int offset = Paging.offset(page, totalOrders, ORDERS_PER_PAGE);
-
-            // Lấy danh sách order, lấy với số lượng là ORDERS_PER_PAGE và tính từ mốc offset
-            List<OrderDto> orders = orderService.getOrderedPartByUserId(
-                    user.getId(), ORDERS_PER_PAGE, offset
-            );
-
-            // Tạo response order để show
-            List<OrderResponse> orderResponses = new ArrayList<>();
-            OrderHashService orderHashService = new OrderHashService();
-            for (OrderDto order : orders) {
-                // set orderItems for Order
-                order.setOrderItems(orderItemService.getByOrderId(order.getId()));
-
-                double totalPrice = orderService.totalPrice(order);
-
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy");
-                String verifyStatus = "NONE";
-                if(order.getIsVerified() == 1){
-                    verifyStatus = (orderHashService.verifyOrderById(order.getId())) ? "GOOD" : "BAD";
-                }
-                OrderResponse orderResponse = new OrderResponse(
-                        order.getId(),
-                        simpleDateFormat.format(order.getCreatedAt()),
-                        orderItemService.getProductNamesByOrderId(order.getId()),
-                        order.getStatus(),
-                        verifyStatus,
-                        totalPrice + order.getDeliveryPrice());
-
-                orderResponses.add(orderResponse);
-            }
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("page", page);
-            request.setAttribute("orders", orderResponses);
-            request.setAttribute("inDangerList", orderHashService.getUncanceledOrderHaveDangerByUserId(user.getId()));
-        }
-
+        // Chuyển đến trang JSP - trang này sẽ sử dụng Ajax để lấy dữ liệu
         request.getRequestDispatcher("/WEB-INF/views/client/myOrder.jsp").forward(request, response);
     }
 }

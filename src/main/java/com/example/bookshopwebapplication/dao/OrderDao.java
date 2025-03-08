@@ -78,7 +78,7 @@ public class OrderDao extends AbstractDao<Order> implements IOrderDao {
         return orders.isEmpty() ? new LinkedList<>() : orders;
     }
 
-     //Lấy danh sách các đơn hàng được sắp xếp theo người dùng và giới hạn số lượng và vị trí bắt đầu.
+    //Lấy danh sách các đơn hàng được sắp xếp theo người dùng và giới hạn số lượng và vị trí bắt đầu.
     @Override
     public List<Order> getOrderedPartByUserId(long userId, int limit, int offset) {
         clearSQL();
@@ -89,7 +89,7 @@ public class OrderDao extends AbstractDao<Order> implements IOrderDao {
                         "LIMIT " + offset + ", " + limit
         );
         List<Order> orders = query(builderSQL.toString(), new OrderMapper(), userId);
-        return orders.isEmpty() ? new LinkedList<>(): orders;
+        return orders.isEmpty() ? new LinkedList<>() : orders;
     }
 
     // Đếm số lượng đơn hàng dựa trên id người dùng.
@@ -169,10 +169,10 @@ public class OrderDao extends AbstractDao<Order> implements IOrderDao {
         // Create the SQL query
         builderSQL.append(
                 "SELECT * FROM orders WHERE CONCAT" +
-                "(id, ' ', userId, ' ', status, ' ', deliveryMethod" +
-                ", ' ', deliveryPrice, ' ', is_verified) LIKE ? " +
-                "ORDER BY " + orderBy + " " + sort + " " +
-                "LIMIT " + offset + ", " + limit
+                        "(id, ' ', userId, ' ', status, ' ', deliveryMethod" +
+                        ", ' ', deliveryPrice, ' ', is_verified) LIKE ? " +
+                        "ORDER BY " + orderBy + " " + sort + " " +
+                        "LIMIT " + offset + ", " + limit
         );
 
         List<Order> orders = query(builderSQL.toString(), new OrderMapper(), "%" + searchValue + "%");
@@ -234,5 +234,24 @@ public class OrderDao extends AbstractDao<Order> implements IOrderDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public int countByUserIdAndStatus(long userId, int status) {
+        clearSQL();
+        builderSQL.append(
+                "SELECT COUNT(*) FROM orders WHERE userId = ? AND status = ?"
+        );
+        return count(builderSQL.toString(), userId, status);
+    }
+
+    public List<Order> getOrderedPartByUserIdAndStatus(Long id, int status, int ordersPerPage, int offset) {
+        clearSQL();
+        builderSQL.append(
+                "SELECT * FROM orders WHERE userId = ? AND status = ? " +
+                        "ORDER BY createdAt DESC " +
+                        "LIMIT " + offset + ", " + ordersPerPage
+        );
+        List<Order> orders = query(builderSQL.toString(), new OrderMapper(), id, status);
+        return orders.isEmpty() ? new LinkedList<>() : orders;
     }
 }
