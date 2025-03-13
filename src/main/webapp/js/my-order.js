@@ -74,12 +74,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     <table class="table table-bordered table-striped table-hover align-middle">
                         <thead>
                             <tr>
-                                <th scope="col" style="min-width: 60px;">Mã</th>
-                                <th scope="col" style="min-width: 100px;">Ngày mua</th>
-                                <th scope="col" style="min-width: 300px;">Sản phẩm</th>
-                                <th scope="col" style="min-width: 100px;">Tổng tiền</th>
-                                <th scope="col" style="min-width: 160px;">Trạng thái</th>
-                                <th scope="col" style="min-width: 100px;">Xác thực</th>
+                                <th scope="col" >Mã</th>
+                                <th scope="col" >Ngày mua</th>
+                                <th scope="col" >Sản phẩm</th>
+                                <th scope="col">Tổng tiền</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col" >Xác thực</th>
                                 <th scope="col">Thao tác</th>
                             </tr>
                         </thead>
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td>${formatters.verifyBadge(order.verifyStatus)}</td>
                         <td class="text-center text-nowrap">
                             <a class="btn btn-primary me-2"
-                               href="${contextPathMetaTag.content}/orderDetail?id=${order.id}"
+                               href="${contextPathMetaTag.content}/orderDetail?id=${order.id}&statusTab=${state.currentStatus}"
                                role="button">
                                 Xem đơn hàng
                             </a>

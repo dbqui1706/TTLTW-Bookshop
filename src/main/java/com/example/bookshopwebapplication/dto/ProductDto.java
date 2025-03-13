@@ -29,6 +29,7 @@ public class ProductDto {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+
     public ProductDto(Long id,
                       String name,
                       Double price,

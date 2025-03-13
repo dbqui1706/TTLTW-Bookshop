@@ -15,6 +15,7 @@ public class OrderItemDto {
     private Double price;
     private Double discount;
     private Integer quantity;
+    private PreviewStatus previewStatus;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private ProductDto product;
@@ -47,5 +48,11 @@ public class OrderItemDto {
         this.updatedAt = updatedAt;
         this.order = orderDto;
         this.product = productDto;
+    }
+
+    public static enum PreviewStatus {
+        PREVIEWED,
+        EXPIRED,
+        NOT_PREVIEWED
     }
 }

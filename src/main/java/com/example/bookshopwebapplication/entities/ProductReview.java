@@ -14,6 +14,7 @@ public class ProductReview {
     private Long id;
     private Long userId;
     private Long productId;
+    private Long orderId;
     private Integer ratingScore;
     private String content;
     private Integer isShow;

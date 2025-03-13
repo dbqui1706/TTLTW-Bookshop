@@ -4,7 +4,6 @@
 <fmt:setLocale value="vi_VN"/>
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <jsp:include page="/common/meta.jsp"/>
     <title>Trang chủ Admin</title>

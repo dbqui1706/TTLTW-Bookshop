@@ -15,9 +15,9 @@ public class OrderService implements IOrderService {
 
     private final OrderDao orderDao = new OrderDao();
 
-    private UserService userService = new UserService();
+    private final UserService userService = new UserService();
 
-    private TOrder tOrder = new TOrder();
+    private final TOrder tOrder = new TOrder();
 
     private static final OrderService instance = new OrderService();
 
