@@ -15,10 +15,8 @@
             </a>
         </li>
         <li>
-            <a href="#productSubmenu"
-                    data-bs-toggle= "collapse"
-                    aria-expanded="false"
-                    class="dropdown-toggle ${param.active == 'PRODUCT' ?
+            <a href="#productSubmenu" data-bs-toggle="collapse" aria-expanded="false"
+               class="dropdown-toggle ${param.active == 'PRODUCT' || param.active == 'CATEGORY' ?
                     'active'
                     : ''}">
                 <i class="bi bi-box-seam"></i>
@@ -26,26 +24,19 @@
             </a>
             <ul class="collapse submenu submenu" id="productSubmenu">
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/product-manager"
-                            class="${param.active == 'PRODUCT' ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin2/product-manager" class="${param.active == 'PRODUCT' ? 'active' : ''}">
                         Danh Sách Sản Phẩm
                     </a>
                 </li>
                 <li>
-                    <a href="#">Thêm Sản Phẩm Mới</a>
-                </li>
-                <li>
-                    <a href="#">Danh Mục Sản Phẩm</a>
+                    <a href="${pageContext.request.contextPath}/admin2/category-manager" class="${param.active == 'CATEGORY' ? 'active' : ''}">
+                        Danh Mục Sản Phẩm
+                    </a>
                 </li>
             </ul>
         </li>
         <li>
-            <a
-                    href="#orderSubmenu"
-                    data-bs-toggle="collapse"
-                    aria-expanded="false"
-                    class="dropdown-toggle"
-            >
+            <a href="#orderSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                 <i class="bi bi-cart3"></i>
                 <span>Đơn Hàng</span>
                 <span class="badge bg-danger rounded-pill">5</span>
@@ -66,12 +57,7 @@
             </ul>
         </li>
         <li>
-            <a
-                    href="#customerSubmenu"
-                    data-bs-toggle="collapse"
-                    aria-expanded="false"
-                    class="dropdown-toggle"
-            >
+            <a href="#customerSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                 <i class="bi bi-people"></i>
                 <span>Khách Hàng</span>
             </a>
