@@ -17,8 +17,7 @@
         <li>
             <a href="#productSubmenu" data-bs-toggle="collapse" aria-expanded="false"
                class="dropdown-toggle ${param.active == 'PRODUCT' || param.active == 'CATEGORY' ?
-                    'active'
-                    : ''}">
+                    'active': ''}">
                 <i class="bi bi-box-seam"></i>
                 <span>Sản Phẩm</span>
             </a>
@@ -57,19 +56,22 @@
             </ul>
         </li>
         <li>
-            <a href="#customerSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+            <a href="#customerSubmenu" data-bs-toggle="collapse" aria-expanded="false"
+               class="dropdown-toggle ${param.active == 'USER' || param.active == 'FEEDBACK' ?
+                    'active': ''}">
                 <i class="bi bi-people"></i>
                 <span>Khách Hàng</span>
             </a>
             <ul class="collapse submenu" id="customerSubmenu">
                 <li>
-                    <a href="#">Danh Sách Khách Hàng</a>
+                    <a href="${pageContext.request.contextPath}/admin2/user-manager" class="${param.active == 'USER' ? 'active' : ''}">
+                        Danh Sách Khách Hàng
+                    </a>
                 </li>
                 <li>
-                    <a href="#">Khách Hàng VIP</a>
-                </li>
-                <li>
-                    <a href="#">Phản Hồi Khách Hàng</a>
+                    <a href="${pageContext.request.contextPath}/admin2/user-manager" class="${param.active == 'FEEDBACK' ? 'active' : ''}">
+                        Phản Hồi Khách Hàng
+                    </a>
                 </li>
             </ul>
         </li>

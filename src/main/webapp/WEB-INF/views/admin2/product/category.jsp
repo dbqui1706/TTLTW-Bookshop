@@ -22,58 +22,12 @@
     <jsp:include page="${pageContext.request.contextPath}/common/admin2/sidebar.jsp">
         <jsp:param name="active" value="CATEGORY"/>
     </jsp:include>
+
     <!-- Page Content -->
     <div id="content">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg mb-4">
-            <div class="container-fluid">
-                <button type="button" id="sidebarCollapse" class="btn btn-primary">
-                    <i class="bi bi-list"></i>
-                </button>
-                <button class="btn btn-dark d-inline-block d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <i class="bi bi-three-dots"></i>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="nav navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" title="Thông báo">
-                                <i class="bi bi-bell position-relative">
-                                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                            <span class="visually-hidden">Thông báo mới</span>
-                                        </span>
-                                </i>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" title="Tin nhắn">
-                                <i class="bi bi-envelope"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="https://via.placeholder.com/30" class="rounded-circle me-2" alt="Admin" />
-                                <span>Admin</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Hồ sơ</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Cài đặt</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <!-- Navbar -->
+        <jsp:include page="${pageContext.request.contextPath}/common/admin2/navbar.jsp"/>
 
         <!-- Dashboard Header -->
         <div class="row mb-4">
@@ -87,6 +41,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Control Panel -->
         <div class="row mb-4">
             <div class="col-md-12">
@@ -555,140 +510,11 @@
 <!-- Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="app.js"></script>
-<script src="category.js"></script>
+<%--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>--%>
+<%--<script src="app.js"></script>--%>
+<%--<script src="category.js"></script>--%>
 <!-- Script khởi tạo tooltip -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Khởi tạo tất cả tooltip trong trang
-        var tooltipTriggerList = [].slice.call(
-            document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        );
-        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-
-        // Xử lý sinh tự động slug từ tên thể loại
-        const categoryNameInput = document.getElementById("categoryName");
-        const categorySlugInput = document.getElementById("categorySlug");
-
-        if (categoryNameInput && categorySlugInput) {
-            categoryNameInput.addEventListener("keyup", function() {
-                // Chuyển đổi thành slug (loại bỏ dấu, chuyển khoảng trắng thành dấu gạch ngang)
-                let slug = this.value
-                    .toLowerCase()
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "") // Loại bỏ dấu tiếng Việt
-                    .replace(/[đĐ]/g, "d")
-                    .replace(/[^a-z0-9\s-]/g, "") // Loại bỏ ký tự đặc biệt
-                    .replace(/[\s-]+/g, "-") // Thay khoảng trắng và nhiều dấu gạch ngang thành một dấu gạch ngang
-                    .trim();
-
-                categorySlugInput.value = slug;
-            });
-        }
-
-        // Xử lý nút lưu thể loại
-        const saveCategoryBtn = document.getElementById("saveCategoryBtn");
-        const addCategoryForm = document.getElementById("addCategoryForm");
-
-        if (saveCategoryBtn && addCategoryForm) {
-            saveCategoryBtn.addEventListener("click", function() {
-                if (addCategoryForm.checkValidity()) {
-                    // Giả lập việc lưu thành công
-                    alert("Thể loại đã được thêm thành công!");
-
-                    // Đóng modal
-                    const modal = bootstrap.Modal.getInstance(
-                        document.getElementById("addCategoryModal")
-                    );
-                    modal.hide();
-
-                    // Reset form
-                    addCategoryForm.reset();
-                } else {
-                    addCategoryForm.reportValidity();
-                }
-            });
-        }
-
-        // Xử lý nút chỉnh sửa
-        const editButtons = document.querySelectorAll(".btn-outline-primary");
-
-        editButtons.forEach((button) => {
-            button.addEventListener("click", function() {
-                // Lấy thông tin từ hàng được chọn
-                const row = this.closest("tr");
-                const id = row.cells[0].textContent;
-                const name = row.cells[1].textContent;
-                const slug = row.cells[2].textContent;
-                const status =
-                    row.cells[6].querySelector(".badge").textContent === "Hoạt động" ?
-                        "active" :
-                        "inactive";
-
-                // Điền thông tin vào form chỉnh sửa
-                document.getElementById("editCategoryId").value = id;
-                document.getElementById("editCategoryName").value = name;
-                document.getElementById("editCategorySlug").value = slug;
-
-                if (status === "active") {
-                    document.getElementById(
-                        "editCategoryStatusActive"
-                    ).checked = true;
-                } else {
-                    document.getElementById(
-                        "editCategoryStatusInactive"
-                    ).checked = true;
-                }
-
-                document.getElementById("editCategoryOrder").value = 0; // Giả định
-
-                // Mở modal chỉnh sửa
-                const editModal = new bootstrap.Modal(
-                    document.getElementById("editCategoryModal")
-                );
-                editModal.show();
-            });
-        });
-
-        // Xử lý nút cập nhật thể loại
-        const updateCategoryBtn = document.getElementById("updateCategoryBtn");
-
-        if (updateCategoryBtn) {
-            updateCategoryBtn.addEventListener("click", function() {
-                // Giả lập việc cập nhật thành công
-                alert("Thể loại đã được cập nhật thành công!");
-
-                // Đóng modal
-                const modal = bootstrap.Modal.getInstance(
-                    document.getElementById("editCategoryModal")
-                );
-                modal.hide();
-            });
-        }
-
-        // Xử lý nút khóa/mở khóa
-        const lockButtons = document.querySelectorAll(".btn-outline-danger");
-        const unlockButtons = document.querySelectorAll(".btn-outline-success");
-
-        lockButtons.forEach((button) => {
-            button.addEventListener("click", function() {
-                if (confirm("Bạn có chắc chắn muốn khóa thể loại này?")) {
-                    alert("Đã khóa thể loại thành công!");
-                }
-            });
-        });
-
-        unlockButtons.forEach((button) => {
-            button.addEventListener("click", function() {
-                if (confirm("Bạn có chắc chắn muốn mở khóa thể loại này?")) {
-                    alert("Đã mở khóa thể loại thành công!");
-                }
-            });
-        });
-    });
+<script src="${pageContext.request.contextPath}/js/admin2/product/category.js">
 </script>
 </body>
 </html>

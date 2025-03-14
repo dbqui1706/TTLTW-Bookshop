@@ -1,6 +1,5 @@
-package com.example.bookshopwebapplication.servlet.admin2.api;
+package com.example.bookshopwebapplication.servlet.admin2.api.dashboard;
 
-import com.example.bookshopwebapplication.entities.Order;
 import com.example.bookshopwebapplication.service.OrderService;
 
 import javax.servlet.ServletException;
