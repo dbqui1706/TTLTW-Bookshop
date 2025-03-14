@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.service;
 import com.example.bookshopwebapplication.dao.ProductDao;
 import com.example.bookshopwebapplication.dto.ProductDto;
 import com.example.bookshopwebapplication.entities.Product;
+import com.example.bookshopwebapplication.http.request.product.ProductStatistic;
 import com.example.bookshopwebapplication.service._interface.IProductService;
 import com.example.bookshopwebapplication.service.transferObject.TProduct;
 
@@ -70,10 +71,35 @@ public class ProductService implements IProductService {
                 .collect(Collectors.toList());
     }
 
-    // Phương thức để đếm số lượng sản phẩm theo categoryId
+    // Tổng sản phẩm
     @Override
     public int count() {
         return productDao.count();
+    }
+
+    // Sản phẩm còn hàng (quantity > 0)
+    public int countAvailable() {
+       return productDao.countAvailable();
+    }
+
+    // Sản phẩm sắp hết hàng (quantity > 0 nhưng nhỏ, ví dụ <= 10)
+    public int countAlmostOutOfStock() {
+        return productDao.countAlmostOutOfStock();
+    }
+
+    // Sản phẩm hết hàng (quantity = 0)
+    public int countOutOfStock() {
+        return productDao.countOutOfStock();
+    }
+
+    // Xử lý lấy dữ liệu thống kê sản phẩm
+    public ProductStatistic getStatistic() {
+        ProductStatistic productStatistic = new ProductStatistic();
+        productStatistic.setTotal(count());
+        productStatistic.setAvailable(countAvailable());
+        productStatistic.setAlmostOutOfStock(countAlmostOutOfStock());
+        productStatistic.setOutOfStock(countOutOfStock());
+        return productStatistic;
     }
 
     @Override

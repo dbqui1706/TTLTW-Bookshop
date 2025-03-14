@@ -78,7 +78,34 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
     public int count() {
         clearSQL();
         builderSQL.append(
-                "SELECT COUNT(*) FROM product"
+                "SELECT COUNT(*) FROM bookshopdb.product"
+        );
+        return count(builderSQL.toString());
+    }
+
+    // Sản phẩm còn hàng (quantity > 0)
+    public int countAvailable() {
+        clearSQL();
+        builderSQL.append(
+                "SELECT COUNT(*) FROM bookshopdb.product WHERE quantity > 0"
+        );
+        return count(builderSQL.toString());
+    }
+
+    // Sản phẩm sắp hết hàng (quantity > 0 nhưng nhỏ, ví dụ <= 10)
+    public int countAlmostOutOfStock() {
+        clearSQL();
+        builderSQL.append(
+                "SELECT COUNT(*) FROM bookshopdb.product WHERE quantity > 0 AND quantity <= 10"
+        );
+        return count(builderSQL.toString());
+    }
+
+    // Sản phẩm hết hàng (quantity = 0)
+    public int countOutOfStock() {
+        clearSQL();
+        builderSQL.append(
+                "SELECT COUNT(*) FROM bookshopdb.product WHERE quantity = 0"
         );
         return count(builderSQL.toString());
     }

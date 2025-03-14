@@ -125,7 +125,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">Tổng sản phẩm</h6>
-                                <h3 class="mb-0">1,358</h3>
+                                <h3 class="mb-0" id="totalProducts">1,358</h3>
                             </div>
                         </div>
                     </div>
@@ -142,7 +142,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">Sản phẩm còn hàng</h6>
-                                <h3 class="mb-0">1,208</h3>
+                                <h3 class="mb-0" id="available">1,208</h3>
                             </div>
                         </div>
                     </div>
@@ -159,7 +159,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">Sắp hết hàng</h6>
-                                <h3 class="mb-0">85</h3>
+                                <h3 class="mb-0" id="almostOutOfStock">85</h3>
                             </div>
                         </div>
                     </div>
@@ -176,7 +176,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">Hết hàng</h6>
-                                <h3 class="mb-0">65</h3>
+                                <h3 class="mb-0" id="outOfStock">65</h3>
                             </div>
                         </div>
                     </div>

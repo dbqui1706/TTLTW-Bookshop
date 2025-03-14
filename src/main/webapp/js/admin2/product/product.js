@@ -1,5 +1,53 @@
 // View toggle functionality
 document.addEventListener("DOMContentLoaded", function () {
+    // ID của các thẻ hiển thị thông tin thống kê
+    const totalProducts = document.getElementById("totalProducts");
+    const available = document.getElementById("available");
+    const almostOutOfStock = document.getElementById("almostOutOfStock");
+    const outOfStock = document.getElementById("outOfStock");
+
+    // Biến đối tượng để đổ dữ liệu
+    let productStatistic = {
+        totalProducts: 0,
+        available: 0,
+        almostOutOfStock: 0,
+        outOfStock: 0
+    }
+
+    // Urls API
+    const API_STATISTIC = "/admin2/api/product/statistic";
+    const API_PRODUCTS = "/admin2/api/product";
+
+    // Lấy dữ liệu thống kê và hiển thị
+    const getStatistic = async () => {
+        try {
+            const response = await fetch(API_STATISTIC, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+            });
+            const status = response.status;
+            if (status === 200) {
+                const data = await response.json();
+                productStatistic = data;
+                console.log(productStatistic);
+
+                totalProducts.textContent = productStatistic.total;
+                available.textContent = productStatistic.available;
+                almostOutOfStock.textContent = productStatistic.almostOutOfStock;
+                outOfStock.textContent = productStatistic.outOfStock;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // ********* Tiến hành call và sử dụng API ********* //
+    getStatistic();
+
+    // ************************************************* //
     const viewOptions = document.querySelectorAll(".view-option");
     const productContainers =
         document.querySelectorAll(".product-container");
@@ -210,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    FroalaEditor.DefineIcon('insertHTML', { NAME: 'plus', SVG_KEY: 'add' });
+    FroalaEditor.DefineIcon('insertHTML', {NAME: 'plus', SVG_KEY: 'add'});
     FroalaEditor.RegisterCommand('insertHTML', {
         title: 'Insert HTML',
         focus: true,
@@ -236,14 +284,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('product-category');
     // Mảng thể loại sách mẫu
     const categories = [
-        { id: 1, name: 'Văn học' },
-        { id: 2, name: 'Kinh tế' },
-        { id: 3, name: 'Tâm lý - Kỹ năng sống' },
-        { id: 4, name: 'Thiếu nhi' },
-        { id: 5, name: 'Tiểu sử - Hồi ký' },
-        { id: 6, name: 'Giáo khoa - Tham khảo' },
-        { id: 7, name: 'Ngoại ngữ' },
-        { id: 8, name: 'Comics - Manga' }
+        {id: 1, name: 'Văn học'},
+        {id: 2, name: 'Kinh tế'},
+        {id: 3, name: 'Tâm lý - Kỹ năng sống'},
+        {id: 4, name: 'Thiếu nhi'},
+        {id: 5, name: 'Tiểu sử - Hồi ký'},
+        {id: 6, name: 'Giáo khoa - Tham khảo'},
+        {id: 7, name: 'Ngoại ngữ'},
+        {id: 8, name: 'Comics - Manga'}
     ];
 
     // Thêm các tùy chọn thể loại vào select
