@@ -69,7 +69,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/user-manager" class="${param.active == 'FEEDBACK' ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin2/feedback-manager" class="${param.active == 'FEEDBACK' ? 'active' : ''}">
                         Phản Hồi Khách Hàng
                     </a>
                 </li>

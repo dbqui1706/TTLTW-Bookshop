@@ -1,0 +1,97 @@
+/* CSS cho trang Quản lý phản hồi */
+
+/* CSS cho các badge loại phản hồi */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* CSS cho các badge mức ưu tiên */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* CSS cho các badge trạng thái */
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* CSS cho bảng phản hồi */
+.table td {
+    vertical-align: middle;
+}
+
+.table .text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* CSS cho card lịch sử phản hồi */
+.card.border-primary {
+    border-color: #0d6efd !important;
+}
+
+.card.border-info {
+    border-color: #0dcaf0 !important;
+}
+
+/* CSS cho nút thao tác */
+.btn-group .btn {
+    padding: 0.375rem 0.5rem;
+}
+
+/* CSS cho ảnh đại diện */
+.rounded-circle {
+    object-fit: cover;
+}
+
+/* CSS cho phần xem chi tiết phản hồi */
+#viewFeedbackModal .modal-dialog {
+    max-width: 800px;
+}
+
+/* CSS cho textarea */
+textarea.form-control {
+    min-height: 100px;
+}
