@@ -14,7 +14,10 @@
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-
+    <!-- Thêm Select2 CSS và JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- CSS -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin/home.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin/product/product-manager.css"/>
@@ -53,8 +56,12 @@
                         <div class="row g-2 align-items-center">
                             <div class="col-lg-2 col-md-6">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" id="searchProduct"
-                                           placeholder="Tìm kiếm sản phẩm"/>
+                                    <input
+                                            type="text"
+                                            class="form-control"
+                                            id="searchProduct"
+                                            placeholder="Tìm kiếm sản phẩm"
+                                    />
                                     <label for="searchProduct">Tìm kiếm sản phẩm</label>
                                 </div>
                             </div>
@@ -62,10 +69,6 @@
                                 <div class="form-floating">
                                     <select class="form-select" id="categoryFilter">
                                         <option value="" selected>Tất cả</option>
-                                        <option value="1">Điện thoại</option>
-                                        <option value="2">Laptop</option>
-                                        <option value="3">Máy tính bảng</option>
-                                        <option value="4">Phụ kiện</option>
                                     </select>
                                     <label for="categoryFilter">Danh mục</label>
                                 </div>
@@ -73,10 +76,6 @@
                             <div class="col-lg-2 col-md-6">
                                 <div class="form-floating">
                                     <select class="form-select" id="stockFilter">
-                                        <option value="" selected>Tất cả</option>
-                                        <option value="in-stock">Còn hàng</option>
-                                        <option value="low-stock">Sắp hết</option>
-                                        <option value="out-of-stock">Hết hàng</option>
                                     </select>
                                     <label for="stockFilter">Tình trạng</label>
                                 </div>
@@ -84,23 +83,37 @@
                             <div class="col-lg-2 col-md-6">
                                 <div class="form-floating">
                                     <select class="form-select" id="sortOption">
-                                        <option value="name-asc" selected>Tên A-Z</option>
-                                        <option value="name-desc">Tên Z-A</option>
-                                        <option value="price-asc">Giá tăng dần</option>
-                                        <option value="price-desc">Giá giảm dần</option>
-                                        <option value="newest">Mới nhất</option>
                                     </select>
                                     <label for="sortOption">Sắp xếp theo</label>
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-12 text-end">
-                                <button class="btn btn-success ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
-                                        title="Thêm hàng loạt sản phẩm từ file Excel">
-                                    <i class="bi bi-file-earmark-arrow-down"></i> Import Excel
+                                <button
+                                        id="importExcelBtn"
+                                        class="btn btn-success ms-2"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Thêm hàng loạt sản phẩm từ file Excel"
+                                >
+                                    <i class="bi bi-file-earmark-arrow-down"></i>
                                 </button>
-                                <button class="btn btn-success ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
-                                        title="Xuất file Excel danh sách sản phẩm">
-                                    <i class="bi bi-file-earmark-arrow-up"></i> Export Excel
+                                <button
+                                        id="exportExcelBtn"
+                                        class="btn btn-warning ms-2"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Xuất file Excel danh sách sản phẩm"
+                                >
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                </button>
+                                <button
+                                        id="exportPdfBtn"
+                                        class="btn btn-danger ms-2"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="In file FDF danh sách sản phẩm"
+                                >
+                                    <i class="bi bi-filetype-pdf"></i>
                                 </button>
                                 <button id="addProductBtn" class="btn btn-primary ms-2">
                                     <i class="bi bi-plus-lg"></i> Thêm sản phẩm
@@ -395,7 +408,7 @@
             <div class="col-md-6 mb-3">
                 <div class="d-flex align-items-center">
                     <span class="me-2">Hiển thị</span>
-                    <select class="form-select form-select-sm w-auto">
+                    <select class="form-select-sm w-auto">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -1106,5 +1119,39 @@
 <script src="${pageContext.request.contextPath}/js/admin2/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/js/admin2/product/product.js"></script>
 <script src="${pageContext.request.contextPath}/js/admin2/product/product2.js"></script>
+
+<!-- Select2 JS CSS -->
+<style>
+    /* Ẩn container của Select2 để không thay đổi giao diện */
+    .select2-container--default .select2-selection--single {
+        height: 100%;
+        border: 1px solid #ced4da; /* Giữ border giống Bootstrap */
+        border-radius: 0.375rem; /* Border radius giống Bootstrap */
+        padding: 0.1rem 0.75rem;
+    }
+
+    /* Giữ nguyên vị trí và kích thước của mũi tên dropdown */
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+        right: 10px;
+    }
+
+    /* Đảm bảo văn bản được hiển thị đúng vị trí */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+        padding-left: 0;
+        color: #212529; /* Màu chữ giống Bootstrap */
+    }
+
+    /* Đảm bảo form-floating hoạt động đúng */
+    .form-floating .select2-container {
+        height: 100%;
+    }
+
+    .form-floating .select2-container--default .select2-selection--single {
+        padding-top: 1.62rem;
+        padding-bottom: 0.62rem;
+    }
+</style>
 </body>
 </html>

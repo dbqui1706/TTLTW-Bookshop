@@ -1,4 +1,4 @@
-package com.example.bookshopwebapplication.http.request.product;
+package com.example.bookshopwebapplication.http.response.product;
 
 import lombok.Data;
 

@@ -3,7 +3,7 @@ package com.example.bookshopwebapplication.service;
 import com.example.bookshopwebapplication.dao.ProductDao;
 import com.example.bookshopwebapplication.dto.ProductDto;
 import com.example.bookshopwebapplication.entities.Product;
-import com.example.bookshopwebapplication.http.request.product.ProductStatistic;
+import com.example.bookshopwebapplication.http.response.product.ProductStatistic;
 import com.example.bookshopwebapplication.service._interface.IProductService;
 import com.example.bookshopwebapplication.service.transferObject.TProduct;
 
@@ -79,7 +79,7 @@ public class ProductService implements IProductService {
 
     // Sản phẩm còn hàng (quantity > 0)
     public int countAvailable() {
-       return productDao.countAvailable();
+        return productDao.countAvailable();
     }
 
     // Sản phẩm sắp hết hàng (quantity > 0 nhưng nhỏ, ví dụ <= 10)
@@ -258,5 +258,14 @@ public class ProductService implements IProductService {
     // Phương thức để đếm số lượng sản phẩm dựa trên categoryId và điều kiện lọc
     public int countByCategoryIdAndFilters(Long id, String filtersQuery) {
         return productDao.countByCategoryIdAndFilters(id, filtersQuery);
+    }
+
+    public Map<String, Object> getProductsWithFilters(Long categoryId, String stock,
+                                                      String sortOption, String search,
+                                                      int offset, int limit) {
+
+
+
+        return productDao.getProductsWithFilters(categoryId, stock, sortOption, search, offset, limit);
     }
 }

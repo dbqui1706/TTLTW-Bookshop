@@ -5,9 +5,7 @@ import com.example.bookshopwebapplication.dao.mapper.ProductMapper;
 import com.example.bookshopwebapplication.entities.Product;
 
 import java.sql.*;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ProductDao extends AbstractDao<Product> implements IProductDao {
 
@@ -382,6 +380,241 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
             return product;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, Object> getProductsWithFilters(Long categoryId, String stock,
+                                                      String sortOption, String search,
+                                                      int offset, int limit) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> products = new ArrayList<>();
+        long totalElements = 0;
+
+        Connection conn = null;
+        PreparedStatement stmtCount = null;
+        PreparedStatement stmtProducts = null;
+        ResultSet rsCount = null;
+        ResultSet rsProducts = null;
+
+        try {
+            conn = getConnection();
+
+            // Xây dựng câu truy vấn SQL cơ bản
+            StringBuilder baseQueryBuilder = new StringBuilder();
+            baseQueryBuilder.append("FROM bookshopdb.product p ");
+
+            // Thêm JOIN nếu có lọc theo danh mục
+            if (categoryId != null) {
+                baseQueryBuilder.append("INNER JOIN bookshopdb.product_category pc ON p.id = pc.productId ");
+                baseQueryBuilder.append("WHERE pc.categoryId = ? ");
+            } else {
+                baseQueryBuilder.append("WHERE 1=1 ");
+            }
+
+            // Thêm điều kiện lọc theo trạng thái tồn kho
+            stockFilters(stock, baseQueryBuilder);
+
+            // Thêm điều kiện tìm kiếm
+            if (search != null && !search.isEmpty()) {
+                baseQueryBuilder.append("AND (p.name LIKE ? OR p.description LIKE ? OR p.author LIKE ?) ");
+            }
+
+            // Truy vấn đếm tổng số sản phẩm
+            StringBuilder countQueryBuilder = new StringBuilder("SELECT COUNT(DISTINCT p.id) AS total ");
+            countQueryBuilder.append(baseQueryBuilder);
+
+            // Truy vấn lấy thông tin sản phẩm
+            StringBuilder productQueryBuilder = new StringBuilder("SELECT DISTINCT p.* ");
+            productQueryBuilder.append(baseQueryBuilder);
+
+            // Thêm sắp xếp
+            sortOptions(sortOption, productQueryBuilder);
+
+            // Thêm phân trang
+            productQueryBuilder.append("LIMIT ? OFFSET ?");
+
+            // Chuẩn bị câu lệnh và thực thi truy vấn đếm
+            stmtCount = conn.prepareStatement(countQueryBuilder.toString());
+            int paramIndex = 1;
+
+            if (categoryId != null) {
+                stmtCount.setLong(paramIndex++, categoryId);
+            }
+
+            if (search != null && !search.isEmpty()) {
+                String searchPattern = "%" + search + "%";
+                stmtCount.setString(paramIndex++, searchPattern);
+                stmtCount.setString(paramIndex++, searchPattern);
+                stmtCount.setString(paramIndex++, searchPattern);
+            }
+
+            rsCount = stmtCount.executeQuery();
+            if (rsCount.next()) {
+                totalElements = rsCount.getLong("total");
+            }
+
+            // Chuẩn bị câu lệnh và thực thi truy vấn sản phẩm
+            stmtProducts = conn.prepareStatement(productQueryBuilder.toString());
+            paramIndex = 1;
+
+            if (categoryId != null) {
+                stmtProducts.setLong(paramIndex++, categoryId);
+            }
+
+            if (search != null && !search.isEmpty()) {
+                String searchPattern = "%" + search + "%";
+                stmtProducts.setString(paramIndex++, searchPattern);
+                stmtProducts.setString(paramIndex++, searchPattern);
+                stmtProducts.setString(paramIndex++, searchPattern);
+            }
+
+            stmtProducts.setInt(paramIndex++, limit);
+            stmtProducts.setInt(paramIndex++, offset);
+
+            rsProducts = stmtProducts.executeQuery();
+
+            // Xử lý kết quả
+            while (rsProducts.next()) {
+                Map<String, Object> product = new HashMap<>();
+                product.put("id", rsProducts.getLong("id"));
+                product.put("name", rsProducts.getString("name"));
+                product.put("price", rsProducts.getFloat("price"));
+                product.put("discount", rsProducts.getFloat("discount"));
+                product.put("quantity", rsProducts.getInt("quantity"));
+                product.put("totalBuy", rsProducts.getInt("totalBuy"));
+                product.put("author", rsProducts.getString("author"));
+                product.put("pages", rsProducts.getInt("pages"));
+                product.put("publisher", rsProducts.getString("publisher"));
+                product.put("yearPublishing", rsProducts.getInt("yearPublishing"));
+                product.put("description", rsProducts.getString("description"));
+                product.put("imageName", rsProducts.getString("imageName"));
+                product.put("shop", rsProducts.getBoolean("shop"));
+
+                // Xử lý các trường datetime
+                Timestamp createdAt = rsProducts.getTimestamp("createdAt");
+                product.put("createdAt", createdAt != null ? createdAt.toString() : null);
+
+                Timestamp updatedAt = rsProducts.getTimestamp("updatedAt");
+                product.put("updatedAt", updatedAt != null ? updatedAt.toString() : null);
+
+                Timestamp startsAt = rsProducts.getTimestamp("startsAt");
+                product.put("startsAt", startsAt != null ? startsAt.toString() : null);
+
+                Timestamp endsAt = rsProducts.getTimestamp("endsAt");
+                product.put("endsAt", endsAt != null ? endsAt.toString() : null);
+
+                // Thêm danh mục của sản phẩm
+                product.put("categories", getProductCategories(conn, rsProducts.getLong("id")));
+
+                products.add(product);
+            }
+
+            // Tính toán tổng số trang
+            int totalPages = (int) Math.ceil((double) totalElements / limit);
+            // Tạo kết quả trả về
+            result.put("data", products);
+            result.put("totalElements", totalElements);
+            result.put("totalPages", totalPages);
+            result.put("page", offset / limit + 1);
+            result.put("limit", limit);
+
+        } catch (SQLException e) {
+            System.out.println("Error Function getProductsWithFilters: " + e);
+            throw new RuntimeException(e);
+        } finally {
+            // Đóng tất cả các resource
+            if (rsProducts != null) try {
+                rsProducts.close();
+            } catch (SQLException e) { /* ignored */ }
+            if (rsCount != null) try {
+                rsCount.close();
+            } catch (SQLException e) { /* ignored */ }
+            if (stmtProducts != null) try {
+                stmtProducts.close();
+            } catch (SQLException e) { /* ignored */ }
+            if (stmtCount != null) try {
+                stmtCount.close();
+            } catch (SQLException e) { /* ignored */ }
+            if (conn != null) try {
+                conn.close();
+            } catch (SQLException e) { /* ignored */ }
+        }
+
+        return result;
+    }
+
+    // Helper method để lấy danh mục của sản phẩm
+    private Map<Long, String> getProductCategories(Connection conn, long productId) throws SQLException {
+        Map<Long, String> categories = new HashMap<>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            String sql = "SELECT c.id, c.name FROM bookshopdb.category c " +
+                    "INNER JOIN bookshopdb.product_category pc ON c.id = pc.categoryId " +
+                    "WHERE pc.productId = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, productId);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                categories.put(rs.getLong("id"), rs.getString("name"));
+            }
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) { /* ignored */ }
+            if (stmt != null) try { stmt.close(); } catch (SQLException e) { /* ignored */ }
+        }
+
+        return categories;
+    }
+
+    public void stockFilters(String stock, StringBuilder baseQueryBuilder) {
+        if (stock != null) {
+
+            switch (stock) {
+                case "AVAILABLE":
+                    baseQueryBuilder.append("AND p.quantity > 10 ");
+                    break;
+                case "ALMOST_OUT_OF_STOCK":
+                    baseQueryBuilder.append("AND p.quantity > 0 AND p.quantity <= 10 ");
+                    break;
+                case "OUT_OF_STOCK":
+                    baseQueryBuilder.append("AND p.quantity = 0 ");
+                    break;
+                default:
+                    // Không thêm điều kiện
+                    break;
+            }
+        }
+    }
+
+    public void sortOptions(String sortOption, StringBuilder productQueryBuilder) {
+
+        switch (sortOption) {
+            case "PRICE_ASC":
+                productQueryBuilder.append("ORDER BY p.price ASC ");
+                break;
+            case "PRICE_DESC":
+                productQueryBuilder.append("ORDER BY p.price DESC ");
+                break;
+            case "NAME_ASC":
+                productQueryBuilder.append("ORDER BY p.name ASC ");
+                break;
+            case "NAME_DESC":
+                productQueryBuilder.append("ORDER BY p.name DESC ");
+                break;
+            case "POPULARITY_ASC":
+                productQueryBuilder.append("ORDER BY p.totalBuy DESC ");
+                break;
+            case "CREATED_AT_ASC":
+                productQueryBuilder.append("ORDER BY p.createdAt ASC ");
+                break;
+            case "CREATED_AT_DESC":
+                productQueryBuilder.append("ORDER BY p.createdAt DESC ");
+                break;
+            default:
+                productQueryBuilder.append("ORDER BY p.id DESC ");
+                break;
         }
     }
 }

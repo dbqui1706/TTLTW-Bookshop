@@ -1,6 +1,6 @@
 package com.example.bookshopwebapplication.servlet.admin2.api.product;
 
-import com.example.bookshopwebapplication.http.request.product.ProductStatistic;
+import com.example.bookshopwebapplication.http.response.product.ProductStatistic;
 import com.example.bookshopwebapplication.message.Message;
 import com.example.bookshopwebapplication.service.ProductService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
 @WebServlet(name = "Statistic", urlPatterns = "/admin2/api/product/statistic")
 public class Statistic extends HttpServlet {
