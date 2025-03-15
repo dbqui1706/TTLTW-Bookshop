@@ -22,6 +22,8 @@ public class TProduct implements ITransfer<ProductDto, Product> {
         productDto.setShop(product.getShop());
         productDto.setCreatedAt(product.getCreatedAt());
         productDto.setUpdatedAt(product.getUpdatedAt());
+        productDto.setStartAt(product.getStartAt());
+        productDto.setEndsAt(product.getEndsAt());
         return productDto;
     }
 
@@ -43,6 +45,8 @@ public class TProduct implements ITransfer<ProductDto, Product> {
         product.setShop(productDto.getShop());
         product.setCreatedAt(productDto.getCreatedAt());
         product.setUpdatedAt(productDto.getUpdatedAt());
+        product.setStartAt(productDto.getStartAt());
+        product.setEndsAt(productDto.getEndsAt());
         return product;
     }
 }

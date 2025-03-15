@@ -268,4 +268,8 @@ public class ProductService implements IProductService {
 
         return productDao.getProductsWithFilters(categoryId, stock, sortOption, search, offset, limit);
     }
+
+    public int countByFilter(String filterQuery) {
+        return productDao.countByFilter(filterQuery);
+    }
 }

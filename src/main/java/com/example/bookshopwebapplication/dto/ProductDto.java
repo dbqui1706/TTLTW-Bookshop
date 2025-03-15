@@ -1,9 +1,7 @@
 package com.example.bookshopwebapplication.dto;
 
 import com.example.bookshopwebapplication.entities.Category;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
@@ -12,6 +10,8 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @ToString
+@Getter
+@Setter
 public class ProductDto {
     private Long id;
     private String name;
@@ -28,7 +28,8 @@ public class ProductDto {
     private Integer shop;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-
+    private Timestamp startAt;
+    private Timestamp endsAt;
 
     public ProductDto(Long id,
                       String name,

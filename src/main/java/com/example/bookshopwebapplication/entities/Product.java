@@ -27,6 +27,8 @@ public class Product {
     private Integer shop;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private Timestamp startAt;
+    private Timestamp endsAt;
 
     public Product(Long id,
                    String name,

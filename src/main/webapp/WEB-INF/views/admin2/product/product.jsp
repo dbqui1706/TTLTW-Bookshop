@@ -203,7 +203,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0" id="productTable">
                                 <thead class="table-view-header">
                                 <tr>
                                     <th width="60">ID</th>
@@ -214,189 +214,23 @@
                                     <th>Giá gốc</th>
                                     <th>Tồn kho</th>
                                     <th>Trạng thái</th>
-                                    <th width="150">Thao tác</th>
+                                    <th>Đã bán</th>
+                                    <th>Thao tác</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <!-- Product Table Row 1 -->
-                                <tr>
-                                    <td>#SP001</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/300x300" alt="Sách Spacewax" width="50"
-                                             height="50" class="rounded"/>
-                                    </td>
-                                    <td>Sách Spacewax</td>
-                                    <td>
-                                        <span>Báo in</span>
-                                    </td>
-                                    <td class="fw-bold">29,990đ</td>
-                                    <td class="text-muted text-decoration-line-through">32,990đ</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="stock-indicator stock-high me-2"></div>
-                                            <span>128</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge bg-success">Còn hàng</span></td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Product Table Row 2 -->
-                                <tr>
-                                    <td>#SP002</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/300x300" alt="Sách Ontagene" width="50"
-                                             height="50" class="rounded"/>
-                                    </td>
-                                    <td>Sách Ontagene</td>
-                                    <td>
-                                        <span> Sách kỹ năng sống</span>
-                                    </td>
-                                    <td class="fw-bold">35,990đ</td>
-                                    <td class="text-muted text-decoration-line-through">39,990đ</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="stock-indicator stock-low me-2"></div>
-                                            <span>0</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge bg-danger">Hết hàng</span></td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Product Table Row 3 -->
-                                <tr>
-                                    <td>#SP003</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/300x300?text=Samsung+S24"
-                                             alt="Samsung Galaxy S24" width="50" height="50" class="rounded"/>
-                                    </td>
-                                    <td>Samsung Galaxy S24</td>
-                                    <td>
-                                        <span class="badge bg-primary">Điện thoại</span>
-                                    </td>
-                                    <td class="fw-bold">25,990,000đ</td>
-                                    <td class="text-muted text-decoration-line-through">
-                                        27,990,000đ
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="stock-indicator stock-medium me-2"></div>
-                                            <span>8</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-warning text-dark">Sắp hết</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Product Table Row 4 -->
-                                <tr>
-                                    <td>#SP004</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/300x300?text=iPad+Pro" alt="iPad Pro"
-                                             width="50" height="50" class="rounded"/>
-                                    </td>
-                                    <td>iPad Pro 12.9"</td>
-                                    <td>
-                                        <span class="badge bg-secondary">Máy tính bảng</span>
-                                    </td>
-                                    <td class="fw-bold">26,990,000đ</td>
-                                    <td class="text-muted text-decoration-line-through">
-                                        29,990,000đ
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="stock-indicator stock-high me-2"></div>
-                                            <span>42</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge bg-success">Còn hàng</span></td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Product Table Row 5 -->
-                                <tr>
-                                    <td>#SP005</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/300x300?text=AirPods+Pro"
-                                             alt="AirPods Pro" width="100" height="150" class="rounded"/>
-                                    </td>
-                                    <td>AirPods Pro 2</td>
-                                    <td><span class="badge bg-dark">Phụ kiện</span></td>
-                                    <td class="fw-bold">6,990,000đ</td>
-                                    <td class="text-muted text-decoration-line-through">
-                                        7,990,000đ
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="stock-indicator stock-high me-2"></div>
-                                            <span>75</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge bg-success">Còn hàng</span></td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Thêm các hàng sản phẩm khác vào đây -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="loadingOverlay"
+                             class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                             style="z-index: 1000; background-color: rgba(255, 255, 255, 0.8); display: none;">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="spinner-border text-primary mb-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div>Đang tải dữ liệu...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -408,7 +242,7 @@
             <div class="col-md-6 mb-3">
                 <div class="d-flex align-items-center">
                     <span class="me-2">Hiển thị</span>
-                    <select class="form-select-sm w-auto">
+                    <select class="form-select-sm w-auto" id="itemsPerPage">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -419,23 +253,7 @@
             </div>
             <div class="col-md-6">
                 <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-end">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item active">
-                            <a class="page-link" href="#">1</a>
-                        </li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
+                    <ul class="pagination justify-content-end"></ul>
                 </nav>
             </div>
         </div>
@@ -1118,7 +936,7 @@
 <!-- Custom JS -->
 <script src="${pageContext.request.contextPath}/js/admin2/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/js/admin2/product/product.js"></script>
-<script src="${pageContext.request.contextPath}/js/admin2/product/product2.js"></script>
+<%--<script src="${pageContext.request.contextPath}/js/admin2/product/product2.js"></script>--%>
 
 <!-- Select2 JS CSS -->
 <style>

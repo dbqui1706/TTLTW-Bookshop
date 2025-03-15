@@ -130,13 +130,12 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
     @Override
     public int countByFilter(String filtersQuery) {
         clearSQL();
-        builderSQL.append("SELECT COUNT(*) ");
-        builderSQL.append("FROM product_category pc ");
-        builderSQL.append("JOIN product p ON pc.productId = p.id ");
-        builderSQL.append("WHERE pc.categoryId = ? ");
-        builderSQL.append("AND " + filtersQuery);
+        clearSQL();
+        builderSQL.append("SELECT COUNT(*) FROM product p WHERE " + filtersQuery);
         return count(builderSQL.toString());
     }
+
+
 
     @Override
     public String getIDByCategoriesName(String categoryNames) {

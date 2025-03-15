@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const categoryFilter = document.getElementById("categoryFilter");
     const stockFilter = document.getElementById("stockFilter");
     const searchInput = document.getElementById("searchProduct");
+    const itemsPerPageSelect = document.getElementById("itemsPerPage");
 
     // Button action
     const importExcelBtn = document.getElementById("importExcelBtn");
@@ -22,19 +23,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Biến đối tượng để đổ dữ liệu
     let productStatistic = {
-        totalProducts: 0,
-        available: 0,
-        almostOutOfStock: 0,
-        outOfStock: 0
+        totalProducts: 0, available: 0, almostOutOfStock: 0, outOfStock: 0
     }
     let categories = {};
     let products = [];
 
     const stockFilterMap = {
-        DEFAULT: "Tất cả",
-        AVAILABLE: "Còn hàng",
-        ALMOST_OUT_OF_STOCK: "Sắp hết",
-        OUT_OF_STOCK: "Hết hàng"
+        DEFAULT: "Tất cả", AVAILABLE: "Còn hàng", ALMOST_OUT_OF_STOCK: "Sắp hết", OUT_OF_STOCK: "Hết hàng"
+    };
+
+    const badgeStockMap = {
+        'AVAILABLE': `<span class="badge bg-success">Còn hàng</span>`,
+        'ALMOST_OUT_OF_STOCK': `<span class="badge bg-warning text-dark">Sắp hết</span>`,
+        'OUT_OF_STOCK': `<span class="badge bg-danger">Hết hàng</span>`
     };
 
     const sortOptionMap = {
@@ -60,13 +61,12 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
 
+    // Hàm lấy danh sách các thể loại
     const getCategory = async () => {
         try {
             const response = await fetch(API_CATEGORIES, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
+                method: "GET", headers: {
+                    "Accept": "application/json", "Content-Type": "application/json",
                 },
             });
             const status = response.status;
@@ -93,17 +93,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const getStatistic = async () => {
         try {
             const response = await fetch(API_STATISTIC, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
+                method: "GET", headers: {
+                    "Accept": "application/json", "Content-Type": "application/json",
                 },
             });
             const status = response.status;
             if (status === 200) {
                 const data = await response.json();
                 productStatistic = data;
-                console.log(productStatistic);
 
                 totalProducts.textContent = productStatistic.total;
                 available.textContent = productStatistic.available;
@@ -122,13 +119,12 @@ document.addEventListener("DOMContentLoaded", function () {
             $('.form-select').each(function () {
                 $(this).select2({
                     minimumResultsForSearch: Infinity, // Ẩn ô tìm kiếm
-                    dropdownAutoWidth: true,
-                    width: '100%'
+                    dropdownAutoWidth: true, width: '100%'
                 });
             });
 
             // Đặt chiều cao tối đa cho dropdown
-            $('.select2-results__options').css('max-height', '300px');
+            $('.select2-results__options').css('max-height', '400px');
         } else {
             console.error("jQuery hoặc Select2 chưa được tải!");
         }
@@ -151,9 +147,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Hàm lấy dữ liệu sản phẩm
+    // Cập nhật hàm getProducts để hiển thị dữ liệu trả về
     const getProducts = async (filter) => {
         try {
+
+            showLoading();
             // Tạo query string từ filter
             const queryParams = new URLSearchParams();
 
@@ -167,10 +165,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const url = `${API_PRODUCTS}?${queryParams.toString()}`;
             const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
+                method: "GET", headers: {
+                    "Accept": "application/json", "Content-Type": "application/json",
                 },
             });
 
@@ -178,16 +174,267 @@ document.addEventListener("DOMContentLoaded", function () {
             if (status === 200) {
                 const data = await response.json();
                 console.log(data);
+                filterInitialize.data = data.products;
+                // Render sản phẩm vào bảng
+                renderProductTable(data.products);
+
+                // Cập nhật phân trang
+                updatePagination(data.currentPage, data.totalPages);
+
+                // Cập nhật tổng số sản phẩm hiển thị
+                document.querySelector('.col-md-6.mb-3 span.ms-2').textContent = `sản phẩm (Tổng số: ${data.totalProducts})`;
             }
         } catch (error) {
             console.log(error);
+        } finally {
+            hideLoading();
         }
+    };
+
+    // Hàm render sản phẩm vào bảng
+    const renderProductTable = (products) => {
+        const tableBody = document.getElementById('productTable').querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        products.forEach(product => {
+            // Tạo trạng thái tồn kho và màu sắc
+            let stockStatus, stockBadgeClass, stockIndicatorClass;
+            if (product.stockStatus === 'OUT_OF_STOCK') {
+                stockStatus = 'Hết hàng';
+                stockBadgeClass = 'bg-danger';
+                stockIndicatorClass = 'stock-low';
+            } else if (product.stockStatus === 'ALMOST_OUT_OF_STOCK') {
+                stockStatus = 'Sắp hết';
+                stockBadgeClass = 'bg-warning text-dark';
+                stockIndicatorClass = 'stock-medium';
+            } else {
+                stockStatus = 'Còn hàng';
+                stockBadgeClass = 'bg-success';
+                stockIndicatorClass = 'stock-high';
+            }
+
+            // Format giá tiền
+            const formatPrice = (price) => {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                    maximumFractionDigits: 0
+                }).format(price);
+            };
+
+            // Tạo hàng mới trong bảng
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td>#${product.id}</td>
+            <td>
+                <img src="${product.imageName ? product.imageName : 'https://via.placeholder.com/300x300'}" 
+                     alt="${product.name}" width="50" height="50" class="rounded"/>
+            </td>
+            <td>${product.name}</td>
+            <td>
+                ${product.categoryName}
+            </td>
+            <td class="fw-bold">${formatPrice(product.discountedPrice)}</td>
+            <td class="${product.discountedPrice === product.price ? '' : 'text-decoration-line-through'}">
+                ${formatPrice(product.price)}
+            </td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="stock-indicator ${stockIndicatorClass} me-2"></div>
+                    <span>${product.quantity}</span>
+                </div>
+            </td>
+            <td><span class="badge ${stockBadgeClass}">${stockStatus}</span></td>
+            <td>${product.totalBuy}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" data-product-id="${product.id}" data-action="view">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" data-product-id="${product.id}" data-action="edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" data-product-id="${product.id}" data-action="delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+            tableBody.appendChild(row);
+        });
+
+        // Thêm sự kiện cho các nút
+        addButtonEventListeners();
+    };
+
+    // Hàm thêm sự kiện cho các nút trong bảng
+    const addButtonEventListeners = () => {
+        // Nút xem chi tiết
+        document.querySelectorAll('[data-action="view"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.getAttribute('data-product-id');
+                viewProduct(productId);
+            });
+        });
+
+        // Nút sửa sản phẩm
+
+        // Nút xóa sản phẩm
+    };
+
+    // Hàm cập nhật phân trang
+    const updatePagination = (currentPage, totalPages) => {
+        const pagination = document.querySelector('.pagination');
+        pagination.innerHTML = '';
+
+        // Nút Previous
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `
+        <a class="page-link" href="#" aria-label="Previous" data-page="${currentPage - 1}">
+            <span aria-hidden="true">&laquo;</span>
+        </a>
+    `;
+        pagination.appendChild(prevLi);
+
+        // Các nút trang
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+            pagination.appendChild(pageLi);
+        }
+
+        // Nút Next
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `
+        <a class="page-link" href="#" aria-label="Next" data-page="${currentPage + 1}">
+            <span aria-hidden="true">&raquo;</span>
+        </a>
+    `;
+        pagination.appendChild(nextLi);
+
+        // Thêm sự kiện cho các nút phân trang
+        document.querySelectorAll('.pagination .page-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const page = parseInt(this.getAttribute('data-page'));
+                if (page > 0 && page <= totalPages) {
+                    filterInitialize.page = page;
+                    getProducts(filterInitialize);
+                }
+            });
+        });
+    };
+
+    // Hàm xem chi tiết sản phẩm
+    const viewProduct = (productId) => {
+        // Đây là nơi bạn sẽ thêm code để hiển thị modal chi tiết sản phẩm
+        // Bạn cần tạo một API endpoint riêng để lấy chi tiết sản phẩm theo ID
+        console.log('View product:', productId);
+        // Điền thông tin vào modal xem chi tiết
+        const productDetails = filterInitialize.data.find(product => product.id == productId);
+        console.log("productDetails: ", productDetails);
+
+        document.getElementById('viewProductId').textContent = productDetails.id;
+        document.getElementById('viewProductName').textContent = productDetails.name;
+        document.getElementById('viewCategory').textContent = productDetails.categoryName;
+        document.getElementById('viewProductPrice').textContent = `Giá: ${formatCurrency(productDetails.discountedPrice)}`;
+        if (productDetails.discountedPrice !== productDetails.price) {
+            document.getElementById('viewProductOriginalPrice').textContent = formatCurrency(productDetails.price);
+        }
+        document.getElementById('viewProductQuantity').textContent = productDetails.quantity;
+        document.getElementById('viewProductStatus').innerHTML = badgeStockMap[productDetails.stockStatus];
+        document.getElementById('viewProductImage').src = productDetails.imageName ? productDetails.imageName : 'https://via.placeholder.com/300x300';
+        document.getElementById('viewProductAuthor').textContent = productDetails.author;
+        document.getElementById('viewProductPublisher').textContent = productDetails.publisher;
+        document.getElementById('viewProductYear').textContent = productDetails.yearPublishing;
+        document.getElementById('viewProductPages').textContent = productDetails.pages;
+        document.getElementById('viewProductTotalBuy').textContent = productDetails.totalBuy;
+        document.getElementById('viewProductDescription').innerHTML = productDetails.description;
+        document.getElementById('viewProductDiscount').textContent = `${productDetails.discount}%`;
+        ;document.getElementById('viewProductShop').innerHTML = productDetails.shop === 0 ? `<span class="badge bg-success">Có</span>` : `<span class="badge bg-danger">Không</span>`;
+        document.getElementById('viewProductStartsAt').textContent = productDetails.startsAt ? formatDateTime(productDetails.startsAt) : "Không có";
+        document.getElementById('viewProductEndsAt').textContent = productDetails.endsAt ? formatDateTime(productDetails.endsAt) : "Không có";
+
+        // Mở modal xem chi tiết
+        const viewModal = new bootstrap.Modal(document.getElementById('viewProductModal'));
+        viewModal.show();
+    };
+
+    // Hàm format tiền tệ
+    const formatCurrency = (price) => {
+        cnsole.log('formatCurrency received:', price, typeof price);
+        // Kiểm tra nếu price không phải là số hoặc bị NaN
+        if (typeof price !== 'number' || isNaN(price)) {
+            return 'N/A'; // Hoặc trả về một giá trị mặc định
+        }
+
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency', currency: 'VND', maximumFractionDigits: 0
+        }).format(price);
+    };
+
+    // Hàm format ngày tháng
+    const formatDateTime = (date) => {
+        return new Intl.DateTimeFormat('vi-VN', {
+            dateStyle: 'full', timeStyle: 'long'
+        }).format(new Date(date));
     }
 
-    // ********* Tiến hành call và sử dụng API ********* //
+    // Thêm hàm utility để hiển thị và ẩn loading
+    const showLoading = () => {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex';
+            // Thêm class show sau một tick để trigger animation nếu có
+            setTimeout(() => loadingOverlay.classList.add('show'), 10);
+        }
+    };
+
+    const hideLoading = () => {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('show');
+            // Chờ animation hoàn thành rồi mới ẩn hoàn toàn
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 300);
+        }
+    };
+
+    // Thiết lập giá trị mặc định cho select box
+    const setDefaultItemsPerPage = () => {
+        // Đặt giá trị mặc định cho select box là 10
+        itemsPerPageSelect.value = filterInitialize.limit.toString();
+    }
+
+    // Hàm setup các sự kiện cho filter
+    const setupFilterEvents = () => {
+        // Thêm sự kiện cho select box items per page
+        itemsPerPageSelect.addEventListener('change', function () {
+            filterInitialize.limit = parseInt(this.value);
+            filterInitialize.page = 1; // Reset về trang 1 khi thay đổi số lượng hiển thị
+            getProducts(filterInitialize);
+        });
+
+    }
+
+    // ******************* Call API ******************** //
     getCategory();
     getStatistic();
     setValueForFilter();
+    setupFilterEvents();
+    setDefaultItemsPerPage(); // Thiết lập giá trị mặc định cho select box
     getProducts(filterInitialize);
     // ************************************************* //
 });
@@ -273,41 +520,28 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    FroalaEditor.DefineIcon('insertHTML', { NAME: 'plus', SVG_KEY: 'add' });
+    FroalaEditor.DefineIcon('insertHTML', {NAME: 'plus', SVG_KEY: 'add'});
     FroalaEditor.RegisterCommand('insertHTML', {
-        title: 'Insert HTML',
-        focus: true,
-        undo: true,
-        refreshAfterCallback: true,
-        callback: function () {
+        title: 'Insert HTML', focus: true, undo: true, refreshAfterCallback: true, callback: function () {
             this.html.insert('Some Custom HTML.');
             this.undo.saveStep();
         }
     });
 
     new FroalaEditor('div#froala-editor', {
-        toolbarButtons: [
-            ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'paragraphFormat', 'formatOL', 'formatUL'],
-            ['fontFamily', 'fontSize', 'textColor', 'backgroundColor'],
-            ['inlineClass', 'inlineStyle', 'clearFormatting'],
-            ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons'],
-            ['insertHTML', 'undo', 'redo', 'html'],
-        ]
+        toolbarButtons: [['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'paragraphFormat', 'formatOL', 'formatUL'], ['fontFamily', 'fontSize', 'textColor', 'backgroundColor'], ['inlineClass', 'inlineStyle', 'clearFormatting'], ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons'], ['insertHTML', 'undo', 'redo', 'html'],]
     })
 
     // Tải danh sách thể loại (trong trường hợp thực tế, bạn sẽ tải từ API)
     const categorySelect = document.getElementById('product-category');
     // Mảng thể loại sách mẫu
-    const categories = [
-        { id: 1, name: 'Văn học' },
-        { id: 2, name: 'Kinh tế' },
-        { id: 3, name: 'Tâm lý - Kỹ năng sống' },
-        { id: 4, name: 'Thiếu nhi' },
-        { id: 5, name: 'Tiểu sử - Hồi ký' },
-        { id: 6, name: 'Giáo khoa - Tham khảo' },
-        { id: 7, name: 'Ngoại ngữ' },
-        { id: 8, name: 'Comics - Manga' }
-    ];
+    const categories = [{id: 1, name: 'Văn học'}, {id: 2, name: 'Kinh tế'}, {
+        id: 3,
+        name: 'Tâm lý - Kỹ năng sống'
+    }, {id: 4, name: 'Thiếu nhi'}, {id: 5, name: 'Tiểu sử - Hồi ký'}, {id: 6, name: 'Giáo khoa - Tham khảo'}, {
+        id: 7,
+        name: 'Ngoại ngữ'
+    }, {id: 8, name: 'Comics - Manga'}];
 
     // Thêm các tùy chọn thể loại vào select
     categories.forEach(category => {
