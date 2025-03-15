@@ -427,6 +427,40 @@ document.addEventListener("DOMContentLoaded", function () {
             getProducts(filterInitialize);
         });
 
+        // Sự kiện cho bộ lọc danh mục
+        // Select2, cần thiết lập sự kiện khác
+        $('#categoryFilter').on('select2:select', function (e) {
+            filterInitialize.category = e.params.data.id;
+            filterInitialize.page = 1;
+            getProducts(filterInitialize);
+        });
+
+        // Sự kiện cho bộ lọc trạng thái kho
+        $('#stockFilter').on('select2:select', function (e) {
+            console.log(e.params);
+            filterInitialize.stock = e.params.data.id;
+            filterInitialize.page = 1;
+            getProducts(filterInitialize);
+        });
+
+        // Sự kiện cho bộ lọc sắp xếp
+        $('#sortOption').on('select2:select', function (e) {
+            console.log(e.params);
+            filterInitialize.sortOption = e.params.data.id;
+            filterInitialize.page = 1;
+            getProducts(filterInitialize);
+        });
+
+        // Sự kiện cho ô tìm kiếm
+        searchInput.addEventListener('input', function () {
+            // Debounce search để tránh gọi API quá nhiều lần
+            clearTimeout(this.timer);
+            this.timer = setTimeout(() => {
+                filterInitialize.search = this.value;
+                filterInitialize.page = 1;
+                getProducts(filterInitialize);
+            }, 300);
+        });
     }
 
     // ******************* Call API ******************** //
