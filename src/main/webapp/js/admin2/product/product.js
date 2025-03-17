@@ -2,9 +2,13 @@
 // products.js - Module quản lý sản phẩm
 // ==========================================================
 
-import { getProducts } from './api.js';
-import { showLoading, hideLoading, formatCurrency } from './utils.js';
-import { productDetailModal } from './modals.js';
+import {getProducts} from './api.js';
+import {showLoading, hideLoading, formatCurrency} from './utils.js';
+import {
+    productDetailModal,
+    addProductModal,
+    editProductModal
+} from './modals.js';
 
 // Filter state
 export const filterInitialize = {
@@ -141,6 +145,14 @@ export const addButtonEventListeners = () => {
         });
     });
 
+    // Nút thêm sản phẩm
+    const addProductBtn = document.getElementById('addProductBtn');
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', function () {
+            addProductModal();
+        });
+    }
+
     // Các nút khác có thể thêm sau
 };
 
@@ -151,6 +163,7 @@ export const viewProduct = (productId) => {
         productDetailModal(productDetails);
     }
 };
+
 
 export const loadProducts = async () => {
     try {
