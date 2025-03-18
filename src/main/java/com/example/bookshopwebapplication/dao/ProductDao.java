@@ -18,12 +18,13 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
         clearSQL();
         builderSQL.append("INSERT INTO product (name, price, discount, quantity, totalBuy, author, ");
         builderSQL.append("pages, publisher, yearPublishing, description, imageName, shop, createdAt, ");
-        builderSQL.append("updatedAt) ");
-        builderSQL.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        builderSQL.append("updatedAt, startsAt, endsAt) ");
+        builderSQL.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         return insert(builderSQL.toString(), product.getName(), product.getPrice(), product.getDiscount(),
                 product.getQuantity(), product.getTotalBuy(), product.getAuthor(), product.getPages(),
                 product.getPublisher(), product.getYearPublishing(), product.getDescription(),
-                product.getImageName(), product.getShop(), product.getCreatedAt(), product.getUpdatedAt());
+                product.getImageName(), product.getShop(), product.getCreatedAt(), product.getUpdatedAt(),
+                product.getStartAt(), product.getEndsAt());
     }
 
     // Phương thức để cập nhật thông tin một đối tượng Product trong cơ sở dữ liệu
