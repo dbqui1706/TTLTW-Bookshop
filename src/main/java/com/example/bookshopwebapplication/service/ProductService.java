@@ -265,11 +265,17 @@ public class ProductService implements IProductService {
                                                       int offset, int limit) {
 
 
-
         return productDao.getProductsWithFilters(categoryId, stock, sortOption, search, offset, limit);
     }
 
     public int countByFilter(String filterQuery) {
         return productDao.countByFilter(filterQuery);
+    }
+
+    public List<ProductDto> getAll() {
+        return productDao.getAll()
+                .stream()
+                .map(p -> tProduct.toDto(p))
+                .collect(Collectors.toList());
     }
 }

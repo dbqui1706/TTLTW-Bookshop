@@ -24,6 +24,10 @@ public class AddRequest {
     private String startsAt;  // Ngày bắt đầu khuyến mãi
     private String endsAt;    // Ngày kết thúc khuyến mãi
 
+    // Thời gian tạo và cập nhật
+    private String createdAt;    // Thời gian tạo
+    private String updatedAt;    // Thời gian cập nhật
+
     // Nội dung và hình ảnh
     private String description;     // Mô tả sách
     private String image;           // Hình sản phẩm

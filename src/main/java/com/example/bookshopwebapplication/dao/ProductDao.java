@@ -34,13 +34,13 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
                 "UPDATE product SET name = ?, price = ?, discount = ?, quantity = ?, " +
                         "totalBuy = ?, author = ?, pages = ?, publisher = ?, " +
                         "yearPublishing = ?, description = ?, imageName = ?, " +
-                        "shop = ?, createdAt = ?, updatedAt = ? " +
+                        "shop = ?, updatedAt = ? " +
                         "WHERE id = ?"
         );
         update(builderSQL.toString(), product.getName(), product.getPrice(), product.getDiscount(),
                 product.getQuantity(), product.getTotalBuy(), product.getAuthor(), product.getPages(),
                 product.getPublisher(), product.getYearPublishing(), product.getDescription(),
-                product.getImageName(), product.getShop(), product.getCreatedAt(),
+                product.getImageName(), product.getShop(),
                 new Timestamp(System.currentTimeMillis()), product.getId());
     }
 
@@ -72,6 +72,12 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
         builderSQL.append("SELECT * FROM product ORDER BY " + orderBy + " " + sort);
         builderSQL.append(" LIMIT " + offset + ", " + limit + "");
         return super.getOrderedPart(builderSQL.toString(), new ProductMapper());
+    }
+
+    public List<Product> getAll() {
+        clearSQL();
+        builderSQL.append("SELECT * FROM product");
+        return query(builderSQL.toString(), new ProductMapper());
     }
 
     public int count() {

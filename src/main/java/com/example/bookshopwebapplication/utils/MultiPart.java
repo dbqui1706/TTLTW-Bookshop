@@ -22,14 +22,13 @@ public class MultiPart<T> {
     private T object = null;
     private final Gson gson = new Gson();
 
-    public static <T> T get(ServletRequest request, Class<T> objectClass) throws IOException {
+    public static <T> T get(HttpServletRequest request, Class<T> objectClass) throws IOException {
         return new MultiPart<T>().getMultiPart(request, objectClass);
     }
 
-    private T getMultiPart(ServletRequest request, Class<T> objectClass) {
+    private T getMultiPart(HttpServletRequest request, Class<T> objectClass) {
         try {
-            HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-            boolean isMultipart = ServletFileUpload.isMultipartContent(httpServletRequest);
+            boolean isMultipart = ServletFileUpload.isMultipartContent(request);
             if (!isMultipart) {
                 return null;
             }
@@ -37,7 +36,7 @@ public class MultiPart<T> {
             DiskFileItemFactory factory = new DiskFileItemFactory();
 
             // Cấu hình factory
-            ServletContext servletContext = httpServletRequest.getServletContext();
+            ServletContext servletContext = request.getServletContext();
             File repository = (File) servletContext.getAttribute("javax.servlet.context.tempdir");
             factory.setRepository(repository);
 
@@ -49,8 +48,7 @@ public class MultiPart<T> {
             upload.setFileItemFactory(factory);
 
             // Parse request để lấy các field
-            // Parse request để lấy các field
-            List<FileItem> items = upload.parseRequest(httpServletRequest);
+            List<FileItem> items = upload.parseRequest(request);
             // Tạo map để lưu các giá trị form
             Map<String, String> formFields = new HashMap<>();
             String imageName = null;
