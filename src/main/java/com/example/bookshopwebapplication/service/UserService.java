@@ -5,11 +5,14 @@ import com.example.bookshopwebapplication.dao.UserKeysDao;
 import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.entities.User;
 import com.example.bookshopwebapplication.entities.UserKeys;
+import com.example.bookshopwebapplication.http.response.user.UserFullDetail;
 import com.example.bookshopwebapplication.service._interface.IUserService;
 import com.example.bookshopwebapplication.service.transferObject.TUser;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -149,5 +152,15 @@ public class UserService implements IUserService {
             System.err.println("Function resetPassword: " + e);
             return false;
         }
+    }
+
+    public Map<String, Object> getStatistic() {
+        return userDao.getUserStatistics();
+    }
+
+    public Map<String, Object> getAllUserDetails(int page, int limit, String search,
+                                                 String role, String status, String sort) {
+        // Lấy danh sách người dùng có đầy đủ thông tin chi tiết
+        return userDao.getAllUserDetails(page, limit, search, role, status, sort);
     }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 @Data
@@ -15,6 +16,8 @@ public class CategoryDto {
     private String name;
     private String description;
     private String imageName;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
     private List<ProductDto> products;
 
     public Long getId() {

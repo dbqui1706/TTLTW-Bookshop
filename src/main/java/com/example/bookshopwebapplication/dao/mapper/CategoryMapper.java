@@ -15,6 +15,8 @@ public class CategoryMapper implements IRowMapper<Category> {
             category.setName(resultSet.getString("name"));
             category.setDescription(resultSet.getString("description"));
             category.setImageName(resultSet.getString("imageName"));
+            category.setCreatedAt(resultSet.getTimestamp("createdAt"));
+            category.setUpdatedAt(resultSet.getTimestamp("updatedAt"));
             return category;
         } catch (SQLException e) {
             throw new RuntimeException(e);

@@ -5,17 +5,18 @@ import com.example.bookshopwebapplication.dao.mapper.CategoryMapper;
 import com.example.bookshopwebapplication.entities.Category;
 import com.example.bookshopwebapplication.entities.Product;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class CategoryDao extends AbstractDao<Category> implements ICategoryDao {
 
     public CategoryDao() {
         super("category");
     }
+
     // Lưu một Category mới vào cơ sở dữ liệu.
     public Long save(Category category) {
         clearSQL();
@@ -77,7 +78,8 @@ public class CategoryDao extends AbstractDao<Category> implements ICategoryDao {
         builderSQL.append(" LIMIT " + offset + ", " + limit + "");
         return query(builderSQL.toString(), new CategoryMapper());
     }
-    public int count(){
+
+    public int count() {
         clearSQL();
         builderSQL.append(
                 "SELECT COUNT(*) FROM category"
@@ -104,6 +106,48 @@ public class CategoryDao extends AbstractDao<Category> implements ICategoryDao {
             return category;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Map<Long, Integer> getProductsCountByCategory() {
+        clearSQL();
+        builderSQL.append(
+                "SELECT pc.categoryId, COUNT(pc.productId) as productCount " +
+                        "FROM bookshopdb.product_category pc " +
+                        "GROUP BY pc.categoryId"
+        );
+        Map<Long, Integer> productCountMap = new HashMap<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(builderSQL.toString());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Long categoryId = rs.getLong("categoryId");
+                Integer productCount = rs.getInt("productCount");
+                productCountMap.put(categoryId, productCount);
+            }
+            return productCountMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } finally {
+            // Đảm bảo đóng các tài nguyên liên quan đến cơ sở dữ liệu
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+                return null;
+            }
         }
     }
 }

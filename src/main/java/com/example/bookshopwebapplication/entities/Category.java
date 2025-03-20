@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Data
@@ -14,6 +15,8 @@ public class Category {
     private String name;
     private String description;
     private String imageName;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
     private List<Product> products;
     public Category(Long id,
                     String name,

@@ -361,6 +361,23 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
         return id;
     }
 
+    protected void close(Connection conn, Statement stmt, ResultSet rs) {
+        try {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error closing resources", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Phương thức trừu tượng để ánh xạ 1 dòng ResultSet thành một entity.
      * Các lớp con phải triển khai phương thức này.

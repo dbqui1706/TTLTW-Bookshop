@@ -11,6 +11,8 @@ public class TCategory implements ITransfer<CategoryDto, Category> {
         categoryDto.setName(category.getName());
         categoryDto.setDescription(category.getDescription());
         categoryDto.setImageName(category.getImageName());
+        categoryDto.setCreatedAt(category.getCreatedAt());
+        categoryDto.setUpdatedAt(category.getUpdatedAt());
         return categoryDto;
     }
 
@@ -21,6 +23,8 @@ public class TCategory implements ITransfer<CategoryDto, Category> {
         category.setName(categoryDto.getName());
         category.setDescription(categoryDto.getDescription());
         category.setImageName(categoryDto.getImageName());
+        category.setCreatedAt(categoryDto.getCreatedAt());
+        category.setUpdatedAt(categoryDto.getUpdatedAt());
         return category;
     }
 }

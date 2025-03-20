@@ -10,6 +10,7 @@ import com.example.bookshopwebapplication.service.transferObject.TCategory;
 import com.example.bookshopwebapplication.utils.Protector;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -104,5 +105,9 @@ public class CategoryService implements ICategoryService {
             return Optional.of(tCategory.toDto(category.get()));
         }
         return Optional.empty();
+    }
+
+    public Map<Long, Integer> getProductsCountByCategory() {
+         return categoryDao.getProductsCountByCategory();
     }
 }
