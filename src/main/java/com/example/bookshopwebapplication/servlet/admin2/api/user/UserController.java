@@ -42,7 +42,7 @@ public class UserController extends HttpServlet {
         String search = req.getParameter("search"); // Tìm kiếm theo tên, email, số điện thoại, địa chỉ, id
         String role = req.getParameter("role"); // Tất cả, "ADMIN", "EMPLOYEE", "CUSTOMER"
         String status = req.getParameter("status"); // "Đang hoạt động", "Không hoạt động", "Bị khóa"
-        String sort = req.getParameter("sort"); // "Tên A-Z", "Tên Z-A", "Ngày tạo mới nhất", "Ngày tạo cũ nhất", "Đăng Nhập gần đây"
+        String sort = req.getParameter("sort"); // "Tên A-Z", "Tên Z-A", "Ngày tạo mới nhất", "Ngày tạo cũ nhất", "Đăng Nhập gần đây", role (A-Z)
 
         try {
             // Lấy toàn bộ dữ liệu chi tiết của tất cả người dùng

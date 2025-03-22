@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.servlet.client;
 
 import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.entities.User;
+import com.example.bookshopwebapplication.service.PermissionService;
 import com.example.bookshopwebapplication.service.UserService;
 import com.example.bookshopwebapplication.utils.EncodePassword;
 import com.example.bookshopwebapplication.utils.Protector;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 @WebServlet("/signin")
 public class SignIn extends HttpServlet {
+    private final PermissionService permissionService = new PermissionService();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.getRequestDispatcher("/WEB-INF/views/client/signin.jsp").forward(req, resp);
@@ -58,6 +60,32 @@ public class SignIn extends HttpServlet {
 
         if (sumOfViolations == 0 && userFromServer.isPresent()) {
             request.getSession().setAttribute("currentUser", userFromServer.get());
+
+            // Lưu quyền vào session để hạn chế việc truy vấn cơ sở dữ liệu
+            List<String> permissions = permissionService.getUserPermissions(userFromServer.get().getId());
+            request.getSession().setAttribute("permissions", permissions);
+
+            // Lưu trạng thái người dùng
+
+
+            // Kiểm tra xem session của người dùng đã tồn tại chưa nếu chưa thì save vào database và cache
+            // Lưu thông tin vào bảng user_session
+            String deviceInfo = request.getHeader("User-Agent");
+            String ip = request.getRemoteAddr();
+            String sessionId = request.getSession().getId();
+            System.out.println(
+                    "deviceInfo = " + deviceInfo + "\n" +
+                            "ip = " + ip + "\n" +
+                            "sessionId = " + sessionId
+            );
+
+            // Lưu thông tin vào bảng user_session
+            UserService.getInstance().saveUserSession(
+                    sessionId,
+                    ip,
+                    deviceInfo,
+                    userFromServer.get().getId()
+            );
             response.sendRedirect(request.getContextPath() + "/");
         } else {
             request.setAttribute("values", values);

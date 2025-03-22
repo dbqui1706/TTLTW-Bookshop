@@ -25,7 +25,7 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
     private final ResourceBundle bundle = ResourceBundle.getBundle("database");
 
     // Tên bảng của entity, được truyền từ lớp con (ví dụ: "user", "audit_log", …)
-    protected final String tableName;
+    protected String tableName;
 
     // Gson dùng để chuyển đối tượng thành JSON khi ghi log
     protected final Gson gson = new Gson();

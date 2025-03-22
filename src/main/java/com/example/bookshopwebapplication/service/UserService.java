@@ -2,9 +2,11 @@ package com.example.bookshopwebapplication.service;
 
 import com.example.bookshopwebapplication.dao.UserDao;
 import com.example.bookshopwebapplication.dao.UserKeysDao;
+import com.example.bookshopwebapplication.dao.UserSessionDao;
 import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.entities.User;
 import com.example.bookshopwebapplication.entities.UserKeys;
+import com.example.bookshopwebapplication.entities.UserSession;
 import com.example.bookshopwebapplication.http.response.user.UserFullDetail;
 import com.example.bookshopwebapplication.service._interface.IUserService;
 import com.example.bookshopwebapplication.service.transferObject.TUser;
@@ -14,13 +16,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class UserService implements IUserService {
-    private UserDao userDao = new UserDao();
-    private UserKeysDao userKeysDao = new UserKeysDao();
-    private TUser tUser = new TUser();
+    private final UserDao userDao = new UserDao();
+    private final UserSessionDao userSessionDao = new UserSessionDao();
+    private final UserKeysDao userKeysDao = new UserKeysDao();
+    private final TUser tUser = new TUser();
     private static final UserService instance = new UserService();
+    private final ConcurrentHashMap<Long, String> userSessionCache = new ConcurrentHashMap<>();
+
     public static UserService getInstance() {
         return instance;
     }
@@ -60,7 +66,7 @@ public class UserService implements IUserService {
 
     @Override
     public List<UserDto> getOrderedPart(Integer limit, Integer offset, String orderBy, String sort) {
-        List<UserDto> userDtoList = userDao.getOrderedPart(limit,offset,orderBy,sort)
+        List<UserDto> userDtoList = userDao.getOrderedPart(limit, offset, orderBy, sort)
                 .stream()
                 .map(user -> tUser.toDto(user))
                 .collect(Collectors.toList());
@@ -85,6 +91,7 @@ public class UserService implements IUserService {
     public void changePassword(long userId, String newPassword) {
         userDao.changePassword(userId, newPassword);
     }
+
     // Phương thức để lấy đối tượng UserDto dựa trên địa chỉ email
     @Override
     public Optional<UserDto> getByEmail(String email) {
@@ -92,6 +99,7 @@ public class UserService implements IUserService {
         if (user.isPresent()) return Optional.of(tUser.toDto(user.get()));
         return Optional.empty();
     }
+
     // Phương thức để lấy đối tượng UserDto dựa trên số điện thoại
     @Override
     public Optional<UserDto> getByPhoneNumber(String phoneNumber) {
@@ -121,20 +129,20 @@ public class UserService implements IUserService {
                 .collect(Collectors.toList());
     }
 
-    public UserKeys isExistKey(Long userID){
+    public UserKeys isExistKey(Long userID) {
         Optional<UserKeys> userKeys = userKeysDao.getByUserId(userID);
         return userKeys.orElse(null);
     }
 
-    public Long saveKey(UserKeys userKeys){
+    public Long saveKey(UserKeys userKeys) {
         return userKeysDao.save(userKeys);
     }
 
-    public void updateKey(UserKeys userKeys){
+    public void updateKey(UserKeys userKeys) {
         userKeysDao.update(userKeys);
     }
 
-    public boolean sendPasswordResetEmail(UserDto userDto){
+    public boolean sendPasswordResetEmail(UserDto userDto) {
         // Gửi email khôi phục mật khẩu
         try {
             EmailUtils.sendPasswordResetEmail(userDto);
@@ -144,7 +152,8 @@ public class UserService implements IUserService {
             return false;
         }
     }
-    public boolean resetPassword(String email, String password){
+
+    public boolean resetPassword(String email, String password) {
         try {
             userDao.changePassword(email, password);
             return true;
@@ -162,5 +171,23 @@ public class UserService implements IUserService {
                                                  String role, String status, String sort) {
         // Lấy danh sách người dùng có đầy đủ thông tin chi tiết
         return userDao.getAllUserDetails(page, limit, search, role, status, sort);
+    }
+
+    public void saveUserSession(String sessionId, String ip, String deviceInfo, long userId) {
+        UserSession userSession = new UserSession();
+        userSession.setSessionToken(sessionId);
+        userSession.setIpAddress(ip);
+        userSession.setDeviceInfo(deviceInfo);
+        userSession.setUserId(userId);
+
+        // Kiểm xem session đã tồn tại chưa
+        if (userSessionCache.containsKey(userId) && userSessionCache.get(userId).equals(sessionId)) {
+            // Nếu đã tồn tại thì cập nhật lại
+//            userSessionDao.update(userSession);
+        } else {
+            // Nếu chưa thì thêm mới
+            userSessionCache.put(userId, sessionId); // put vào cache
+            userSessionDao.save(userSession); // save vào database
+        }
     }
 }

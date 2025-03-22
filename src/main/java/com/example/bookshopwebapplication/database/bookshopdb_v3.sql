@@ -78,6 +78,89 @@ CREATE TABLE bookshopdb.user_session
             ON UPDATE CASCADE
 );
 
+-- Bảng vai trò (roles)
+CREATE TABLE bookshopdb.roles (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    description TEXT NULL,
+    is_system BIT NOT NULL DEFAULT 0, -- Đánh dấu vai trò hệ thống không được xóa
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE INDEX uq_role_name (name)
+);
+
+-- Bảng quyền hạn (permissions)
+CREATE TABLE bookshopdb.permissions (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(100) NOT NULL, -- Mã định danh kỹ thuật (ví dụ: 'product.create')
+    module VARCHAR(50) NOT NULL, -- Module chức năng (ví dụ: 'product', 'order', 'user')
+    description TEXT NULL,
+    is_system BIT NOT NULL DEFAULT 0, -- Đánh dấu quyền hệ thống không được xóa
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE INDEX uq_permission_code (code)
+);
+
+-- Bảng phân quyền cho vai trò (role_permissions)
+CREATE TABLE bookshopdb.role_permissions (
+    role_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_role_permissions_role
+        FOREIGN KEY (role_id)
+            REFERENCES bookshopdb.roles (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+    CONSTRAINT fk_role_permissions_permission
+        FOREIGN KEY (permission_id)
+            REFERENCES bookshopdb.permissions (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+);
+
+-- Bảng phân vai trò cho người dùng (user_roles)
+CREATE TABLE bookshopdb.user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, role_id),
+    CONSTRAINT fk_user_roles_user
+        FOREIGN KEY (user_id)
+            REFERENCES bookshopdb.user (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+    CONSTRAINT fk_user_roles_role
+        FOREIGN KEY (role_id)
+            REFERENCES bookshopdb.roles (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+);
+
+-- Bảng quyền đặc biệt cho người dùng (user_permissions)
+-- Cho phép gán quyền trực tiếp cho người dùng ngoài quyền từ vai trò
+CREATE TABLE bookshopdb.user_permissions (
+    user_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
+    is_granted BIT NOT NULL DEFAULT 1, -- 1: Cấp quyền, 0: Từ chối quyền
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, permission_id),
+    CONSTRAINT fk_user_permissions_user
+        FOREIGN KEY (user_id)
+            REFERENCES bookshopdb.user (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+    CONSTRAINT fk_user_permissions_permission
+        FOREIGN KEY (permission_id)
+            REFERENCES bookshopdb.permissions (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+);
+
 CREATE TABLE IF NOT exists bookshopdb.audit_log (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     ip_address VARCHAR(45),
@@ -90,6 +173,7 @@ CREATE TABLE IF NOT exists bookshopdb.audit_log (
     modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     -- FOREIGN KEY (modified_by) REFERENCES user(id)
 );
+
 CREATE TABLE bookshopdb.user_keys
 (
     id            BIGINT       NOT NULL AUTO_INCREMENT,

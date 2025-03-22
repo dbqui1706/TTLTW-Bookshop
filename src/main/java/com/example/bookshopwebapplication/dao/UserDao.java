@@ -198,11 +198,12 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
 
     /**
      * Lấy số người dùng với đầy đủ thông tin chi tiết theo page, limit
+     *
      * @return {
-     *     users: [UserFullDetail],
-     *     currentPage: int,
-     *     totalPages: int,
-     *     totalUsers: int
+     * users: [UserFullDetail],
+     * currentPage: int,
+     * totalPages: int,
+     * totalUsers: int
      * }
      */
     public Map<String, Object> getAllUserDetails(int page, int limit, String search,
@@ -273,14 +274,17 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
                     case "name-desc":
                         sql.append("u.fullname DESC ");
                         break;
-                    case "created-newest":
-                        sql.append("u.created_at DESC ");
-                        break;
-                    case "created-oldest":
+                    case "date-asc":
                         sql.append("u.created_at ASC ");
+                        break;
+                    case "date-desc":
+                        sql.append("u.created_at DESC ");
                         break;
                     case "last-login":
                         sql.append("us.last_login_time DESC NULLS LAST ");
+                        break;
+                    case "role-asc":
+                        sql.append("u.role ASC ");
                         break;
                     default:
                         // Mặc định sắp xếp theo ID giảm dần
@@ -409,11 +413,12 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
 
     /**
      * Xây dựng điều kiện WHERE và tham số cho truy vấn
+     *
      * @param whereClause StringBuilder để lưu điều kiện WHERE
-     * @param params Danh sách tham số
-     * @param search Từ khóa tìm kiếm
-     * @param role Vai trò
-     * @param status Trạng thái
+     * @param params      Danh sách tham số
+     * @param search      Từ khóa tìm kiếm
+     * @param role        Vai trò
+     * @param status      Trạng thái
      */
     private void buildWhereClause(StringBuilder whereClause, List<Object> params, String search, String role, String status) {
         boolean hasCondition = false;
@@ -475,5 +480,13 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
                     break;
             }
         }
+    }
+
+    public void saveUserSession(String sessionId, String ip, String deviceInfo, long userId) {
+        this.tableName = "user_session";
+        clearSQL();
+        builderSQL.append("INSERT INTO user_session (session_token, ip_address, device_info, user_id) ");
+        builderSQL.append("VALUES (?, ?, ?, ?)");
+        insert(builderSQL.toString(), sessionId, ip, deviceInfo, userId);
     }
 }
