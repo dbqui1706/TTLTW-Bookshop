@@ -143,7 +143,6 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
     }
 
 
-
     @Override
     public String getIDByCategoriesName(String categoryNames) {
         clearSQL();
@@ -567,8 +566,12 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
                 categories.put(rs.getLong("id"), rs.getString("name"));
             }
         } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) { /* ignored */ }
-            if (stmt != null) try { stmt.close(); } catch (SQLException e) { /* ignored */ }
+            if (rs != null) try {
+                rs.close();
+            } catch (SQLException e) { /* ignored */ }
+            if (stmt != null) try {
+                stmt.close();
+            } catch (SQLException e) { /* ignored */ }
         }
 
         return categories;
@@ -622,5 +625,53 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
                 productQueryBuilder.append("ORDER BY p.id DESC ");
                 break;
         }
+    }
+
+    /**
+     * Lấy tất cả nhà xuất bản và số lượng sản phẩm của mỗi nhà xuất bản
+     *
+     * @return Map với key là ID (được tạo tự động), value là một Map chứa thông tin nhà xuất bản và số lượng sản phẩm
+     */
+    public List<Object> getPublishersAndCountProduct() {
+        List<Object> result = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection(); // Phương thức để lấy kết nối đến database
+
+            String query = "SELECT publisher, COUNT(*) AS productCount " +
+                    "FROM product " +
+                    "GROUP BY publisher " +
+                    "ORDER BY publisher";
+
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+
+            long id = 1; // ID tự tạo cho các nhà xuất bản
+
+            while (rs.next()) {
+                Map<String, Object> publisherInfo = new HashMap<>();
+
+                String publisherName = rs.getString("publisher");
+                int productCount = rs.getInt("productCount");
+
+                publisherInfo.put("id", id);
+                publisherInfo.put("name", publisherName);
+                publisherInfo.put("productCount", productCount);
+
+                result.add(publisherInfo);
+                id++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Xử lý ngoại lệ tùy thuộc vào ứng dụng của bạn
+        } finally {
+            // Đóng các tài nguyên
+            close(conn, stmt, rs);
+        }
+
+        return result;
     }
 }

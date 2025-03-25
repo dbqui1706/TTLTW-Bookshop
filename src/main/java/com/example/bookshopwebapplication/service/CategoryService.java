@@ -110,4 +110,10 @@ public class CategoryService implements ICategoryService {
     public Map<Long, Integer> getProductsCountByCategory() {
          return categoryDao.getProductsCountByCategory();
     }
+
+    public List< Object> getCategoriesAndCountProduct() {
+        return categoryDao.getCategoriesAndCountProduct();
+    }
+
+
 }

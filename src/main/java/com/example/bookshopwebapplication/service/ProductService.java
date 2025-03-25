@@ -278,4 +278,8 @@ public class ProductService implements IProductService {
                 .map(p -> tProduct.toDto(p))
                 .collect(Collectors.toList());
     }
+
+    public List<Object> getPublishersAndCountProduct() {
+        return productDao.getPublishersAndCountProduct();
+    }
 }

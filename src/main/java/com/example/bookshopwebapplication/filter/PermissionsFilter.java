@@ -4,7 +4,6 @@ import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.service.PermissionService;
 
 import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -15,7 +14,7 @@ import java.util.Map;
 //@WebFilter(filterName = "PermissionsFilter", urlPatterns = {"/admin2/*"})
 public class PermissionsFilter implements Filter{
     private PermissionService permissionService;
-    // Bảng ánh xạ URL với quyền cần thiết
+    // Bảng ánh xạ URL với quyền cần thiết  
     private Map<String, String> urlPermissionMap;
 
     @Override

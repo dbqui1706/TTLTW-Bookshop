@@ -150,4 +150,53 @@ public class CategoryDao extends AbstractDao<Category> implements ICategoryDao {
             }
         }
     }
+
+    /**
+     * Lấy tất cả danh mục và số lượng sản phẩm trong mỗi danh mục
+     * @return Map với key là ID của danh mục, value là một Map chứa thông tin danh mục và số lượng sản phẩm
+     */
+    public List<Object> getCategoriesAndCountProduct() {
+        List<Object> result = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection(); // Phương thức để lấy kết nối đến database
+
+            String query = "SELECT c.id, c.name, c.description, c.imageName, " +
+                    "COUNT(DISTINCT pc.productId) AS productCount " +
+                    "FROM category c " +
+                    "LEFT JOIN product_category pc ON c.id = pc.categoryId " +
+                    "LEFT JOIN product p ON pc.productId = p.id " +
+                    "GROUP BY c.id, c.name, c.description, c.imageName " +
+                    "ORDER BY c.name";
+
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                long categoryId = rs.getLong("id");
+                Map<String, Object> categoryInfo = new HashMap<>();
+
+                categoryInfo.put("id", categoryId);
+                categoryInfo.put("name", rs.getString("name"));
+                categoryInfo.put("description", rs.getString("description"));
+                categoryInfo.put("imageName", rs.getString("imageName"));
+                categoryInfo.put("productCount", rs.getInt("productCount"));
+
+                result.add(categoryInfo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Xử lý ngoại lệ tùy thuộc vào ứng dụng của bạn
+        } finally {
+            // Đóng các tài nguyên
+           close(conn, stmt, rs);
+        }
+
+        return result;
+    }
+
+
 }
