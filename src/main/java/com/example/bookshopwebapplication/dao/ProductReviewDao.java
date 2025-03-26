@@ -3,14 +3,12 @@ package com.example.bookshopwebapplication.dao;
 import com.example.bookshopwebapplication.dao._interface.IProductReviewDao;
 import com.example.bookshopwebapplication.dao.mapper.ProductReviewMapper;
 import com.example.bookshopwebapplication.entities.ProductReview;
+import com.example.bookshopwebapplication.http.response.reviews.RatingsSummary;
+import com.example.bookshopwebapplication.http.response.reviews.ReviewDTO;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ProductReviewDao extends AbstractDao<ProductReview> implements IProductReviewDao {
 
@@ -141,6 +139,66 @@ public class ProductReviewDao extends AbstractDao<ProductReview> implements IPro
         update(builderSQL.toString(), id);
     }
 
+    public RatingsSummary getProductRatings(Long productId) {
+        RatingsSummary summary = new RatingsSummary();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            String sql = "SELECT " +
+                    "AVG(pr.ratingScore) AS average_rating, " +
+                    "COUNT(pr.id) AS total_reviews, " +
+                    "SUM(CASE WHEN pr.ratingScore = 5 THEN 1 ELSE 0 END) AS five_star, " +
+                    "SUM(CASE WHEN pr.ratingScore = 4 THEN 1 ELSE 0 END) AS four_star, " +
+                    "SUM(CASE WHEN pr.ratingScore = 3 THEN 1 ELSE 0 END) AS three_star, " +
+                    "SUM(CASE WHEN pr.ratingScore = 2 THEN 1 ELSE 0 END) AS two_star, " +
+                    "SUM(CASE WHEN pr.ratingScore = 1 THEN 1 ELSE 0 END) AS one_star " +
+                    "FROM bookshopdb.product_review pr " +
+                    "WHERE pr.productId = ? AND pr.isShow = 1";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, productId);
+
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                summary.setAverageRating(rs.getDouble("average_rating"));
+                summary.setTotalReviews(rs.getInt("total_reviews"));
+
+                Map<Integer, Integer> distribution = new HashMap<>();
+                distribution.put(5, rs.getInt("five_star"));
+                distribution.put(4, rs.getInt("four_star"));
+                distribution.put(3, rs.getInt("three_star"));
+                distribution.put(2, rs.getInt("two_star"));
+                distribution.put(1, rs.getInt("one_star"));
+                summary.setDistribution(distribution);
+
+                // Tính phần trăm cho mỗi mức sao
+                Map<Integer, Integer> percentages = new HashMap<>();
+                int totalReviews = summary.getTotalReviews();
+
+                if (totalReviews > 0) {
+                    for (Map.Entry<Integer, Integer> entry : distribution.entrySet()) {
+                        int percent = (entry.getValue() * 100) / totalReviews;
+                        percentages.put(entry.getKey(), percent);
+                    }
+                }
+                summary.setPercentages(percentages);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Đóng tài nguyên
+            close(conn, stmt, rs);
+        }
+
+        return summary;
+    }
+
     @Override
     public ProductReview mapResultSetToEntity(ResultSet resultSet) {
         try {
@@ -156,6 +214,131 @@ public class ProductReviewDao extends AbstractDao<ProductReview> implements IPro
             return productReview;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public List<ReviewDTO> getProductReviews(Long productId, String filter, int page, int limit) {
+        List<ReviewDTO> reviews = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            StringBuilder sqlBuilder = new StringBuilder(
+                    "SELECT " +
+                            "pr.id AS review_id, " +
+                            "pr.ratingScore, " +
+                            "pr.content, " +
+                            "pr.createdAt, " +
+                            "u.id AS user_id, " +
+                            "u.fullname AS user_name " +
+                            "FROM bookshopdb.product_review pr " +
+                            "JOIN bookshopdb.user u ON pr.userId = u.id " +
+                            "WHERE pr.productId = ? AND pr.isShow = 1 "
+            );
+
+            // Phần lọc theo số sao
+            int ratingFilter = 0;
+            if (filter != null && !filter.equals("newest")) {
+                try {
+                    ratingFilter = Integer.parseInt(filter);
+                    if (ratingFilter >= 1 && ratingFilter <= 5) {
+                        sqlBuilder.append("AND pr.ratingScore = ? ");
+                    } else {
+                        ratingFilter = 0;
+                    }
+                } catch (NumberFormatException e) {
+                    // Không phải số, nên không lọc theo rating
+                    ratingFilter = 0;
+                }
+            }
+
+            // Sắp xếp
+            sqlBuilder.append("ORDER BY pr.createdAt DESC ");
+
+            // Phân trang
+            sqlBuilder.append("LIMIT ?, ?");
+
+            stmt = conn.prepareStatement(sqlBuilder.toString());
+
+            int paramIndex = 1;
+            stmt.setLong(paramIndex++, productId);
+
+            if (ratingFilter > 0) {
+                stmt.setInt(paramIndex++, ratingFilter);
+            }
+
+            stmt.setInt(paramIndex++, (page - 1) * limit);
+            stmt.setInt(paramIndex++, limit);
+
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                ReviewDTO review = new ReviewDTO();
+                review.setId(rs.getLong("review_id"));
+                review.setRating(rs.getInt("ratingScore"));
+                review.setContent(rs.getString("content"));
+
+                // Định dạng ngày tháng
+                Timestamp createdAt = rs.getTimestamp("createdAt");
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                review.setReviewDate(sdf.format(createdAt));
+
+                // Thông tin người dùng
+                review.setUserId(rs.getLong("user_id"));
+                review.setUserName(rs.getString("user_name"));
+
+                // Thêm nhãn dựa trên số sao
+                review.setRatingLabel(getRatingLabel(review.getRating()));
+
+                reviews.add(review);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Đóng tài nguyên
+            close(conn, stmt, rs);
+        }
+
+        return reviews;
+    }
+
+    // Phương thức lấy chữ cái đầu của tên
+    private String getInitials(String name) {
+        if (name == null || name.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder initials = new StringBuilder();
+        String[] parts = name.split("\\s+");
+
+        for (String part : parts) {
+            if (!part.isEmpty()) {
+                initials.append(part.charAt(0));
+            }
+        }
+
+        return initials.toString().toUpperCase();
+    }
+
+    // Phương thức lấy nhãn đánh giá dựa vào số sao
+    private String getRatingLabel(int rating) {
+        switch (rating) {
+            case 5:
+                return "Cực kì hài lòng";
+            case 4:
+                return "Hài lòng";
+            case 3:
+                return "Bình thường";
+            case 2:
+                return "Không hài lòng";
+            case 1:
+                return "Rất không hài lòng";
+            default:
+                return "";
         }
     }
 }

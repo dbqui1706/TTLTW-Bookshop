@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.service;
 import com.example.bookshopwebapplication.dao.ProductDao;
 import com.example.bookshopwebapplication.dto.ProductDto;
 import com.example.bookshopwebapplication.entities.Product;
+import com.example.bookshopwebapplication.http.response.product.ProductDetailDto;
 import com.example.bookshopwebapplication.http.response.product.ProductStatistic;
 import com.example.bookshopwebapplication.service._interface.IProductService;
 import com.example.bookshopwebapplication.service.transferObject.TProduct;
@@ -281,5 +282,54 @@ public class ProductService implements IProductService {
 
     public List<Object> getPublishersAndCountProduct() {
         return productDao.getPublishersAndCountProduct();
+    }
+
+    /**
+     * Lấy danh sách sản phẩm với các bộ lọc
+     *
+     * @param searchTerm Từ khóa tìm kiếm
+     * @param categories Danh sách category ids
+     * @param publishers Danh sách nhà xuất bản
+     * @param priceFrom  Giá từ
+     * @param priceTo    Giá đến
+     * @param rating     Đánh giá tối thiểu
+     * @param services   Danh sách dịch vụ (freeship, sale,...)
+     * @param sortBy     Sắp xếp theo (popular, price-asc, price-desc, newest)
+     * @param page       Trang hiện tại
+     * @param limit      Số sản phẩm mỗi trang
+     * @return Map chứa kết quả lọc và phân trang
+     */
+    public Map<String, Object> getFilteredProducts(
+            String searchTerm, String[] categories, String[] publishers,
+            Float priceFrom, Float priceTo, Integer rating, String[] services,
+            String sortBy, int page, int limit) {
+
+        // Tính offset cho phân trang
+        int offset = (page - 1) * limit;
+
+        // Lấy danh sách sản phẩm và tổng số sản phẩm
+        List<Product> products = productDao.getFilteredProducts(
+                searchTerm, categories, publishers, priceFrom, priceTo,
+                rating, services, sortBy, limit, offset
+        );
+
+        int total = productDao.countFilteredProducts(
+                searchTerm, categories, publishers, priceFrom, priceTo,
+                rating, services
+        );
+
+        // Tạo kết quả trả về
+        Map<String, Object> result = new HashMap<>();
+        result.put("products", products);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("limit", limit);
+        result.put("lastPage", (int) Math.ceil((double) total / limit));
+
+        return result;
+    }
+
+    public ProductDetailDto getProductDetail(Long productId) {
+        return productDao.getProductDetail(productId);
     }
 }

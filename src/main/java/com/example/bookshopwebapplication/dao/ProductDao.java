@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.dao;
 import com.example.bookshopwebapplication.dao._interface.IProductDao;
 import com.example.bookshopwebapplication.dao.mapper.ProductMapper;
 import com.example.bookshopwebapplication.entities.Product;
+import com.example.bookshopwebapplication.http.response.product.ProductDetailDto;
 
 import java.sql.*;
 import java.util.*;
@@ -673,5 +674,336 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
         }
 
         return result;
+    }
+
+    public List<Product> getFilteredProducts(String searchTerm, String[] categories, String[] publishers, Float priceFrom, Float priceTo, Integer rating, String[] services, String sortBy, int limit, int offset) {
+        List<Product> products = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            // Xây dựng câu truy vấn SQL với các bộ lọc
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT DISTINCT p.* FROM product p ");
+
+            // Join bảng category nếu cần
+            if (categories != null && categories.length > 0) {
+                sql.append("JOIN product_category pc ON p.id = pc.productId ");
+                sql.append("JOIN category c ON pc.categoryId = c.id ");
+            }
+
+            // Điều kiện WHERE
+            sql.append("WHERE 1=1 ");
+
+            // Thêm các điều kiện lọc
+            List<Object> params = new ArrayList<>();
+
+            // Tìm kiếm
+            if (searchTerm != null && !searchTerm.isEmpty()) {
+                sql.append("AND (p.name LIKE ? OR p.author LIKE ? OR p.description LIKE ?) ");
+                String searchPattern = "%" + searchTerm + "%";
+                params.add(searchPattern);
+                params.add(searchPattern);
+                params.add(searchPattern);
+            }
+
+            // Lọc theo category
+            if (categories != null && categories.length > 0) {
+                sql.append("AND (");
+                for (int i = 0; i < categories.length; i++) {
+                    if (i > 0) sql.append(" OR ");
+                    sql.append("c.name = ?");
+                    params.add(categories[i]);
+                }
+                sql.append(") ");
+            }
+
+            // Lọc theo nhà xuất bản
+            if (publishers != null && publishers.length > 0) {
+                sql.append("AND (");
+                for (int i = 0; i < publishers.length; i++) {
+                    if (i > 0) sql.append(" OR ");
+                    sql.append("p.publisher = ?");
+                    params.add(publishers[i]);
+                }
+                sql.append(") ");
+            }
+
+            // Lọc theo khoảng giá
+            if (priceFrom != null) {
+                sql.append("AND p.price >= ? ");
+                params.add(priceFrom);
+            }
+
+            if (priceTo != null) {
+                sql.append("AND p.price <= ? ");
+                params.add(priceTo);
+            }
+
+            // Lọc theo đánh giá
+            if (rating != null) {
+                // Trong trường hợp thực tế, cần có bảng ratings hoặc trường rating trong bảng product
+                sql.append("AND p.rating >= ? ");
+                params.add(rating);
+            }
+
+            // Lọc theo services (ví dụ: freeship, sale,...)
+            if (services != null && services.length > 0) {
+                for (String service : services) {
+                    if ("freeship".equals(service)) {
+                        // Thêm điều kiện freeship (giả sử có trường freeShipping)
+                        sql.append("AND p.freeShipping = 1 ");
+                    } else if ("sale".equals(service)) {
+                        // Thêm điều kiện sale (có discount > 0)
+                        sql.append("AND p.discount > 0 ");
+                    }
+                    // Thêm các service khác nếu cần
+                }
+            }
+
+            // Sắp xếp
+            sql.append("ORDER BY ");
+            if ("popular".equals(sortBy)) {
+                sql.append("p.totalBuy DESC ");
+            } else if ("price-asc".equals(sortBy)) {
+                sql.append("p.price ASC ");
+            } else if ("price-desc".equals(sortBy)) {
+                sql.append("p.price DESC ");
+            } else if ("newest".equals(sortBy)) {
+                sql.append("p.createdAt DESC ");
+            } else {
+                sql.append("p.totalBuy DESC "); // Mặc định
+            }
+
+            // Phân trang
+            sql.append("LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+
+            // Chuẩn bị statement
+            stmt = conn.prepareStatement(sql.toString());
+
+            // Đặt các tham số
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            // Thực thi truy vấn
+            rs = stmt.executeQuery();
+
+            // Xử lý kết quả
+            while (rs.next()) {
+                Product product = mapResultSetToEntity(rs);
+                products.add(product);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(conn, stmt, rs);
+        }
+
+        return products;
+    }
+
+    /**
+     * Đếm tổng số sản phẩm thỏa mãn điều kiện lọc
+     */
+    public int countFilteredProducts(
+            String searchTerm, String[] categories, String[] publishers,
+            Float priceFrom, Float priceTo, Integer rating, String[] services) {
+
+        int count = 0;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            // Xây dựng câu truy vấn SQL với các bộ lọc
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT COUNT(DISTINCT p.id) AS total FROM product p ");
+
+            // Tương tự như getFilteredProducts() nhưng không có ORDER BY và LIMIT
+            if (categories != null && categories.length > 0) {
+                sql.append("JOIN product_category pc ON p.id = pc.productId ");
+                sql.append("JOIN category c ON pc.categoryId = c.id ");
+            }
+
+            // Điều kiện WHERE
+            sql.append("WHERE 1=1 ");
+
+            // Thêm các điều kiện lọc
+            List<Object> params = new ArrayList<>();
+
+            // Tìm kiếm
+            if (searchTerm != null && !searchTerm.isEmpty()) {
+                sql.append("AND (p.name LIKE ? OR p.author LIKE ? OR p.description LIKE ?) ");
+                String searchPattern = "%" + searchTerm + "%";
+                params.add(searchPattern);
+                params.add(searchPattern);
+                params.add(searchPattern);
+            }
+
+            // Lọc theo category
+            if (categories != null && categories.length > 0) {
+                sql.append("AND (");
+                for (int i = 0; i < categories.length; i++) {
+                    if (i > 0) sql.append(" OR ");
+                    sql.append("c.name = ?");
+                    params.add(categories[i]);
+                }
+                sql.append(") ");
+            }
+
+            // Lọc theo nhà xuất bản
+            if (publishers != null && publishers.length > 0) {
+                sql.append("AND (");
+                for (int i = 0; i < publishers.length; i++) {
+                    if (i > 0) sql.append(" OR ");
+                    sql.append("p.publisher = ?");
+                    params.add(publishers[i]);
+                }
+                sql.append(") ");
+            }
+
+            // Lọc theo khoảng giá
+            if (priceFrom != null) {
+                sql.append("AND p.price >= ? ");
+                params.add(priceFrom);
+            }
+
+            if (priceTo != null) {
+                sql.append("AND p.price <= ? ");
+                params.add(priceTo);
+            }
+
+            // Lọc theo đánh giá
+            if (rating != null) {
+                // Trong trường hợp thực tế, cần có bảng ratings hoặc trường rating trong bảng product
+                sql.append("AND p.rating >= ? ");
+                params.add(rating);
+            }
+
+            // Lọc theo services (ví dụ: freeship, sale,...)
+            if (services != null) {
+                for (String service : services) {
+                    if ("freeship".equals(service)) {
+                        // Thêm điều kiện freeship (giả sử có trường freeShipping)
+                        sql.append("AND p.freeShipping = 1 ");
+                    } else if ("sale".equals(service)) {
+                        // Thêm điều kiện sale (có discount > 0)
+                        sql.append("AND p.discount > 0 ");
+                    }
+                    // Thêm các service khác nếu cần
+                }
+            }
+
+            // Chuẩn bị statement
+            stmt = conn.prepareStatement(sql.toString());
+
+            // Đặt các tham số
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            // Thực thi truy vấn
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(conn, stmt, rs);
+        }
+
+        return count;
+    }
+
+    public ProductDetailDto getProductDetail(Long productId) {
+        ProductDetailDto productDetail = null;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            // Thiết lập kết nối
+            conn = getConnection();
+
+            // SQL query
+            String sql = "SELECT p.*, c.name AS categoryBreadcrumb, \n" +
+                    "(SELECT COUNT(id) FROM bookshopdb.product_review WHERE productId = p.id AND isShow = 1) AS totalProductReviews,\n" +
+                    "(SELECT CASE  \n" +
+                    "    WHEN COUNT(id) = 0 THEN 0 \n" +
+                    "    ELSE SUM(ratingScore) / COUNT(id)\n" +
+                    "END FROM bookshopdb.product_review WHERE productId = p.id AND isShow = 1) AS averageRatingScore\n" +
+                    "FROM bookshopdb.product p \n" +
+                    "LEFT JOIN bookshopdb.category c ON c.id = (SELECT categoryId FROM bookshopdb.product_category WHERE productId = p.id LIMIT 1)\n" +
+                    "WHERE p.id = ?";
+
+            // Chuẩn bị statement
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, productId);
+
+            // Thực thi query
+            rs = stmt.executeQuery();
+
+            // Xử lý kết quả
+            if (rs.next()) {
+                productDetail = new ProductDetailDto();
+
+                // Map dữ liệu từ ResultSet vào DTO
+                productDetail.setId(rs.getLong("id"));
+                productDetail.setName(rs.getString("name"));
+                productDetail.setPrice(rs.getFloat("price"));
+                productDetail.setDiscount(rs.getFloat("discount"));
+                productDetail.setQuantity(rs.getShort("quantity"));
+                productDetail.setTotalBuy(rs.getShort("totalBuy"));
+                productDetail.setAuthor(rs.getString("author"));
+                productDetail.setPages(rs.getShort("pages"));
+                productDetail.setPublisher(rs.getString("publisher"));
+                productDetail.setYearPublishing(rs.getInt("yearPublishing"));
+                productDetail.setDescription(rs.getString("description"));
+                productDetail.setImageName(rs.getString("imageName"));
+                productDetail.setShop(rs.getBoolean("shop"));
+                productDetail.setCreatedAt(rs.getTimestamp("createdAt"));
+
+                // Xử lý các trường có thể null
+                Timestamp updatedAt = rs.getTimestamp("updatedAt");
+                if (!rs.wasNull()) {
+                    productDetail.setUpdatedAt(updatedAt);
+                }
+
+                Timestamp startsAt = rs.getTimestamp("startsAt");
+                if (!rs.wasNull()) {
+                    productDetail.setStartsAt(startsAt);
+                }
+
+                Timestamp endsAt = rs.getTimestamp("endsAt");
+                if (!rs.wasNull()) {
+                    productDetail.setEndsAt(endsAt);
+                }
+
+                // Lấy thông tin đánh giá
+                productDetail.setTotalProductReviews(rs.getInt("totalProductReviews"));
+                productDetail.setAverageRatingScore(rs.getDouble("averageRatingScore"));
+                productDetail.setCategoryBreadcrumb(rs.getString("categoryBreadcrumb"));
+            }
+
+        } catch (SQLException e) {
+            // Xử lý exception
+            e.printStackTrace();
+            throw new RuntimeException("Error getting product detail: " + e.getMessage(), e);
+        } finally {
+            // Đóng tài nguyên
+            close(conn, stmt, rs);
+        }
+
+        return productDetail;
     }
 }

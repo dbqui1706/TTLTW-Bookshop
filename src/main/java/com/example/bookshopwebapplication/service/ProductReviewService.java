@@ -3,6 +3,8 @@ package com.example.bookshopwebapplication.service;
 import com.example.bookshopwebapplication.dao.ProductReviewDao;
 import com.example.bookshopwebapplication.dto.ProductReviewDto;
 import com.example.bookshopwebapplication.entities.ProductReview;
+import com.example.bookshopwebapplication.http.response.reviews.RatingsSummary;
+import com.example.bookshopwebapplication.http.response.reviews.ReviewDTO;
 import com.example.bookshopwebapplication.service._interface.IProductReviewService;
 import com.example.bookshopwebapplication.service.transferObject.ITransfer;
 import com.example.bookshopwebapplication.service.transferObject.TProductReview;
@@ -107,5 +109,13 @@ public class ProductReviewService implements IProductReviewService {
     }
     public void show(long id) {
         productReviewDao.show(id);
+    }
+
+    public RatingsSummary getProductRatings(long productId) {
+        return productReviewDao.getProductRatings(productId);
+    }
+
+    public List<ReviewDTO> getProductReviews(Long productId, String filter, int page, int limit) {
+        return productReviewDao.getProductReviews(productId, filter, page, limit);
     }
 }
