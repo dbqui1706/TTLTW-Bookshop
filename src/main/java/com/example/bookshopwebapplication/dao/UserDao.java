@@ -30,11 +30,11 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
     public void update(User user) {
         clearSQL();
         builderSQL.append("UPDATE user SET username = ?, password = ?, fullname = ?, email = ?, ");
-        builderSQL.append("phoneNumber = ?, gender = ?, address = ?, role = ? ");
+        builderSQL.append("phoneNumber = ?, gender = ?, address = ?, role = ? , is_active_email = ? ");
         builderSQL.append("WHERE id = ?");
         update(builderSQL.toString(), user.getUsername(), user.getPassword(), user.getFullName(),
                 user.getEmail(), user.getPhoneNumber(), user.getGender(), user.getAddress(), user.getRole(),
-                user.getId()
+                user.getIsActiveEmail(), user.getId()
         );
     }
 
@@ -488,5 +488,19 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
         builderSQL.append("INSERT INTO user_session (session_token, ip_address, device_info, user_id) ");
         builderSQL.append("VALUES (?, ?, ?, ?)");
         insert(builderSQL.toString(), sessionId, ip, deviceInfo, userId);
+    }
+
+    public Long register(User registerUser) {
+        clearSQL();
+        builderSQL.append("INSERT INTO user (password, fullname, email, phoneNumber, gender, role) ");
+        builderSQL.append("VALUES (?, ?, ?, ?, ?, ?)");
+        return insert(builderSQL.toString(), registerUser.getPassword(),
+                registerUser.getFullName(), registerUser.getEmail(),
+                registerUser.getPhoneNumber(), registerUser.getGender(),
+                registerUser.getRole());
+    }
+
+    public void setActiveEmail(Long userId) {
+
     }
 }

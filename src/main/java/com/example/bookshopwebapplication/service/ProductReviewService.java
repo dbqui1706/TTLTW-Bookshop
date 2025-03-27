@@ -118,4 +118,8 @@ public class ProductReviewService implements IProductReviewService {
     public List<ReviewDTO> getProductReviews(Long productId, String filter, int page, int limit) {
         return productReviewDao.getProductReviews(productId, filter, page, limit);
     }
+
+    public int countProductReviews(Long productId, String filter) {
+        return productReviewDao.countProductReviews(productId, filter);
+    }
 }

@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.sql.Timestamp;
 import java.util.*;
 
 @WebServlet("/signup")
@@ -95,7 +96,10 @@ public class SignUp extends HttpServlet {
                     values.get("phoneNumber"),
                     Integer.parseInt(values.get("gender")),
                     values.get("address"),
-                    "CUSTOMER"
+                    "CUSTOMER",
+                    new Timestamp(System.currentTimeMillis()),
+                    null,
+                    false
             );
 
             // send email

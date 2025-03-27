@@ -14,11 +14,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @WebServlet(name = "ProductController", urlPatterns = {
         "/api/products",
@@ -68,9 +66,17 @@ public class ProductController extends HttpServlet {
             List<ReviewDTO> reviews = productReviewService.getProductReviews(
                     productId, filter, page, limit
             );
+
+            // Lấy tổng số đánh giá theo loại lọc
+            int total = productReviewService.countProductReviews(productId, filter);
+
             Map<String, Object> result = Map.of(
                     "ratingsSummary", ratingsSummary,
-                    "reviews", reviews
+                    "reviews", reviews,
+                    "total", total,
+                    "currentPage", page,
+                    "totalPages", (int) Math.ceil((double) total / limit),
+                    "hasMore", page < (int) Math.ceil((double) total / limit)
             );
             JsonUtils.out(
                     response,
@@ -90,7 +96,7 @@ public class ProductController extends HttpServlet {
         try {
             Long categoryId = Long.parseLong(request.getParameter("categoryId"));
             List<ProductDto> relatedProducts = productService.getRandomPartByCategoryId(
-                    5, 0, categoryId
+                    12, 0, categoryId
             );
             JsonUtils.out(
                     response,

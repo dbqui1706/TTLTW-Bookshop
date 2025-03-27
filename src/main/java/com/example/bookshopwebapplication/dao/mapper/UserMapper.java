@@ -21,6 +21,9 @@ public class UserMapper implements IRowMapper<User> {
             user.setGender(resultSet.getInt("gender"));
             user.setAddress(resultSet.getString("address"));
             user.setRole(resultSet.getString("role"));
+            user.setIsActiveEmail(resultSet.getBoolean("is_active_email"));
+            user.setCreatedAt(resultSet.getTimestamp("created_at"));
+            user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
             return user;
         } catch (SQLException e) {
             throw new RuntimeException(e);

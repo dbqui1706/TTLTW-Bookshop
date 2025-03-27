@@ -260,7 +260,7 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
         builderSQL.append(
                 "SELECT p.* FROM product_category pc " +
                         "JOIN product p ON pc.productId = p.id " +
-                        "WHERE pc.categoryId = ? " +
+                        "WHERE pc.categoryId = ? AND shop = 1 " +
                         "ORDER BY RAND() " +
                         "LIMIT " + offset + ", " + limit
         );
@@ -936,7 +936,7 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
             conn = getConnection();
 
             // SQL query
-            String sql = "SELECT p.*, c.name AS categoryBreadcrumb, \n" +
+            String sql = "SELECT p.*, c.id AS categoryId, c.name AS categoryBreadcrumb, \n" +
                     "(SELECT COUNT(id) FROM bookshopdb.product_review WHERE productId = p.id AND isShow = 1) AS totalProductReviews,\n" +
                     "(SELECT CASE  \n" +
                     "    WHEN COUNT(id) = 0 THEN 0 \n" +
@@ -992,6 +992,7 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
                 // Lấy thông tin đánh giá
                 productDetail.setTotalProductReviews(rs.getInt("totalProductReviews"));
                 productDetail.setAverageRatingScore(rs.getDouble("averageRatingScore"));
+                productDetail.setCategoryId(rs.getLong("categoryId"));
                 productDetail.setCategoryBreadcrumb(rs.getString("categoryBreadcrumb"));
             }
 
@@ -1006,4 +1007,5 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
 
         return productDetail;
     }
+
 }

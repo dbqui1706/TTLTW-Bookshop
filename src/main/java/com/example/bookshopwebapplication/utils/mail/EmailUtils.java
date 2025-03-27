@@ -80,14 +80,40 @@ public class EmailUtils {
     @NotNull
     private static String getEmailContent(String toAddress, String fullName, String code) {
         String activationLink = "http://localhost:8080/activeAccount?email=" + toAddress + "&code=" + code;
-        String emailContent = "<html><body>" +
-                "<p>Xin chào, " + fullName + "</p>" +
-                "<p>Bạn vừa đăng ký tài khoản tại BookShopWeb Application. Để kích hoạt tài khoản, vui lòng nhấn vào liên kết bên dưới nếu không sẽ hết hạn sau 5 phút:</p>" +
-                "<p><a href=\"" + activationLink + "\" style=\"text-decoration:none; color: #3498db; font-weight: bold;\">Kích hoạt</a></p>" +
-                "<p>Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua thư này.</p>" +
-                "<p>Trân trọng,</p>" +
-                "<p>BookShopWeb Team</p>" +
-                "</body></html>";
+        String emailContent = "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "    <title>Kích hoạt tài khoản BookStore</title>" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; color: #333;\">" +
+                "    <div style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); margin-top: 20px; margin-bottom: 20px;\">" +
+                "        <!-- Header -->" +
+                "        <div style=\"background-color: #1a73e8; padding: 30px 20px; text-align: center;\">" +
+                "            <h1 style=\"color: #ffffff; margin: 0; font-size: 24px;\">BookStore Application</h1>" +
+                "        </div>" +
+                "        <!-- Content -->" +
+                "        <div style=\"padding: 30px 40px;\">" +
+                "            <p style=\"font-size: 16px; line-height: 1.6; margin-bottom: 20px;\">Xin chào, <strong style=\"color: #1a73e8;\">" + fullName + "</strong>!</p>" +
+                "            <p style=\"font-size: 16px; line-height: 1.6; margin-bottom: 20px;\">Bạn vừa đăng ký tài khoản tại BookStore Application. Để kích hoạt tài khoản, vui lòng nhấn vào nút bên dưới:</p>" +
+                "            <div style=\"text-align: center; margin: 30px 0;\">" +
+                "                <a href=\"" + activationLink + "\" style=\"display: inline-block; background-color: #1a73e8; color: #ffffff; font-weight: bold; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); transition: background-color 0.2s;\">Kích hoạt tài khoản</a>" +
+                "            </div>" +
+                "            <p style=\"font-size: 14px; line-height: 1.6; color: #777; margin-bottom: 20px;\">Liên kết kích hoạt sẽ hết hạn sau 5 phút. Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua thư này.</p>" +
+                "            <div style=\"border-top: 1px solid #eee; margin-top: 30px; padding-top: 20px;\">" +
+                "                <p style=\"font-size: 15px; margin-bottom: 10px;\">Trân trọng,</p>" +
+                "                <p style=\"font-size: 15px; font-weight: bold; color: #1a73e8; margin: 0;\">BookShopWeb Team</p>" +
+                "            </div>" +
+                "        </div>" +
+                "        <!-- Footer -->" +
+                "        <div style=\"background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #777;\">" +
+                "            <p>Email này được gửi tự động. Vui lòng không trả lời email này.</p>" +
+                "            <p>&copy; 2025 BookStore. Tất cả các quyền được bảo lưu.</p>" +
+                "        </div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
         return emailContent;
     }
 

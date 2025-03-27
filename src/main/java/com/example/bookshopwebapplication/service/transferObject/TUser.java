@@ -16,6 +16,9 @@ public class TUser implements ITransfer<UserDto, User>{
         userDto.setGender(user.getGender());
         userDto.setAddress(user.getAddress());
         userDto.setRole(user.getRole());
+        userDto.setIsActiveEmail(user.getIsActiveEmail());
+        userDto.setCreatedAt(user.getCreatedAt());
+        userDto.setUpdatedAt(user.getUpdatedAt());
         return userDto;
     }
     @Override
@@ -30,6 +33,9 @@ public class TUser implements ITransfer<UserDto, User>{
         user.setGender(userDto.getGender());
         user.setAddress(userDto.getAddress());
         user.setRole(userDto.getRole());
+        user.setIsActiveEmail(userDto.getIsActiveEmail());
+        user.setCreatedAt(userDto.getCreatedAt());
+        user.setUpdatedAt(userDto.getUpdatedAt());
         return user;
     }
 }

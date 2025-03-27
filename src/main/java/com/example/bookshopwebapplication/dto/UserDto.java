@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.sql.Timestamp;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,4 +21,7 @@ public class UserDto {
     private Integer gender;
     private String address;
     private String role;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private Boolean isActiveEmail;
 }

@@ -341,4 +341,59 @@ public class ProductReviewDao extends AbstractDao<ProductReview> implements IPro
                 return "";
         }
     }
+
+    public int countProductReviews(Long productId, String filter) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = getConnection();
+
+            StringBuilder sqlBuilder = new StringBuilder(
+                    "SELECT COUNT(*) AS total FROM bookshopdb.product_review pr " +
+                            "WHERE pr.productId = ? AND pr.isShow = 1 "
+            );
+
+            // Phần lọc theo số sao
+            int ratingFilter = 0;
+            if (filter != null && !filter.equals("newest")) {
+                try {
+                    ratingFilter = Integer.parseInt(filter);
+                    if (ratingFilter >= 1 && ratingFilter <= 5) {
+                        sqlBuilder.append("AND pr.ratingScore = ? ");
+                    } else {
+                        ratingFilter = 0;
+                    }
+                } catch (NumberFormatException e) {
+                    // Không phải số, nên không lọc theo rating
+                    ratingFilter = 0;
+                }
+            }
+
+            stmt = conn.prepareStatement(sqlBuilder.toString());
+
+            int paramIndex = 1;
+            stmt.setLong(paramIndex++, productId);
+
+            if (ratingFilter > 0) {
+                stmt.setInt(paramIndex++, ratingFilter);
+            }
+
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Đóng tài nguyên
+            close(conn, stmt, rs);
+        }
+
+        return count;
+    }
 }

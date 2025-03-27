@@ -28,6 +28,7 @@ public class ProductDetailDto {
     private int totalProductReviews;
     private double averageRatingScore;
     private String categoryBreadcrumb;
+    private Long categoryId;
 
     // Getters and setters
     // ...

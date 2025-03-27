@@ -7,12 +7,12 @@ import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.entities.User;
 import com.example.bookshopwebapplication.entities.UserKeys;
 import com.example.bookshopwebapplication.entities.UserSession;
-import com.example.bookshopwebapplication.http.response.user.UserFullDetail;
+import com.example.bookshopwebapplication.http.request.user.RegisterDTO;
 import com.example.bookshopwebapplication.service._interface.IUserService;
 import com.example.bookshopwebapplication.service.transferObject.TUser;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
 
-import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -173,7 +173,12 @@ public class UserService implements IUserService {
         return userDao.getAllUserDetails(page, limit, search, role, status, sort);
     }
 
-    public void saveUserSession(String sessionId, String ip, String deviceInfo, long userId) {
+    public void saveUserSession(HttpServletRequest request, long userId) {
+        // Lấy thông tin thiết bị, ip, session id
+        String deviceInfo = request.getHeader("User-Agent");
+        String ip = request.getRemoteAddr();
+        String sessionId = request.getSession().getId();
+
         UserSession userSession = new UserSession();
         userSession.setSessionToken(sessionId);
         userSession.setIpAddress(ip);
@@ -189,5 +194,37 @@ public class UserService implements IUserService {
             userSessionCache.put(userId, sessionId); // put vào cache
             userSessionDao.save(userSession); // save vào database
         }
+    }
+
+    // Login with email and password
+    public Optional<UserDto> login(String email, String password) {
+        Optional<User> user = userDao.getByEmail(email);
+        if (
+                user.isPresent()
+                        && user.get().getPassword().equals(password)
+                        && user.get().getIsActiveEmail()
+        ) {
+            return Optional.of(tUser.toDto(user.get()));
+        }
+        return Optional.empty();
+    }
+
+    // Register with RegisterDTO
+    public Optional<UserDto> register(RegisterDTO registerDTO) {
+        User user = new User();
+        user.setFullName(registerDTO.getFullname());
+        user.setEmail(registerDTO.getEmail());
+        user.setPassword(registerDTO.getPassword());
+        user.setRole(registerDTO.getRole());
+        user.setPhoneNumber(registerDTO.getPhone());
+        user.setGender(registerDTO.getGender());
+        Long id = userDao.register(user);
+        return getById(id);
+    }
+
+    public void setActiveEmail(Long userId) {
+        User user = userDao.getById(userId).get();
+        user.setIsActiveEmail(true);
+        userDao.update(user);
     }
 }

@@ -6,16 +6,17 @@ USE bookshopdb;
 CREATE TABLE bookshopdb.user
 (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
-    username    VARCHAR(25)  NOT NULL,
+    username    VARCHAR(100)  NULL,    
     password    VARCHAR(32)  NOT NULL,
     fullname    VARCHAR(50)  NOT NULL,
     email       VARCHAR(50)  NOT NULL,
     phoneNumber VARCHAR(11)  NOT NULL,
     gender      BIT          NOT NULL,
-    address     VARCHAR(200) NOT NULL,
+    address 	VARCHAR(200) NULL,
     role        VARCHAR(10)  NOT NULL,
+    is_email_verified BIT	 NOT NULL DEFAULT 0,
     created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
+    updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 

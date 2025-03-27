@@ -81,9 +81,7 @@ public class SignIn extends HttpServlet {
 
             // Lưu thông tin vào bảng user_session
             UserService.getInstance().saveUserSession(
-                    sessionId,
-                    ip,
-                    deviceInfo,
+                   request,
                     userFromServer.get().getId()
             );
             response.sendRedirect(request.getContextPath() + "/");
