@@ -58,6 +58,32 @@ CREATE TABLE bookshopdb.user_status
             ON UPDATE CASCADE
 );
 
+-- Bảng địa chỉ người dùng
+CREATE TABLE IF NOT EXISTS bookshopdb.user_addresses (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    user_id           BIGINT         NOT NULL,
+    address_type      VARCHAR(20)    NOT NULL DEFAULT 'SHIPPING', -- Loại địa chỉ (SHIPPING - giao hàng, BILLING - thanh toán, BOTH - cả hai)
+    recipient_name    VARCHAR(100)   NOT NULL, -- Tên người nhận
+    phone_number      VARCHAR(15)    NOT NULL, -- Số điện thoại liên hệ
+    address_line1     VARCHAR(255)   NOT NULL, -- Dòng địa chỉ chính
+    address_line2     VARCHAR(255)   NULL, -- Dòng địa chỉ phụ (tùy chọn)
+    city              VARCHAR(100)   NOT NULL,
+    district          VARCHAR(100)   NOT NULL,
+    ward              VARCHAR(100)   NOT NULL,
+    postal_code       VARCHAR(20)    NULL, -- Mã bưu điện (tùy chọn)
+    is_default        TINYINT(1)     NOT NULL DEFAULT 0, -- Đánh dấu địa chỉ mặc định (1 = mặc định)
+    notes             TEXT           NULL,  -- Ghi chú đặc biệt về địa chỉ này
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_user_addresses_user (user_id),
+    CONSTRAINT fk_user_addresses_user
+        FOREIGN KEY (user_id)
+        REFERENCES bookshopdb.user (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 CREATE TABLE bookshopdb.user_session
 (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
