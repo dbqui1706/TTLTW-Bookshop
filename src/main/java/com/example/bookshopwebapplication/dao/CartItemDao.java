@@ -4,10 +4,13 @@ import com.example.bookshopwebapplication.dao._interface.ICartItemDao;
 import com.example.bookshopwebapplication.dao.mapper.CartItemMapper;
 import com.example.bookshopwebapplication.entities.Cart;
 import com.example.bookshopwebapplication.entities.CartItem;
+import com.example.bookshopwebapplication.http.request.cart.SaveCartRequest;
+import com.example.bookshopwebapplication.http.response.cart.CartResponse;
+import com.example.bookshopwebapplication.http.response.product.CartProductResponse;
+import com.sun.source.tree.TryTree;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -76,15 +79,15 @@ public class CartItemDao extends AbstractDao<CartItem> implements ICartItemDao {
     }
 
     //Đếm số lượng CartItem trong cơ sở dữ liệu.
-     public int count() {
-     clearSQL();
-     builderSQL.append(
-     "SELECT COUNT(*) FROM cart_item"
-     );
-     return count(builderSQL.toString());
-     }
+    public int count() {
+        clearSQL();
+        builderSQL.append(
+                "SELECT COUNT(*) FROM cart_item"
+        );
+        return count(builderSQL.toString());
+    }
 
-     //Lấy danh sách CartItem dựa trên cartId.
+    //Lấy danh sách CartItem dựa trên cartId.
     @Override
     public List<CartItem> getByCartId(long cartId) {
         clearSQL();
@@ -100,7 +103,7 @@ public class CartItemDao extends AbstractDao<CartItem> implements ICartItemDao {
         return cartItems.isEmpty() ? new LinkedList<>() : cartItems;
     }
 
-   //Lấy CartItem dựa trên cartId và productId.
+    //Lấy CartItem dựa trên cartId và productId.
     @Override
     public Optional<CartItem> getByCartIdAndProductId(long cartId, long productId) {
         clearSQL();
@@ -139,12 +142,155 @@ public class CartItemDao extends AbstractDao<CartItem> implements ICartItemDao {
             cartItem.setProductId(resultSet.getLong("productId"));
             cartItem.setQuantity(resultSet.getInt("quantity"));
             cartItem.setCreatedAt(resultSet.getTimestamp("createdAt"));
-            if (resultSet.getTimestamp("createdAt") != null){
+            if (resultSet.getTimestamp("createdAt") != null) {
                 cartItem.setUpdatedAt(resultSet.getTimestamp("updatedAt"));
             }
             return cartItem;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public boolean bulkInsert(Long cartId, List<SaveCartRequest.CartItem> cartItems) {
+        Connection conn = null;
+        PreparedStatement insertStmt = null;
+        PreparedStatement updateStmt = null;
+        PreparedStatement checkStmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // Chuẩn bị câu lệnh kiểm tra sản phẩm đã tồn tại trong giỏ hàng chưa
+            String checkSql = "SELECT cartId, productId, quantity FROM cart_item WHERE cartId = ? AND productId = ?";
+            checkStmt = conn.prepareStatement(checkSql);
+
+            // Chuẩn bị câu lệnh cập nhật số lượng nếu sản phẩm đã tồn tại
+            String updateSql = "UPDATE cart_item SET quantity = quantity + ? WHERE cartId = ? AND productId = ?";
+            updateStmt = conn.prepareStatement(updateSql);
+
+            // Danh sách các sản phẩm cần thêm mới (không tồn tại trong giỏ hàng)
+            List<SaveCartRequest.CartItem> itemsToInsert = new ArrayList<>();
+
+            // Kiểm tra và cập nhật các sản phẩm đã tồn tại
+            for (SaveCartRequest.CartItem item : cartItems) {
+                checkStmt.setLong(1, cartId);
+                checkStmt.setLong(2, item.getProductId());
+                rs = checkStmt.executeQuery();
+
+                if (rs.next()) {
+                    // Sản phẩm đã tồn tại, cập nhật số lượng
+                    updateStmt.setInt(1, item.getQuantity());
+                    updateStmt.setLong(2, cartId);
+                    updateStmt.setLong(3, item.getProductId());
+                    updateStmt.executeUpdate();
+                } else {
+                    // Sản phẩm chưa tồn tại, thêm vào danh sách cần insert
+                    itemsToInsert.add(item);
+                }
+
+                rs.close();
+            }
+
+            // Nếu có sản phẩm cần thêm mới
+            if (!itemsToInsert.isEmpty()) {
+                StringBuilder insertSql = new StringBuilder();
+                insertSql.append("INSERT INTO cart_item (cartId, productId, quantity) VALUES ");
+                for (int i = 0; i < itemsToInsert.size(); i++) {
+                    insertSql.append("(?, ?, ?)");
+                    if (i < itemsToInsert.size() - 1) {
+                        insertSql.append(", ");
+                    }
+                }
+
+                insertStmt = conn.prepareStatement(insertSql.toString());
+                int index = 1;
+                for (SaveCartRequest.CartItem product : itemsToInsert) {
+                    insertStmt.setLong(index++, cartId);
+                    insertStmt.setLong(index++, product.getProductId());
+                    insertStmt.setInt(index++, product.getQuantity());
+                }
+                insertStmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            close(conn, insertStmt, null);
+            close(null, updateStmt, null);
+            close(null, checkStmt, rs);
+        }
+
+    }
+
+    public List<CartProductResponse> getByCartIdAndUserId(long cartId, long userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            String sql = "SELECT \n" +
+                    "    ci.id AS cartItemId,\n" +
+                    "    p.id AS productId,\n" +
+                    "    p.name AS productName,\n" +
+                    "    p.imageName AS productImage,\n" +
+                    "    p.price AS productPrice,\n" +
+                    "    p.discount AS productDiscount,\n" +
+                    "    ci.quantity AS quantity \n" +
+                    "FROM bookshopdb.cart c\n" +
+                    "JOIN \n" +
+                    "    bookshopdb.cart_item ci ON ci.cartId = ?\n" +
+                    "JOIN \n" +
+                    "    bookshopdb.product p ON ci.productId = p.id\n" +
+                    "WHERE \n" +
+                    "    c.userId = ?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, cartId);
+            stmt.setLong(2, userId);
+            rs = stmt.executeQuery();
+            List<CartProductResponse> cartResponses = new LinkedList<>();
+            while (rs.next()) {
+                CartProductResponse cartResponse = new CartProductResponse();
+                cartResponse.setCartItemId(rs.getLong("cartItemId"));
+                cartResponse.setProductId(rs.getLong("productId"));
+                cartResponse.setProductName(rs.getString("productName"));
+                cartResponse.setProductImage(rs.getString("productImage"));
+                cartResponse.setProductPrice(rs.getDouble("productPrice"));
+                cartResponse.setProductDiscount(rs.getDouble("productDiscount"));
+                cartResponse.setQuantity(rs.getInt("quantity"));
+                cartResponses.add(cartResponse);
+            }
+            return cartResponses;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new LinkedList<>();
+        } finally {
+            close(conn, stmt, rs);
+        }
+    }
+
+    public boolean updateQuantity(long cartItemId, int quantity) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            String sql = "UPDATE cart_item SET quantity = ? WHERE id = ?";
+            update(sql, quantity, cartItemId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            close(conn, stmt, null);
         }
     }
 }

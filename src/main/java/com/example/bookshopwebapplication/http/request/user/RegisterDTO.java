@@ -8,6 +8,6 @@ public class RegisterDTO {
     private String email;
     private String phone;
     private String password;
-    private int gender;
+    private Integer gender;
     private String role = "CUSTOMER";
 }

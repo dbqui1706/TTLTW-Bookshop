@@ -7,7 +7,6 @@ import com.example.bookshopwebapplication.service.PermissionService;
 import com.example.bookshopwebapplication.service.UserService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 import com.example.bookshopwebapplication.utils.MultiPart;
-import com.example.bookshopwebapplication.utils.Protector;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
@@ -28,7 +27,7 @@ import java.util.UUID;
                 "/api/auth/login",
                 "/api/auth/register",
                 "/api/auth/logout",
-                "api/auth/active-account",
+                "/api/auth/active-account",
                 "/api/auth/forgot-password",
                 "/api/auth/reset-password",
                 "/api/auth/change-password",
@@ -69,16 +68,13 @@ public class UserController extends HttpServlet {
             Optional<String> code = Optional.ofNullable(request.getParameter("code"));
 
             if (EmailUtils.isValidVerificationCode(email.get(), code.get())) {
-                UserDto user = (UserDto) request.getSession().getAttribute("userCacheRegister");
+                UserDto user = (UserDto) request.getSession().getAttribute("userSignUp");
 
                 // Update email was active
-                userService.setActiveEmail(user.getId());
+                userService.setActiveEmail(email.get());
 
-
-//                if (userSignUp.isPresent()) {
-//                    request.getSession().removeAttribute("userSignUp");
-//                    response.sendRedirect(request.getContextPath() + "/signin");
-//                }
+                request.getSession().removeAttribute("userSignUp");
+                response.sendRedirect(request.getContextPath() + "/signin");
             } else {
                 response.sendRedirect(request.getContextPath() + "/");
             }
@@ -177,9 +173,9 @@ public class UserController extends HttpServlet {
 
             // Tiến hành gửi email xác nhận
             EmailUtils.sendEmail(isRegistered.get(), UUID.randomUUID().toString());
-
+            System.out.println("Email đã được gửi: " + isRegistered.get());
             // Lưu vào session
-            request.getSession().setAttribute("userCacheRegister", isRegistered.get());
+            request.getSession().setAttribute("userSignUp", isRegistered.get());
 
             JsonUtils.out(
                     response,

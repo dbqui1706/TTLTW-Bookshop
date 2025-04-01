@@ -224,7 +224,9 @@ CREATE TABLE bookshopdb.product
     updatedAt      DATETIME     NULL,
     startsAt       DATETIME     NULL,
     endsAt         DATETIME     NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    INDEX idx_product_name (name), -- Thêm index cho tìm kiếm
+	INDEX idx_product_author (author) -- Thêm index cho tìm kiếm
 );
 
 CREATE TABLE bookshopdb.product_review
@@ -321,89 +323,199 @@ CREATE TABLE bookshopdb.cart_item
             ON UPDATE NO ACTION
 );
 
-CREATE TABLE bookshopdb.orders (
-    id              BIGINT   NOT NULL AUTO_INCREMENT,
-    userId          BIGINT   NOT NULL, -- Người dùng thực hiện đơn hàng
-    status          TINYINT  NOT NULL, -- Trạng thái đơn hàng (pending, shipped, etc.)
-    deliveryMethod  TINYINT  NOT NULL, -- Phương thức giao hàng
-    deliveryPrice   FLOAT    NOT NULL, -- Phí giao hàng
-    is_verified     TINYINT  NOT NULL DEFAULT 0, -- 0: Chưa xác thực, 1: Đã xác thực
-    tampered        TINYINT  NOT NULL DEFAULT 0, -- 0: Bình thường, 1: Phát hiện chỉnh sửa
-    createdAt       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt       DATETIME NULL,
-    PRIMARY KEY (id),
-    INDEX idx_orders_user (userId),
-    CONSTRAINT fk_orders_user
-        FOREIGN KEY (userId)
-        REFERENCES bookshopdb.user (id)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION
+-- Bảng phương thức giao hàng
+CREATE TABLE bookshopdb.delivery_method (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    name              VARCHAR(100)   NOT NULL,
+    description       TEXT           NULL,
+    price             DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
+    estimated_days    VARCHAR(50)    NULL,
+    icon              VARCHAR(255)   NULL,
+    is_active         TINYINT(1)     NOT NULL DEFAULT 1,
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS bookshopdb.order_info(
-    id          BIGINT   NOT NULL AUTO_INCREMENT,
-    orderId     BIGINT   NOT NULL,
-    receiver    VARCHAR(100) NOT NULL,
-    email_receiver VARCHAR(100) NOT NULL,
-    address_receiver VARCHAR(200) NOT NULL,
-    phone_receiver VARCHAR(11) NOT NULL,
-    city       VARCHAR(100) NOT NULL,
-    district   VARCHAR(100) NOT NULL,
-    ward       VARCHAR(100) NOT NULL,
-    total_price FLOAT    NOT NULL,
-    createdAt   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt   DATETIME NULL,
+-- Bảng phương thức thanh toán
+CREATE TABLE bookshopdb.payment_method (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    name              VARCHAR(100)   NOT NULL,
+    code              VARCHAR(50)    NOT NULL UNIQUE,
+    description       TEXT           NULL,
+    icon              VARCHAR(255)   NULL,
+    requires_confirmation TINYINT(1) NOT NULL DEFAULT 0,
+    processing_fee    DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
+    is_active         TINYINT(1)     NOT NULL DEFAULT 1,
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    INDEX idx_order_info_order (orderId),
-    CONSTRAINT fk_order_info_order
-        FOREIGN KEY (orderId)
-            REFERENCES bookshopdb.orders (id)
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
+    INDEX idx_payment_method_code (code)
 );
--- CREATE TABLE IF NOT EXISTS bookshopdb.order_data_hash(
---     id          BIGINT   NOT NULL AUTO_INCREMENT,
---     orderId     BIGINT   NOT NULL,
---     user_id     BIGINT   NOT NULL,
---     data_hash   TEXT     NOT NULL,
---     createdAt   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     updatedAt   DATETIME NULL,
---     PRIMARY KEY (id),
---     INDEX idx_order_data_hash_order (orderId),
---     CONSTRAINT fk_order_data_hash_order
---         FOREIGN KEY (orderId)
---             REFERENCES bookshopdb.orders (id)
---             ON DELETE NO ACTION
---             ON UPDATE NO ACTION,
---     CONSTRAINT fk_order_data_hash_user
---         FOREIGN KEY (user_id)
---             REFERENCES bookshopdb.user (id)
---             ON DELETE NO ACTION
---             ON UPDATE NO ACTION
--- );
-CREATE TABLE bookshopdb.order_item
-(
-    id        BIGINT   NOT NULL AUTO_INCREMENT,
-    orderId   BIGINT   NOT NULL,
-    productId BIGINT   NOT NULL,
-    price     FLOAT    NOT NULL,
-    discount  FLOAT    NOT NULL,
-    quantity  SMALLINT NOT NULL,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME NULL,
+
+-- Bảng đơn hàng chính
+CREATE TABLE bookshopdb.orders (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    order_code        VARCHAR(20)    NOT NULL UNIQUE, -- Mã đơn hàng hiển thị cho khách
+    user_id           BIGINT         NOT NULL,
+    status            ENUM('pending', 'processing', 'shipping', 'delivered', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
+    delivery_method_id BIGINT        NOT NULL,
+    payment_method_id BIGINT         NOT NULL,
+    subtotal          DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Tổng tiền hàng chưa thuế, phí
+    delivery_price    DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Phí giao hàng
+    discount_amount   DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Số tiền giảm giá
+    tax_amount        DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Thuế
+    total_amount      DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Tổng thanh toán
+    coupon_code       VARCHAR(50)    NULL, -- Mã giảm giá đã sử dụng
+    is_verified       TINYINT(1)     NOT NULL DEFAULT 0,
+    note              TEXT           NULL, -- Ghi chú đơn hàng
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    INDEX idx_order_item_orders (orderId),
-    INDEX idx_order_item_product (productId),
-    CONSTRAINT fk_order_item_orders
-        FOREIGN KEY (orderId)
-            REFERENCES bookshopdb.orders (id)
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION,
+    INDEX idx_orders_code (order_code),
+    INDEX idx_orders_user (user_id),
+    INDEX idx_orders_status (status),
+    INDEX idx_orders_date (created_at),
+    CONSTRAINT fk_orders_user
+        FOREIGN KEY (user_id)
+        REFERENCES bookshopdb.user (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_orders_delivery_method
+        FOREIGN KEY (delivery_method_id)
+        REFERENCES bookshopdb.delivery_method (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_orders_payment_method
+        FOREIGN KEY (payment_method_id)
+        REFERENCES bookshopdb.payment_method (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+-- Bảng thông tin giao hàng
+CREATE TABLE bookshopdb.order_shipping (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    order_id          BIGINT         NOT NULL,
+    receiver_name     VARCHAR(100)   NOT NULL,
+    receiver_email    VARCHAR(100)   NOT NULL,
+    receiver_phone    VARCHAR(15)    NOT NULL,
+    address_line1     VARCHAR(255)   NOT NULL,
+    address_line2     VARCHAR(255)   NULL,
+    city              VARCHAR(100)   NOT NULL,
+    district          VARCHAR(100)   NOT NULL,
+    ward              VARCHAR(100)   NOT NULL,
+    postal_code       VARCHAR(20)    NULL,
+    shipping_notes    TEXT           NULL, -- Ghi chú giao hàng
+    tracking_number   VARCHAR(100)   NULL, -- Mã vận đơn
+    shipping_carrier  VARCHAR(100)   NULL, -- Đơn vị vận chuyển
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY idx_order_shipping_order (order_id),
+    CONSTRAINT fk_order_shipping_order
+        FOREIGN KEY (order_id)
+        REFERENCES bookshopdb.orders (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Bảng chi tiết đơn hàng (sản phẩm)
+CREATE TABLE bookshopdb.order_item (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    order_id          BIGINT         NOT NULL,
+    product_id        BIGINT         NOT NULL,
+    product_name      VARCHAR(255)   NOT NULL, -- Lưu tên sản phẩm tại thời điểm đặt hàng
+    product_image     VARCHAR(255)   NULL, -- Lưu ảnh sản phẩm tại thời điểm đặt hàng
+    base_price        DECIMAL(10,2)  NOT NULL, -- Giá gốc sản phẩm
+    discount_percent  DECIMAL(4,2)   NOT NULL DEFAULT 0.00, -- Tỷ lệ giảm giá
+    price             DECIMAL(10,2)  NOT NULL, -- Giá sau giảm giá
+    quantity          INT            NOT NULL,
+    subtotal          DECIMAL(10,2)  NOT NULL, -- Thành tiền (price * quantity)
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_order_item_order (order_id),
+    INDEX idx_order_item_product (product_id),
+    CONSTRAINT fk_order_item_order
+        FOREIGN KEY (order_id)
+        REFERENCES bookshopdb.orders (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     CONSTRAINT fk_order_item_product
-        FOREIGN KEY (productId)
-            REFERENCES bookshopdb.product (id)
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
+        FOREIGN KEY (product_id)
+        REFERENCES bookshopdb.product (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+-- Bảng giao dịch thanh toán
+CREATE TABLE bookshopdb.payment_transaction (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    order_id          BIGINT         NOT NULL,
+    payment_method_id BIGINT         NOT NULL,
+    amount            DECIMAL(10,2)  NOT NULL,
+    transaction_code  VARCHAR(100)   NULL, -- Mã giao dịch từ cổng thanh toán
+    payment_provider_ref VARCHAR(255) NULL, -- Mã tham chiếu của đơn vị thanh toán
+    status            ENUM('pending', 'completed', 'failed', 'refunded', 'partially_refunded') NOT NULL DEFAULT 'pending',
+    payment_date      TIMESTAMP      NULL, -- Thời gian thanh toán thành công
+    note              TEXT           NULL,
+    created_by        BIGINT         NULL, -- User ID nếu admin tạo giao dịch
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_payment_order (order_id),
+    INDEX idx_payment_method (payment_method_id),
+    INDEX idx_payment_transaction_code (transaction_code),
+    INDEX idx_payment_date (payment_date),
+    CONSTRAINT fk_payment_order
+        FOREIGN KEY (order_id)
+        REFERENCES bookshopdb.orders (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_payment_method
+        FOREIGN KEY (payment_method_id)
+        REFERENCES bookshopdb.payment_method (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+-- Bảng lịch sử trạng thái đơn hàng
+CREATE TABLE bookshopdb.order_status_history (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    order_id          BIGINT         NOT NULL,
+    status            ENUM('pending', 'processing', 'shipping', 'delivered', 'cancelled', 'refunded') NOT NULL,
+    note              TEXT           NULL,
+    changed_by        BIGINT         NULL, -- User ID của người thay đổi trạng thái
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_order_status_history_order (order_id),
+    CONSTRAINT fk_order_status_history_order
+        FOREIGN KEY (order_id)
+        REFERENCES bookshopdb.orders (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Bảng mã giảm giá
+CREATE TABLE bookshopdb.coupon (
+    id                BIGINT         NOT NULL AUTO_INCREMENT,
+    code              VARCHAR(50)    NOT NULL UNIQUE,
+    description       TEXT           NULL,
+    discount_type     ENUM('percentage', 'fixed') NOT NULL, -- Loại giảm giá: phần trăm hoặc số tiền cố định
+    discount_value    DECIMAL(10,2)  NOT NULL, -- Giá trị giảm giá
+    min_order_value   DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Giá trị đơn hàng tối thiểu
+    max_discount      DECIMAL(10,2)  NULL, -- Giảm tối đa (áp dụng với giảm theo %)
+    start_date        TIMESTAMP      NOT NULL,
+    end_date          TIMESTAMP      NOT NULL,
+    usage_limit       INT            NULL, -- Giới hạn số lần sử dụng
+    usage_count       INT            NOT NULL DEFAULT 0, -- Số lần đã sử dụng
+    is_active         TINYINT(1)     NOT NULL DEFAULT 1,
+    created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_coupon_code (code),
+    INDEX idx_coupon_dates (start_date, end_date)
 );
 
 CREATE TABLE bookshopdb.wishlist_item
@@ -428,21 +540,6 @@ CREATE TABLE bookshopdb.wishlist_item
             ON UPDATE NO ACTION
 );
 
--- Thêm dữ liệu mẫu cho phương thức giao hàng
-INSERT INTO bookshopdb.delivery_method (name, description, price, estimated_days) VALUES
-('Giao hàng tiêu chuẩn', 'Giao hàng trong nội thành', 25000.00, '2-3 ngày'),
-('Giao hàng nhanh', 'Giao hàng trong 24h đối với nội thành', 40000.00, '1 ngày'),
-('Giao hàng tiết kiệm', 'Giao hàng toàn quốc', 18000.00, '4-7 ngày');
-
-
--- Thêm dữ liệu mẫu cho phương thức thanh toán
-INSERT INTO bookshopdb.payment_method (name, code, description, requires_confirmation) VALUES
-('Thanh toán khi nhận hàng (COD)', 'cod', 'Thanh toán tiền mặt khi nhận hàng', 1),
-('VNPay', 'vnpay', 'Thanh toán qua cổng VNPay', 0);
--- ('Thẻ tín dụng/Ghi nợ', 'credit_card', 'Thanh toán trực tuyến bằng thẻ Visa, MasterCard, JCB', 0),
--- ('Chuyển khoản ngân hàng', 'bank_transfer', 'Chuyển khoản qua tài khoản ngân hàng', 1),
--- ('Ví điện tử MoMo', 'momo', 'Thanh toán qua ví điện tử MoMo', 0),
--- ('ZaloPay', 'zalopay', 'Thanh toán qua ví ZaloPay', 0),
 
 -- user
 INSERT INTO bookshopdb.user(`username`,`password`,`fullname`,`email`,`phoneNumber`,`gender`,`address`,`role`) VALUES ('user1','202CB962AC59075B964B07152D234B70','Dunn Mcpherson','dunnmcpherson@recrisys.com','0989894900',0,'8 Virginia Place, Troy, Norway','ADMIN');

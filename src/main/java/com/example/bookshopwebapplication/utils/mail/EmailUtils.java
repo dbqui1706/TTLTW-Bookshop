@@ -79,7 +79,7 @@ public class EmailUtils {
 
     @NotNull
     private static String getEmailContent(String toAddress, String fullName, String code) {
-        String activationLink = "http://localhost:8080/activeAccount?email=" + toAddress + "&code=" + code;
+        String activationLink = "http://localhost:8080/api/auth/active-account?email=" + toAddress + "&code=" + code;
         String emailContent = "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +

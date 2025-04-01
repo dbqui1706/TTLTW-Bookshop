@@ -48,6 +48,7 @@ public class PermissionDao extends AbstractDao<Object> {
                 "WHERE up.user_id = ?";
 
         PreparedStatement stmt2 = conn.prepareStatement(sql);
+        stmt2.setLong(1, userId);
         ResultSet rs2 = stmt2.executeQuery();
         try {
             stmt2.setLong(1, userId);

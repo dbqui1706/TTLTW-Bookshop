@@ -155,4 +155,12 @@ public class CartDao extends AbstractDao<Cart> implements ICartDao {
             throw new RuntimeException(e);
         }
     }
+
+    public Long newCart(Integer userId) {
+       clearSQL();
+       builderSQL.append(
+                "INSERT INTO cart (userId) VALUES(?)"
+       );
+         return insert(builderSQL.toString(), userId);
+    }
 }

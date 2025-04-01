@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.servlet.client;
 import com.example.bookshopwebapplication.dto.UserDto;
 import com.example.bookshopwebapplication.entities.User;
 import com.example.bookshopwebapplication.service.UserService;
+import org.apache.xmlbeans.impl.common.NameUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -49,7 +50,10 @@ public class Setting extends HttpServlet {
                 values.get("phoneNumber"),
                 Integer.parseInt(values.get("gender")),
                 values.get("address"),
-                "CUSTOMER"
+                "CUSTOMER",
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                false
         );
 
         // Chuỗi thông báo khi cập nhật thành công và khi cập nhật không thành công

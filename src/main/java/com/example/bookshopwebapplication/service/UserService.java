@@ -222,8 +222,8 @@ public class UserService implements IUserService {
         return getById(id);
     }
 
-    public void setActiveEmail(Long userId) {
-        User user = userDao.getById(userId).get();
+    public void setActiveEmail(String email) {
+        User user = userDao.getByEmail(email).get();
         user.setIsActiveEmail(true);
         userDao.update(user);
     }

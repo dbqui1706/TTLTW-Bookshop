@@ -169,7 +169,6 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
         Long id = extractIdFromParameters(parameters);
         // Lấy trạng thái trước khi update bằng một kết nối riêng
         T beforeState = getCurrentState(id);
-
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             // Thực hiện truy vấn UPDATE

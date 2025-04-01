@@ -5,6 +5,9 @@ import com.example.bookshopwebapplication.dto.CartDto;
 import com.example.bookshopwebapplication.dto.CartItemDto;
 import com.example.bookshopwebapplication.entities.Cart;
 import com.example.bookshopwebapplication.entities.CartItem;
+import com.example.bookshopwebapplication.http.request.cart.SaveCartRequest;
+import com.example.bookshopwebapplication.http.response.cart.CartResponse;
+import com.example.bookshopwebapplication.http.response.product.CartProductResponse;
 import com.example.bookshopwebapplication.service._interface.ICartItemService;
 import com.example.bookshopwebapplication.service.transferObject.TCartItem;
 
@@ -113,4 +116,15 @@ public class CartItemService implements ICartItemService {
         cartItemDao.deleteCartItemByCartIdAndProductId(cartId, productId);
     }
 
+    public boolean bulkInsert(Long cartId, List<SaveCartRequest.CartItem> cartItems) {
+        return cartItemDao.bulkInsert(cartId, cartItems);
+    }
+
+    public List<CartProductResponse> getByCartIdAndUserId (long cartId, long userId) {
+        return cartItemDao.getByCartIdAndUserId(cartId, userId);
+    }
+
+    public boolean updateQuantity(long cartItemId, int quantity) {
+        return cartItemDao.updateQuantity(cartItemId, quantity);
+    }
 }
