@@ -2,7 +2,10 @@ package com.example.bookshopwebapplication.dao;
 
 import com.example.bookshopwebapplication.dao.mapper.UserAddressMapper;
 import com.example.bookshopwebapplication.entities.UserAddress;
+import org.apache.poi.ss.formula.eval.ConcatEval;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -28,6 +31,19 @@ public class UserAddressDao extends AbstractDao<UserAddress> {
     }
 
     public void update(UserAddress userAddress) {
+        // Bước 1: Reset tất cả các địa chỉ khác về 0
+        clearSQL();
+        builderSQL.append("UPDATE bookshopdb.user_addresses SET is_default = 0 " +
+                "WHERE user_id = ? AND id != ?");
+        boolean resetSuccess = executeUpdateAddressDefault(builderSQL.toString(),
+                userAddress.getUserId(),
+                userAddress.getId());
+
+        if (!resetSuccess) {
+            return;
+        }
+
+        // Bước 2: Cập nhật địa chỉ được chọn
         clearSQL();
         builderSQL.append("UPDATE bookshopdb.user_addresses SET address_type = ?, recipient_name = ?, phone_number = ?, " +
                 "address_line1 = ?, province_code = ?, district_code = ?, ward_code = ?, is_default = ?, " +
@@ -49,6 +65,25 @@ public class UserAddressDao extends AbstractDao<UserAddress> {
         clearSQL();
         builderSQL.append("SELECT * FROM bookshopdb.user_addresses WHERE user_id = ?");
         return query(builderSQL.toString(), new UserAddressMapper(), userId);
+    }
+
+    private boolean executeUpdateAddressDefault(String sql, Long userId, Long id) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(sql);
+            statement.setLong(1, userId);
+            statement.setLong(2, id);
+            statement.executeUpdate();
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            close(connection, statement, null);
+        }
     }
 
     @Override

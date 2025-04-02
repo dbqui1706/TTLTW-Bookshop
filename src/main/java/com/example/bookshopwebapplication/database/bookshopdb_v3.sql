@@ -427,15 +427,6 @@ CREATE TABLE bookshopdb.wishlist_item
             ON DELETE NO ACTION
             ON UPDATE NO ACTION
 );
--- Thêm một số dữ liệu mẫu cho địa chỉ người dùng
-INSERT INTO bookshopdb.user_addresses (user_id, address_type, recipient_name, phone_number, address_line1, city, district, ward, is_default)
-VALUES
-(1, 'HOME', 'Dunn Mcpherson', '0989894900', '8 Virginia Place', 'Troy', 'Norway', 'Quận 1', 1),
-(2, 'COMPANY', 'Foreman Carter', '0993194154', '28 Richardson Street', 'Layhill', 'Netherlands', 'Quận 2', 1),
-(3, 'COMPANY', 'Felecia Cabrera', '0930174351', '41 Linden Street', 'Slovan', 'S. Georgia', 'Quận 3', 1),
-(4, 'COMPANY', 'Juliette Mcdowell', '0911925643', '5 Schenck Court', 'Dana', 'Cyprus', 'Quận 7', 1),
-(4, 'HOME', 'Juliette Mcdowell', '0911925643', 'Nguyễn Văn Linh', 'Hồ Chí Minh', 'Quận 7', 'Phường Tân Phong', 0),
-(5, 'HOME', 'Vilma Spencer', '0987509391', '5 Pooles Lane', 'Allentown', 'Zambia', 'Quận 1', 1);
 
 -- Thêm dữ liệu mẫu cho phương thức giao hàng
 INSERT INTO bookshopdb.delivery_method (name, description, price, estimated_days) VALUES
