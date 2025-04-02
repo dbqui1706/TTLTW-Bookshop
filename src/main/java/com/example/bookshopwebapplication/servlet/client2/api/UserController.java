@@ -1,9 +1,12 @@
 package com.example.bookshopwebapplication.servlet.client2.api;
 
 import com.example.bookshopwebapplication.dto.UserDto;
+import com.example.bookshopwebapplication.entities.User;
+import com.example.bookshopwebapplication.entities.UserAddress;
 import com.example.bookshopwebapplication.http.request.user.LoginDTO;
 import com.example.bookshopwebapplication.http.request.user.RegisterDTO;
 import com.example.bookshopwebapplication.service.PermissionService;
+import com.example.bookshopwebapplication.service.UserAddressService;
 import com.example.bookshopwebapplication.service.UserService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 import com.example.bookshopwebapplication.utils.MultiPart;
@@ -35,6 +38,7 @@ import java.util.UUID;
 )
 public class UserController extends HttpServlet {
     private final UserService userService = new UserService();
+    private final UserAddressService userAddressService = new UserAddressService();
     private final PermissionService permissionService = new PermissionService();
 
     @Override
@@ -122,6 +126,8 @@ public class UserController extends HttpServlet {
                 );
                 return;
             }
+            // Lấy địa chỉ người dùng thông qua bảng "user_address"
+            List<UserAddress> userAddresses = userAddressService.findByUser(user.get().getId());
 
             // Save user to session
             request.getSession().setAttribute("currentUser", user.get());
@@ -138,6 +144,7 @@ public class UserController extends HttpServlet {
             );
             Map<String, Object> result = Map.of(
                     "user", user.get(),
+                    "address", userAddresses,
                     "token", request.getSession().getId()
             );
             JsonUtils.out(

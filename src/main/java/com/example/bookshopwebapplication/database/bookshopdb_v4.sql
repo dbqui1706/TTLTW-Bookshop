@@ -59,24 +59,35 @@ CREATE TABLE bookshopdb.user_status
 );
 
 -- Bảng địa chỉ người dùng
-CREATE TABLE IF NOT EXISTS bookshopdb.user_addresses (
+CREATE TABLE bookshopdb.user_addresses (
     id                BIGINT         NOT NULL AUTO_INCREMENT,
     user_id           BIGINT         NOT NULL,
-    address_type      VARCHAR(20)    NOT NULL DEFAULT 'SHIPPING', -- Loại địa chỉ (SHIPPING - giao hàng, BILLING - thanh toán, BOTH - cả hai)
+    address_type      VARCHAR(20)    NOT NULL DEFAULT 'HOME', -- 'COMPANY' , 'HOME'
     recipient_name    VARCHAR(100)   NOT NULL, -- Tên người nhận
-    phone_number      VARCHAR(15)    NOT NULL, -- Số điện thoại liên hệ
-    address_line1     VARCHAR(255)   NOT NULL, -- Dòng địa chỉ chính
-    address_line2     VARCHAR(255)   NULL, -- Dòng địa chỉ phụ (tùy chọn)
-    city              VARCHAR(100)   NOT NULL,
-    district          VARCHAR(100)   NOT NULL,
-    ward              VARCHAR(100)   NOT NULL,
-    postal_code       VARCHAR(20)    NULL, -- Mã bưu điện (tùy chọn)
-    is_default        TINYINT(1)     NOT NULL DEFAULT 0, -- Đánh dấu địa chỉ mặc định (1 = mặc định)
-    notes             TEXT           NULL,  -- Ghi chú đặc biệt về địa chỉ này
+    phone_number      VARCHAR(15)    NOT NULL, -- Điện thoại người nhận
+    address_line1     VARCHAR(255)   NOT NULL, -- Địa chỉ
+    address_line2     VARCHAR(255)   NULL, -- Địa chỉ phụ (Option)
+    
+    -- Lưu trữ mã code thay vì tên text
+    province_code     INT            NOT NULL, -- Mã tỉnh/thành phố từ API
+    district_code     INT            NOT NULL, -- Mã quận/huyện từ API
+    ward_code         INT            NOT NULL, -- Mã phường/xã từ API
+    
+    -- Vẫn giữ lại tên để tiện hiển thị nhanh (không phải join nhiều bảng)
+    province_name     VARCHAR(100)   NOT NULL, -- Tên tỉnh/thành
+    district_name     VARCHAR(100)   NOT NULL, -- Tên quận/huyện
+    ward_name         VARCHAR(100)   NOT NULL, -- Tên phường/xã
+    
+    postal_code       VARCHAR(20)    NULL,
+    is_default        TINYINT(1)     NOT NULL DEFAULT 0,
+    notes             TEXT           NULL,
     created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_user_addresses_user (user_id),
+    INDEX idx_user_addresses_province (province_code),
+    INDEX idx_user_addresses_district (district_code),
+    INDEX idx_user_addresses_ward (ward_code),
     CONSTRAINT fk_user_addresses_user
         FOREIGN KEY (user_id)
         REFERENCES bookshopdb.user (id)

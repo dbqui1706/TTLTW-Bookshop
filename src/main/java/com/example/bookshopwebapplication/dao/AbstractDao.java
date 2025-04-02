@@ -190,6 +190,33 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
         }
     }
 
+    @Override
+    public void delete(String sql, Object... parameters) {
+        // Lấy ID từ các tham số (ví dụ: ID là tham số cuối cùng)
+        Long id = extractIdFromParameters(parameters);
+        // Lấy trạng thái trước khi update bằng một kết nối riêng
+        T beforeState = getCurrentState(id);
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            // Thực hiện truy vấn UPDATE
+            try (PreparedStatement stmt = prepareStatement(conn, sql, parameters)) {
+                stmt.executeUpdate();
+            }
+            conn.commit();
+
+            // Sau khi update, lấy trạng thái mới của bản ghi
+            T afterState = getCurrentState(id);
+            // Nếu không thao tác trên bảng audit_log, ghi log thao tác UPDATE
+            if (!this.tableName.equalsIgnoreCase("audit_log")) {
+                logOperation("DELETE", "DANGER", beforeState, afterState,
+                        RequestContext.getUserId() != null ? RequestContext.getUserId() : 0L);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error executing update", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Lấy trạng thái hiện tại của bản ghi từ database theo ID.
      * Mỗi lần gọi phương thức này mở một kết nối mới và tự đóng sau khi xong.
@@ -242,7 +269,7 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
         String afterJson = afterData != null ? gson.toJson(afterData) : null;
 
         // Ghi log bằng cách gọi phương thức insert của AuditLogDao
-        auditLogDao.saveLog(ipAddress, level, tableName, action, beforeJson, afterJson, modifiedBy);
+        long id = auditLogDao.saveLog(ipAddress, level, tableName, action, beforeJson, afterJson, modifiedBy);
     }
 
     /**
