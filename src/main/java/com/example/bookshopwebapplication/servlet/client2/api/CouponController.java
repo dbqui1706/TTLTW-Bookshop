@@ -27,12 +27,12 @@ public class CouponController extends HttpServlet {
         String uri = req.getRequestURI();
         switch (uri) {
             case "/api/coupons":
-                getCoupon(req, resp);
+                getCoupons(req, resp);
                 break;
         }
     }
 
-    private void getCoupon(HttpServletRequest req, HttpServletResponse resp) {
+    private void getCoupons(HttpServletRequest req, HttpServletResponse resp) {
         try {
             BigDecimal orderValue = new BigDecimal(req.getParameter("orderValue"));
             List<Coupon> coupons = couponService.getAvailableCoupons(null, orderValue);
@@ -43,6 +43,18 @@ public class CouponController extends HttpServlet {
                     HttpServletResponse.SC_OK
             );
         } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void applyCoupon(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+
+        }catch (Exception e) {
             JsonUtils.out(
                     resp,
                     e.getMessage(),

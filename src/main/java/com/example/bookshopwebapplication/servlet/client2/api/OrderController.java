@@ -1,6 +1,9 @@
 package com.example.bookshopwebapplication.servlet.client2.api;
 
-import com.example.bookshopwebapplication.service.OrderService;
+import com.example.bookshopwebapplication.http.request.order.OrderCreateRequest;
+import com.example.bookshopwebapplication.http.response.api.ApiResponse;
+import com.example.bookshopwebapplication.http.response.order.OrderResponse;
+import com.example.bookshopwebapplication.service.OderService2;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 
 import javax.servlet.ServletException;
@@ -19,8 +22,7 @@ import java.io.IOException;
 )
 public class OrderController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final OrderService orderService = new OrderService();
-
+    private final OderService2 orderService2 = new OderService2();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String uri = req.getRequestURI();
@@ -46,7 +48,6 @@ public class OrderController extends HttpServlet {
             int limitInt = limit == null ? 10 : Integer.parseInt(limit);
 
 
-
         }catch (Exception e) {
             JsonUtils.out(
                     response,
@@ -54,5 +55,33 @@ public class OrderController extends HttpServlet {
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR
             );
         }
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try{
+            OrderCreateRequest orderCreateRequest = JsonUtils.get(request, OrderCreateRequest.class);
+
+            // Tạo quy trình đặt hàng.
+            OrderResponse orderResponse = orderService2.createOrder(orderCreateRequest);
+
+            JsonUtils.out(
+                    response,
+                    createSuccessResponse(orderResponse),
+                    HttpServletResponse.SC_OK
+            );
+        }catch (Exception e){
+            JsonUtils.out(
+                    response,
+                    e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+    private ApiResponse<OrderResponse> createSuccessResponse(OrderResponse data) {
+        return new ApiResponse<>(true, "Order created successfully", data);
+    }
+
+    private ApiResponse<Void> createErrorResponse(String message, int status) {
+        return new ApiResponse<>(false, message, null, status);
     }
 }

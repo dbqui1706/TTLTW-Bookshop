@@ -9,7 +9,7 @@ public class DeliveryMethod {
     private Long id;
     private String name;
     private String description;
-    private String price;
+    private Double price;
     private String estimatedDays;
     private String icon;
     private boolean isActive;

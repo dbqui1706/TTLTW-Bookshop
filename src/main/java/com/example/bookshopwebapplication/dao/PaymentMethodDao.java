@@ -6,6 +6,7 @@ import com.example.bookshopwebapplication.entities.PaymentMethod;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public class PaymentMethodDao extends AbstractDao<PaymentMethod> {
     public PaymentMethodDao() {
@@ -38,5 +39,14 @@ public class PaymentMethodDao extends AbstractDao<PaymentMethod> {
         } catch (SQLException e) {
             throw new SQLException(e);
         }
+    }
+
+    public Optional<PaymentMethod> findByCode(String paymentMethod) {
+        clearSQL();
+        builderSQL.append(
+                "SELECT * FROM bookshopdb.payment_method WHERE code = ? AND is_active = 1"
+        );
+        List<PaymentMethod> rs = query(builderSQL.toString(), new PaymentMethodMapper(), paymentMethod);
+        return Optional.ofNullable(rs.isEmpty() ? null : rs.get(0));
     }
 }

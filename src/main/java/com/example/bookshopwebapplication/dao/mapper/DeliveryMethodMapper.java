@@ -13,7 +13,7 @@ public class DeliveryMethodMapper implements com.example.bookshopwebapplication.
             deliveryMethod.setId(resultSet.getLong("id"));
             deliveryMethod.setName(resultSet.getString("name"));
             deliveryMethod.setDescription(resultSet.getString("description"));
-            deliveryMethod.setPrice(resultSet.getString("price"));
+            deliveryMethod.setPrice(resultSet.getDouble("price"));
             deliveryMethod.setEstimatedDays(resultSet.getString("estimated_days"));
             deliveryMethod.setIcon(resultSet.getString("icon"));
             deliveryMethod.setActive(resultSet.getBoolean("is_active"));
