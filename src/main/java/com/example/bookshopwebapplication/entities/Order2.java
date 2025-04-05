@@ -16,11 +16,11 @@ public class Order2 {
     private String status;
     private Long deliveryMethodId;
     private Long paymentMethodId;
-    private BigDecimal subtotal;
-    private BigDecimal deliveryPrice;
-    private BigDecimal discountAmount;
-    private BigDecimal taxAmount;
-    private BigDecimal totalAmount;
+    private Double subtotal;
+    private Double deliveryPrice;
+    private Double discountAmount;
+    private Double taxAmount;
+    private Double totalAmount;
     private String couponCode;
     private Boolean isVerified;
     private String note;

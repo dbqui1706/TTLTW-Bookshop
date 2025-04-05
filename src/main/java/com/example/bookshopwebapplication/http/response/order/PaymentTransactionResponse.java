@@ -14,6 +14,6 @@ public class PaymentTransactionResponse {
     private String transactionCode;
     private String paymentProviderRef;
     private String status;
-    private BigDecimal amount;
+    private Double amount;
     private Timestamp paymentDate;
 }

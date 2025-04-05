@@ -19,11 +19,11 @@ public class OrderResponse {
     private String orderCode;
     private Long userId;
     private String status;
-    private BigDecimal subtotal;
-    private BigDecimal deliveryPrice;
-    private BigDecimal discountAmount;
-    private BigDecimal taxAmount;
-    private BigDecimal totalAmount;
+    private Double subtotal;
+    private Double deliveryPrice;
+    private Double discountAmount;
+    private Double taxAmount;
+    private Double totalAmount;
     private String couponCode;
     private Boolean isVerified;
     private String note;
@@ -33,4 +33,5 @@ public class OrderResponse {
     private List<OrderItemResponse> items;
     private OrderShippingResponse shipping;
     private PaymentTransactionResponse transaction;
+    private PriceSummary priceSummary;
 }

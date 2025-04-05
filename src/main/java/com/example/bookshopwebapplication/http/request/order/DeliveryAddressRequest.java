@@ -7,15 +7,15 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeliveryAddressRequest {
-    private String fullname;
-    private String phone;
+    private String recipientName;
+    private String phoneNumber;
     private String provinceCode;
-    private String province;
+    private String provinceName;
     private String districtCode;
-    private String district;
+    private String districtName;
     private String wardCode;
-    private String ward;
-    private String address;
+    private String wardName;
+    private String addressLine1;
     private Boolean isDefault;
     private String addressType;
 }

@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.dao;
 
 import com.example.bookshopwebapplication.entities.PaymentTransaction;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -18,7 +19,7 @@ public class PaymentTransactionDao extends AbstractDao<PaymentTransaction> {
                     .id(resultSet.getLong("id"))
                     .orderId(resultSet.getLong("order_id"))
                     .paymentMethodId(resultSet.getLong("payment_method_id"))
-                    .amount(resultSet.getBigDecimal("amount"))
+                    .amount(resultSet.getDouble("amount"))
                     .transactionCode(resultSet.getString("transaction_code"))
                     .paymentProviderRef(resultSet.getString("payment_provider_ref"))
                     .status(resultSet.getString("status"))
@@ -34,6 +35,16 @@ public class PaymentTransactionDao extends AbstractDao<PaymentTransaction> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public Long saveWithConnection(PaymentTransaction transaction, Connection conn) {
+        clearSQL();
+        builderSQL.append("INSERT INTO payment_transaction (order_id, payment_method_id, amount, ");
+        builderSQL.append("transaction_code, payment_provider_ref, status, payment_date, note) ");
+        builderSQL.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        return insertWithConnection(conn, builderSQL.toString(), transaction.getOrderId(), transaction.getPaymentMethodId(),
+                transaction.getAmount(), transaction.getTransactionCode(), transaction.getPaymentProviderRef(),
+                transaction.getStatus(), transaction.getPaymentDate(), transaction.getNote());
     }
 
     public Long save(PaymentTransaction transaction) {

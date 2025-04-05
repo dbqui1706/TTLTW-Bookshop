@@ -13,7 +13,7 @@ public class PaymentTransaction {
     private Long id;
     private Long orderId;
     private Long paymentMethodId;
-    private BigDecimal amount;
+    private Double amount;
     private String transactionCode;
     private String paymentProviderRef;
     private String status;

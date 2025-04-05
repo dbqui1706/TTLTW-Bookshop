@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.dao;
 
 import com.example.bookshopwebapplication.entities.OrderShipping;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -9,13 +10,32 @@ public class OderShippingDao extends AbstractDao<OrderShipping> {
     public OderShippingDao() {
         super("order_shipping");
     }
+    public Long saveWithConnection(OrderShipping orderShipping, Connection conn) {
+        clearSQL();
+        builderSQL.append("INSERT INTO order_shipping (order_id, receiver_name, receiver_email, receiver_phone, ");
+        builderSQL.append("address_line1, address_line2, city, district, ward, postal_code, shipping_notes, ");
+        builderSQL.append("tracking_number, shipping_carrier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        return insertWithConnection(conn, builderSQL.toString(), orderShipping.getOrderId(),
+                orderShipping.getReceiverName(), orderShipping.getReceiverEmail(),
+                orderShipping.getReceiverPhone(), orderShipping.getAddressLine1(),
+                orderShipping.getAddressLine2(), orderShipping.getCity(),
+                orderShipping.getDistrict(), orderShipping.getWard(),
+                orderShipping.getPostalCode(), orderShipping.getShippingNotes(),
+                orderShipping.getTrackingNumber(), orderShipping.getShippingCarrier());
+    }
 
     public Long save(OrderShipping orderShipping) {
         clearSQL();
         builderSQL.append("INSERT INTO order_shipping (order_id, receiver_name, receiver_email, receiver_phone, ");
         builderSQL.append("address_line1, address_line2, city, district, ward, postal_code, shipping_notes, ");
         builderSQL.append("tracking_number, shipping_carrier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        return insert(builderSQL.toString(), orderShipping);
+        return insert(builderSQL.toString(), orderShipping.getOrderId(),
+                orderShipping.getReceiverName(), orderShipping.getReceiverEmail(),
+                orderShipping.getReceiverPhone(), orderShipping.getAddressLine1(),
+                orderShipping.getAddressLine2(), orderShipping.getCity(),
+                orderShipping.getDistrict(), orderShipping.getWard(),
+                orderShipping.getPostalCode(), orderShipping.getShippingNotes(),
+                orderShipping.getTrackingNumber(), orderShipping.getShippingCarrier());
     }
 
     @Override

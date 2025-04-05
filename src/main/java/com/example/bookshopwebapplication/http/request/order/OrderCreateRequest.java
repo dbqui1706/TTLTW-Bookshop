@@ -1,5 +1,6 @@
 package com.example.bookshopwebapplication.http.request.order;
 
+import com.example.bookshopwebapplication.http.response.order.PriceSummary;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,4 +23,5 @@ public class OrderCreateRequest {
     private BigDecimal deliveryPrice;
     private BigDecimal discountPromotionAmount;
     private String couponCode;
+    private PriceSummary priceSummary;
 }

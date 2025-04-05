@@ -9,11 +9,12 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItemRequest {
+    private Long cartItemId;
     private Long productId;
     private Integer quantity;
-    private BigDecimal price;
-    private BigDecimal originalPrice;
-    private Float discount;
+    private Double price;
+    private Double originalPrice;
+    private Double discount;
     private String name;
     private String image;
 }

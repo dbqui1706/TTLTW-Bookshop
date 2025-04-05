@@ -66,7 +66,7 @@ public class OrderController extends HttpServlet {
 
             JsonUtils.out(
                     response,
-                    createSuccessResponse(orderResponse),
+                    orderResponse,
                     HttpServletResponse.SC_OK
             );
         }catch (Exception e){

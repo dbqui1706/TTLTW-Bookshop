@@ -54,6 +54,12 @@ public class CartItemDao extends AbstractDao<CartItem> implements ICartItemDao {
         update(builderSQL.toString(), id);
     }
 
+    public void deleteWithConnection(Long id, Connection conn) {
+        clearSQL();
+        builderSQL.append("DELETE FROM cart_item WHERE id = ?");
+        updateWithConnection(conn, builderSQL.toString(), id);
+    }
+
     //Lấy một CartItem từ cơ sở dữ liệu dựa trên id.
     public Optional<CartItem> getById(Long id) {
         clearSQL();
