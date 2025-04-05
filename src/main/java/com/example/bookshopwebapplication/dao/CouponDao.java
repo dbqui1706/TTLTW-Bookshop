@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.dao;
 import com.example.bookshopwebapplication.dao.mapper.CouponMapper;
 import com.example.bookshopwebapplication.entities.Coupon;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -81,6 +82,11 @@ public class CouponDao extends AbstractDao<Coupon> {
         clearSQL();
         builderSQL.append("UPDATE bookshopdb.coupon SET usage_count = usage_count + 1 WHERE code = ?");
         update(builderSQL.toString(), code);
+    }
+    public void incrementUsageCountWithConnection(String code, Connection conn) {
+        clearSQL();
+        builderSQL.append("UPDATE bookshopdb.coupon SET usage_count = usage_count + 1 WHERE code = ?");
+        updateWithConnection(conn, builderSQL.toString(), code);
     }
 
     public List<Coupon> getActiveCoupons() {

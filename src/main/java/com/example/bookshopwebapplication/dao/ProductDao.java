@@ -1008,7 +1008,7 @@ public class ProductDao extends AbstractDao<Product> implements IProductDao {
         return productDetail;
     }
 
-    public void updateProductQuantity(Long productId, short newQuantity) {
+    public void updateProductQuantity(Long productId, int newQuantity) {
         clearSQL();
         builderSQL.append("UPDATE product SET quantity = ? WHERE id = ?");
         update(builderSQL.toString(), newQuantity, productId);

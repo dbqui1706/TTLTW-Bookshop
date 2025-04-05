@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.dao;
 
 import com.example.bookshopwebapplication.entities.OrderStatusHistory;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -12,7 +13,7 @@ public class OrderStatusHistoryDao extends AbstractDao<OrderStatusHistory> {
 
     @Override
     public OrderStatusHistory mapResultSetToEntity(ResultSet resultSet) throws SQLException {
-        try{
+        try {
             return OrderStatusHistory.builder()
                     .id(resultSet.getLong("id"))
                     .orderId(resultSet.getLong("order_id"))
@@ -21,10 +22,18 @@ public class OrderStatusHistoryDao extends AbstractDao<OrderStatusHistory> {
                     .changedBy(resultSet.getLong("changed_by"))
                     .createdAt(resultSet.getTimestamp("created_at"))
                     .build();
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Error in OrderStatusHistoryDao: " + e.getMessage());
             throw new SQLException(e);
         }
+    }
+
+    public Long saveWithConnection(OrderStatusHistory statusHistory, Connection conn) {
+        clearSQL();
+        builderSQL.append("INSERT INTO order_status_history (order_id, status, note, changed_by) ");
+        builderSQL.append("VALUES (?, ?, ?, ?)");
+        return insertWithConnection(conn, builderSQL.toString(), statusHistory.getOrderId(),
+                statusHistory.getStatus(), statusHistory.getNote(), statusHistory.getChangedBy());
     }
 
     public Long save(OrderStatusHistory statusHistory) {

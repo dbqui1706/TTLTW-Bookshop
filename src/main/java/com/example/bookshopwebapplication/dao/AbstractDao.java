@@ -17,7 +17,6 @@ import java.util.*;
  * @param <T> Kiểu entity mà DAO sẽ thao tác
  */
 public abstract class AbstractDao<T> implements IGenericDao<T> {
-
     // Logger dùng cho việc ghi log
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDao.class);
 
@@ -52,7 +51,7 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
      * @return Connection mới
      * @throws RuntimeException nếu không kết nối được
      */
-    protected Connection getConnection() {
+    public Connection getConnection() {
         try {
             // Tải driver từ file properties (ví dụ: "com.mysql.cj.jdbc.Driver")
             Class.forName(bundle.getString("driverName"));
@@ -139,7 +138,6 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
      *
      * @param sql        Câu truy vấn INSERT
      * @param parameters Các tham số cho PreparedStatement
-     * @return Không trả về giá trị
      */
     public void insertNoGenerateKey(String sql, Object... parameters) {
         try (Connection conn = getConnection();
@@ -396,12 +394,170 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
                 stmt.close();
             }
             if (conn != null) {
-                conn.close();
+                conn.close(); // Chỉ đóng kết nối nếu không phải kết nối bên ngoài
             }
         } catch (SQLException e) {
             LOGGER.error("Error closing resources", e);
             throw new RuntimeException(e);
         }
+    }
+
+    public void executeTransaction(TransactionCallback callback) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            callback.execute(conn);
+
+            conn.commit();
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    throw new RuntimeException("Không thể rollback transaction", ex);
+                }
+            }
+            throw new RuntimeException("Lỗi khi thực thi transaction: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    // Log lỗi
+                }
+            }
+        }
+    }
+
+    // Interface để chuyển các câu lệnh SQL vào transaction
+    public interface TransactionCallback {
+        void execute(Connection conn) throws SQLException;
+    }
+
+    /**
+     * Thực hiện một truy vấn INSERT với connection được cung cấp từ bên ngoài.
+     *
+     * @param conn Connection được cung cấp từ bên ngoài
+     * @param sql Câu truy vấn INSERT
+     * @param parameters Các tham số
+     * @return ID của bản ghi vừa được thêm vào
+     */
+    public Long insertWithConnection(Connection conn, String sql, Object... parameters) {
+        try {
+            // Sử dụng connection đã được cung cấp
+            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+            // Đặt các tham số
+            setParameters(stmt, parameters);
+            stmt.executeUpdate();
+
+            // Lấy ID được sinh ra
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                Long id = rs.getLong(1);
+
+                // Không ghi log tại đây vì transaction chưa commit
+                // Log sẽ được ghi sau khi transaction commit thành công
+
+                return id;
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi thực hiện insert: " + e.getMessage(), e);
+        }
+        return null;
+    }
+    /**
+     * Thực hiện một truy vấn UPDATE với connection được cung cấp từ bên ngoài.
+     *
+     * @param conn Connection được cung cấp từ bên ngoài
+     * @param sql Câu truy vấn UPDATE
+     * @param parameters Các tham số
+     */
+    public void updateWithConnection(Connection conn, String sql, Object... parameters) {
+        try {
+            // Sử dụng connection đã được cung cấp
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            // Đặt các tham số
+            setParameters(stmt, parameters);
+            stmt.executeUpdate();
+
+            stmt.close();
+            // Không ghi log tại đây vì transaction chưa commit
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi thực hiện update: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Thực hiện một truy vấn DELETE với connection được cung cấp từ bên ngoài.
+     *
+     * @param conn Connection được cung cấp từ bên ngoài
+     * @param sql Câu truy vấn DELETE
+     * @param parameters Các tham số
+     */
+    public void deleteWithConnection(Connection conn, String sql, Object... parameters) {
+        try {
+            // Sử dụng connection đã được cung cấp
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            // Đặt các tham số
+            setParameters(stmt, parameters);
+            stmt.executeUpdate();
+
+            stmt.close();
+            // Không ghi log tại đây vì transaction chưa commit
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi thực hiện delete: " + e.getMessage(), e);
+        }
+    }
+    /**
+     * Thực hiện truy vấn SELECT với connection được cung cấp từ bên ngoài.
+     *
+     * @param conn Connection được cung cấp từ bên ngoài
+     * @param sql Câu truy vấn SQL
+     * @param rowMapper Mapper để ánh xạ ResultSet sang entity
+     * @param parameters Các tham số
+     * @return Danh sách entity
+     */
+    public List<T> queryWithConnection(Connection conn, String sql, IRowMapper<T> rowMapper, Object... parameters) {
+        List<T> result = new LinkedList<>();
+        try {
+            // Sử dụng connection đã được cung cấp
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            // Đặt các tham số
+            setParameters(stmt, parameters);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                result.add(rowMapper.mapRow(rs));
+            }
+
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi thực hiện query: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Lấy một entity theo ID với connection được cung cấp từ bên ngoài.
+     *
+     * @param conn Connection được cung cấp từ bên ngoài
+     * @param sql Câu truy vấn SQL
+     * @param mapper Mapper để ánh xạ ResultSet sang entity
+     * @param parameters Các tham số
+     * @return Optional chứa entity nếu tìm thấy
+     */
+    public Optional<T> getByIdWithConnection(Connection conn, String sql, IRowMapper<T> mapper, Object... parameters) {
+        List<T> list = queryWithConnection(conn, sql, mapper, parameters);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
     /**

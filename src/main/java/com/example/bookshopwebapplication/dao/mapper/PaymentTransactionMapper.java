@@ -14,7 +14,7 @@ public class PaymentTransactionMapper implements IRowMapper<PaymentTransaction> 
                     .id(resultSet.getLong("id"))
                     .orderId(resultSet.getLong("order_id"))
                     .paymentMethodId(resultSet.getLong("payment_method_id"))
-                    .amount(resultSet.getBigDecimal("amount"))
+                    .amount(resultSet.getDouble("amount"))
                     .transactionCode(resultSet.getString("transaction_code"))
                     .paymentProviderRef(resultSet.getString("payment_provider_ref"))
                     .status(resultSet.getString("status"))

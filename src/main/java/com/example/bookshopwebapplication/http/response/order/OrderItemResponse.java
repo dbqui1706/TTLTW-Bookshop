@@ -13,9 +13,9 @@ public class OrderItemResponse {
     private Long productId;
     private String productName;
     private String productImage;
-    private BigDecimal basePrice;
-    private BigDecimal discountPercent;
-    private BigDecimal price;
+    private Double basePrice;
+    private Double discountPercent;
+    private Double price;
     private Integer quantity;
-    private BigDecimal subtotal;
+    private Double subtotal;
 }
