@@ -395,7 +395,16 @@ CREATE TABLE bookshopdb.orders (
     id                BIGINT         NOT NULL AUTO_INCREMENT,
     order_code        VARCHAR(20)    NOT NULL UNIQUE, -- Mã đơn hàng hiển thị cho khách
     user_id           BIGINT         NOT NULL,
-    status            ENUM('pending', 'processing', 'shipping', 'delivered', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
+    status            ENUM(
+    'pending', 
+    'waiting_payment', -- Đang chờ thanh toán
+    'payment_failed',  -- Thanh toán thất bại
+    'processing', 
+    'shipping', 
+    'delivered', 
+    'cancelled', 
+    'refunded'
+	) NOT NULL DEFAULT 'pending',
     delivery_method_id BIGINT        NOT NULL,
     payment_method_id BIGINT         NOT NULL,
     subtotal          DECIMAL(10,2)  NOT NULL DEFAULT 0.00, -- Tổng tiền hàng chưa thuế, phí
@@ -494,7 +503,16 @@ CREATE TABLE bookshopdb.payment_transaction (
     amount            DECIMAL(10,2)  NOT NULL,
     transaction_code  VARCHAR(100)   NULL, -- Mã giao dịch từ cổng thanh toán
     payment_provider_ref VARCHAR(255) NULL, -- Mã tham chiếu của đơn vị thanh toán
-    status            ENUM('pending', 'completed', 'failed', 'refunded', 'partially_refunded') NOT NULL DEFAULT 'pending',
+    status            ENUM(
+		'pending',
+		'waiting_payment',  -- Đã tạo link thanh toán
+		'processing',       -- Đang xử lý thanh toán
+		'completed',
+		'failed',
+		'expired',          -- Link thanh toán hết hạn
+		'refunded',
+		'partially_refunded'
+	) NOT NULL DEFAULT 'pending',
     payment_date      TIMESTAMP      NULL, -- Thời gian thanh toán thành công
     note              TEXT           NULL,
     created_by        BIGINT         NULL, -- User ID nếu admin tạo giao dịch
@@ -521,7 +539,15 @@ CREATE TABLE bookshopdb.payment_transaction (
 CREATE TABLE bookshopdb.order_status_history (
     id                BIGINT         NOT NULL AUTO_INCREMENT,
     order_id          BIGINT         NOT NULL,
-    status            ENUM('pending', 'processing', 'shipping', 'delivered', 'cancelled', 'refunded') NOT NULL,
+    status            ENUM(
+    'pending', 
+    'waiting_payment', 
+    'payment_failed', 
+    'processing', 
+    'shipping', 
+    'delivered', 
+    'cancelled', 
+    'refunded'),
     note              TEXT           NULL,
     changed_by        BIGINT         NULL, -- User ID của người thay đổi trạng thái
     created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,

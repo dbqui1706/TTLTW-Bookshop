@@ -156,7 +156,7 @@ public class CartDao extends AbstractDao<Cart> implements ICartDao {
         }
     }
 
-    public Long newCart(Integer userId) {
+    public Long newCart(Long userId) {
        clearSQL();
        builderSQL.append(
                 "INSERT INTO cart (userId) VALUES(?)"

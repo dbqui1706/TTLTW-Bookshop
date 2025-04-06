@@ -124,7 +124,7 @@ public class CartService implements ICartService {
         return cartDao.countOrderReceivedByUserId(userId);
     }
 
-    public Long newCart(Integer userId) {
+    public Long newCart(Long userId) {
         return cartDao.newCart(userId);
     }
 }

@@ -3,7 +3,7 @@ package com.example.bookshopwebapplication.servlet.client2.api;
 import com.example.bookshopwebapplication.http.request.order.OrderCreateRequest;
 import com.example.bookshopwebapplication.http.response.api.ApiResponse;
 import com.example.bookshopwebapplication.http.response.order.OrderResponse;
-import com.example.bookshopwebapplication.service.OderService2;
+import com.example.bookshopwebapplication.service.OrderService2;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 
 import javax.servlet.ServletException;
@@ -22,7 +22,7 @@ import java.io.IOException;
 )
 public class OrderController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final OderService2 orderService2 = new OderService2();
+    private final OrderService2 orderService2 = new OrderService2();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String uri = req.getRequestURI();

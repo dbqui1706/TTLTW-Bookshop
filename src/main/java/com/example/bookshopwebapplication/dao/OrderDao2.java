@@ -211,4 +211,20 @@ public class OrderDao2 extends AbstractDao<Order2> {
         }
         return null;
     }
+    public void updateWithConnection(Order2 order, Connection conn) {
+        clearSQL();
+        builderSQL.append("UPDATE orders SET status = ?, delivery_method_id = ?, payment_method_id = ?, ");
+        builderSQL.append("subtotal = ?, delivery_price = ?, discount_amount = ?, tax_amount = ?, total_amount = ?, ");
+        builderSQL.append("coupon_code = ?, is_verified = ?, note = ? WHERE id = ?");
+        updateWithConnection(conn, builderSQL.toString(), order.getStatus(), order.getDeliveryMethodId(),
+                order.getPaymentMethodId(),order.getSubtotal(), order.getDeliveryPrice(), order.getDiscountAmount(),
+                order.getTaxAmount(), order.getTotalAmount(), order.getCouponCode(), order.getIsVerified() ? 1 : 0,
+                order.getNote(), order.getId());
+    }
+    public void updateStatusWithConnection(Long orderId, String processing, Connection conn) {
+        clearSQL();
+        builderSQL.append("UPDATE orders SET status = ? WHERE id = ?");
+        updateWithConnection(conn, builderSQL.toString(), processing, orderId);
+
+    }
 }

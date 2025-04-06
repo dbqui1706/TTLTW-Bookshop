@@ -19,6 +19,7 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
 
     /**
      * Lấy thông tin tồn kho theo ID sản phẩm
+     *
      * @param productId ID của sản phẩm
      * @return Optional chứa thông tin tồn kho hoặc empty nếu không tìm thấy
      */
@@ -31,6 +32,7 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
 
     /**
      * Cập nhật thông tin tồn kho
+     *
      * @param status đối tượng InventoryStatus cần cập nhật
      */
     public void update(InventoryStatus status) {
@@ -48,15 +50,18 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
                 status.getId());
     }
 
-    public boolean updateReservedQuantityWithConnection(Long productId, int reservedQuantity, Connection conn) {
+    public boolean updateReservedQuantityWithConnection(Long productId, int newReservedQuantity, Connection conn) {
         clearSQL();
-        builderSQL.append("UPDATE inventory_status SET reserved_quantity = ?, last_updated = ? WHERE product_id = ?");
-        updateWithConnection(conn, builderSQL.toString(), reservedQuantity, Timestamp.valueOf(LocalDateTime.now()), productId);
+        builderSQL.append("UPDATE bookshopdb.inventory_status SET available_quantity = available_quantity - 1,  \n" +
+                "reserved_quantity = 1 WHERE product_id = 51;");
+        updateWithConnection(conn, builderSQL.toString(), newReservedQuantity,
+                newReservedQuantity, Timestamp.valueOf(LocalDateTime.now()), productId);
         return true;
     }
 
     /**
      * Lấy danh sách các sản phẩm có số lượng dưới ngưỡng cảnh báo
+     *
      * @return Danh sách các thông tin tồn kho dưới ngưỡng
      */
     public List<InventoryStatus> findBelowThreshold() {
@@ -70,7 +75,8 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
 
     /**
      * Cập nhật số lượng đặt trước cho sản phẩm
-     * @param productId ID sản phẩm
+     *
+     * @param productId      ID sản phẩm
      * @param quantityChange Số lượng thay đổi (dương: tăng, âm: giảm)
      * @return true nếu cập nhật thành công, false nếu không đủ số lượng
      */
@@ -101,8 +107,9 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
 
     /**
      * Giảm số lượng thực tế trong kho (khi giao hàng) và giảm số lượng đặt trước
+     *
      * @param productId ID sản phẩm
-     * @param quantity Số lượng cần giảm
+     * @param quantity  Số lượng cần giảm
      * @return true nếu cập nhật thành công
      */
     public boolean decreaseActualQuantity(Long productId, int quantity) {
@@ -131,8 +138,9 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
 
     /**
      * Tăng số lượng thực tế trong kho (khi nhập hàng)
+     *
      * @param productId ID sản phẩm
-     * @param quantity Số lượng cần tăng
+     * @param quantity  Số lượng cần tăng
      * @return true nếu cập nhật thành công
      */
     public boolean increaseActualQuantity(Long productId, int quantity) {
@@ -166,5 +174,25 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
                 .reorderThreshold(rs.getInt("reorder_threshold"))
                 .lastUpdated(rs.getTimestamp("last_updated"))
                 .build();
+    }
+
+    public boolean updateWithConnection(InventoryStatus inventoryStatusObj, Connection conn) {
+        try {
+            clearSQL();
+            builderSQL.append("UPDATE inventory_status SET ");
+            builderSQL.append("actual_quantity = ?, available_quantity = ?, reserved_quantity = ?, ");
+            builderSQL.append("reorder_threshold = ?, last_updated = CURRENT_TIMESTAMP ");
+            builderSQL.append("WHERE product_id = ?");
+            updateWithConnection(conn, builderSQL.toString(),
+                    inventoryStatusObj.getActualQuantity(),
+                    inventoryStatusObj.getAvailableQuantity(),
+                    inventoryStatusObj.getReservedQuantity(),
+                    inventoryStatusObj.getReorderThreshold(),
+                    inventoryStatusObj.getProductId());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.servlet.client2.api;
 
 import com.example.bookshopwebapplication.dto.CartDto;
 import com.example.bookshopwebapplication.dto.CartItemDto;
+import com.example.bookshopwebapplication.http.request.cart.AddCartRequest;
 import com.example.bookshopwebapplication.http.request.cart.SaveCartRequest;
 import com.example.bookshopwebapplication.http.request.cart.UpdateCart;
 import com.example.bookshopwebapplication.http.response.product.CartProductResponse;
@@ -44,7 +45,7 @@ public class CartController extends HttpServlet {
     public void getCart(HttpServletRequest request, HttpServletResponse response) {
         try {
             // Lấy thông tin giỏ hàng từ request
-            int userId = Integer.parseInt(request.getParameter("userId"));
+            Long userId = Long.parseLong(request.getParameter("userId"));
             // Lấy thông tin giỏ hàng từ database
             Optional<CartDto> cart = cartService.getByUserId(userId);
             Long cartId = -1L;
@@ -138,6 +139,15 @@ public class CartController extends HttpServlet {
 
     private void addToCart(HttpServletRequest req, HttpServletResponse resp) {
         try {
+            AddCartRequest cartRequest = JsonUtils.get(req, AddCartRequest.class);
+            Optional<CartDto> cart = cartService.getByUserId(cartRequest.getUserId());
+            Long cartId = -1L;
+            if (cart.isEmpty()) {
+                // Tạo mới giỏ hàng
+                cartId = cartService.newCart(cartRequest.getUserId());
+            } else {
+                cartId = cart.get().getId();
+            }
 
             JsonUtils.out(
                     resp,
