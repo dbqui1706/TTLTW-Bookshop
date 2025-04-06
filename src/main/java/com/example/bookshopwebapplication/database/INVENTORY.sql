@@ -94,3 +94,7 @@ JOIN
     bookshopdb.inventory_status ist ON p.id = ist.product_id
 ORDER BY 
     p.id;
+
+SELECT * FROM bookshopdb.inventory_status WHERE product_id = 51;
+UPDATE bookshopdb.inventory_status SET available_quantity = available_quantity - 1,  
+reserved_quantity = 1 WHERE product_id = 51;

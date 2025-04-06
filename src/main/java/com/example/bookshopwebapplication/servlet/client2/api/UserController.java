@@ -142,6 +142,10 @@ public class UserController extends HttpServlet {
                     request,
                     user.get().getId()
             );
+            user.get().setPassword(null);
+            user.get().setCreatedAt(null);
+            user.get().setUpdatedAt(null);
+            user.get().setUsername(null);
             Map<String, Object> result = Map.of(
                     "user", user.get(),
                     "address", userAddresses,

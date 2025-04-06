@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 @Data
 public class SaveCartRequest {
-    private Integer userId;
+    private Long userId;
     private List<CartItem> cartItems;
 
 

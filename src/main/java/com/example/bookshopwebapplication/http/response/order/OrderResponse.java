@@ -34,4 +34,6 @@ public class OrderResponse {
     private OrderShippingResponse shipping;
     private PaymentTransactionResponse transaction;
     private PriceSummary priceSummary;
+    private String paymentUrl;
+    private Boolean requirePayment;
 }
