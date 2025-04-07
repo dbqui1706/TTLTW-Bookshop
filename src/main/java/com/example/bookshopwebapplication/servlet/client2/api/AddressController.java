@@ -25,7 +25,7 @@ public class AddressController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = Long.parseLong(req.getParameter("userId"));
+            Long userId = req.getAttribute("userId") != null ? (Long) req.getAttribute("userId") : -1L;
             JsonUtils.out(
                     resp,
                     userAddressService.findByUser(userId),

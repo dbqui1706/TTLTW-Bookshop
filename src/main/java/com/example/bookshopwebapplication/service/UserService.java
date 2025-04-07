@@ -10,12 +10,15 @@ import com.example.bookshopwebapplication.entities.UserSession;
 import com.example.bookshopwebapplication.http.request.user.RegisterDTO;
 import com.example.bookshopwebapplication.service._interface.IUserService;
 import com.example.bookshopwebapplication.service.transferObject.TUser;
+import com.example.bookshopwebapplication.utils.CookieUtil;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -173,16 +176,17 @@ public class UserService implements IUserService {
         return userDao.getAllUserDetails(page, limit, search, role, status, sort);
     }
 
-    public void saveUserSession(HttpServletRequest request, long userId) {
+    public void saveUserSession(HttpServletRequest request, long userId, String token) {
         // Lấy thông tin thiết bị, ip, session id
         String deviceInfo = request.getHeader("User-Agent");
         String ip = request.getRemoteAddr();
         String sessionId = request.getSession().getId();
 
         UserSession userSession = new UserSession();
-        userSession.setSessionToken(sessionId);
+        userSession.setSessionToken(token);
         userSession.setIpAddress(ip);
         userSession.setDeviceInfo(deviceInfo);
+        userSession.setExpireTime(new Timestamp(System.currentTimeMillis() + CookieUtil.EXPIRATION_TIME));
         userSession.setUserId(userId);
 
         // Kiểm xem session đã tồn tại chưa

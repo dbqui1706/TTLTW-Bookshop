@@ -1031,4 +1031,22 @@ public class OrderService2 {
         });
         return result[0];
     }
+
+    /**
+     * Lấy danh sách đơn hàng của người dùng với các điều kiện lọc và phân trang
+     *
+     * @param userId ID người dùng
+     * @param status Trạng thái đơn hàng (có thể null)
+     * @param searchTerm Từ khóa tìm kiếm (có thể null)
+     * @param sortBy Trường sắp xếp (có thể null)
+     * @param page Số trang
+     * @param pageSize Kích thước trang
+     * @return OrderPageResponse chứa danh sách đơn hàng và thông tin phân trang
+     */
+    public OrderPageResponse getUserOrders(Long userId, String status,
+                                           String searchTerm, String sortBy,
+                                           int page, int pageSize) {
+
+        return orderDAO.getUserOrders(userId, status, searchTerm, sortBy, page, pageSize);
+    }
 }

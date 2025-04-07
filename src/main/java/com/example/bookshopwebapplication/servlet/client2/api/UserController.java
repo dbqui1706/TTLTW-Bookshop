@@ -8,6 +8,7 @@ import com.example.bookshopwebapplication.http.request.user.RegisterDTO;
 import com.example.bookshopwebapplication.service.PermissionService;
 import com.example.bookshopwebapplication.service.UserAddressService;
 import com.example.bookshopwebapplication.service.UserService;
+import com.example.bookshopwebapplication.utils.CookieUtil;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 import com.example.bookshopwebapplication.utils.MultiPart;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
@@ -15,6 +16,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -138,9 +140,11 @@ public class UserController extends HttpServlet {
             // Lưu trạng thái người dùng
             // Kiểm tra xem session của người dùng đã tồn tại chưa nếu chưa thì save vào database và cache
             // Lưu thông tin vào bảng user_session
+            String token = UUID.randomUUID().toString();
             UserService.getInstance().saveUserSession(
                     request,
-                    user.get().getId()
+                    user.get().getId(),
+                    token
             );
             user.get().setPassword(null);
             user.get().setCreatedAt(null);
@@ -149,8 +153,35 @@ public class UserController extends HttpServlet {
             Map<String, Object> result = Map.of(
                     "user", user.get(),
                     "address", userAddresses,
-                    "token", request.getSession().getId()
+                    "token", token
             );
+
+            // Lưu vào cookie
+            // Lưu vào cookie
+            System.out.println("Saving session to cookie...");
+            CookieUtil.saveSession(token, request, response);
+
+            // Check cookie after setting
+            Cookie[] cookies = request.getCookies();
+            System.out.println("Cookies after setting:");
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    System.out.println(" - " + cookie.getName() + "=" + cookie.getValue());
+                }
+            } else {
+                System.out.println("No cookies found in request after setting");
+            }
+
+            // Response headers
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            // Debug response headers
+            System.out.println("Response headers:");
+            for (String headerName : response.getHeaderNames()) {
+                System.out.println(headerName + ": " + response.getHeader(headerName));
+            }
+
             JsonUtils.out(
                     response,
                     result,

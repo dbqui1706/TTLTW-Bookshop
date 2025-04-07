@@ -80,10 +80,10 @@ public class SignIn extends HttpServlet {
             );
 
             // Lưu thông tin vào bảng user_session
-            UserService.getInstance().saveUserSession(
-                   request,
-                    userFromServer.get().getId()
-            );
+//            UserService.getInstance().saveUserSession(
+//                   request,
+//                    userFromServer.get().getId()
+//            );
             response.sendRedirect(request.getContextPath() + "/");
         } else {
             request.setAttribute("values", values);
