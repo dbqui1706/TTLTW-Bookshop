@@ -169,7 +169,8 @@ public class CartController extends HttpServlet {
             // 1. Lấy giở hàng từ database với id người dùng
             // 1.1 Nếu không có giỏ hàng thì tạo mới
             // 1.2 Nếu có giỏ hàng thì lấy ra
-            Optional<CartDto> cart = cartService.getByUserId(cartRequest.getUserId());
+            Long userId = req.getAttribute("userId") != null ? (Long) req.getAttribute("userId") : -1L;
+            Optional<CartDto> cart = cartService.getByUserId(userId);
             Long cartId = -1L;
             if (cart.isEmpty()) {
                 // Tạo mới giỏ hàng

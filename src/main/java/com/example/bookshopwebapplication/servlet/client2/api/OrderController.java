@@ -2,6 +2,7 @@ package com.example.bookshopwebapplication.servlet.client2.api;
 
 import com.example.bookshopwebapplication.http.request.order.OrderCreateRequest;
 import com.example.bookshopwebapplication.http.response.api.ApiResponse;
+import com.example.bookshopwebapplication.http.response.order.OrderPageResponse;
 import com.example.bookshopwebapplication.http.response.order.OrderResponse;
 import com.example.bookshopwebapplication.service.OrderService2;
 import com.example.bookshopwebapplication.utils.JsonUtils;
@@ -39,15 +40,12 @@ public class OrderController extends HttpServlet {
 
     private void getOrders(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String status = request.getParameter("status");
-            String keyword = request.getParameter("keyword");
-            String page = request.getParameter("page");
-            String limit = request.getParameter("limit");
-
-            int pageInt = page == null ? 1 : Integer.parseInt(page);
-            int limitInt = limit == null ? 10 : Integer.parseInt(limit);
-
-
+            OrderPageResponse result = orderService2.getUserOrders(6L, null, null, "newest", 1, 10);
+            JsonUtils.out(
+                    response,
+                    result,
+                    HttpServletResponse.SC_OK
+            );
         }catch (Exception e) {
             JsonUtils.out(
                     response,
@@ -59,8 +57,9 @@ public class OrderController extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try{
+            Long userId = (Long) request.getAttribute("userId");
             OrderCreateRequest orderCreateRequest = JsonUtils.get(request, OrderCreateRequest.class);
-
+            orderCreateRequest.setUserId(userId);
             // Tạo quy trình đặt hàng.
             OrderResponse orderResponse = orderService2.createOrder(orderCreateRequest);
 
@@ -76,12 +75,5 @@ public class OrderController extends HttpServlet {
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR
             );
         }
-    }
-    private ApiResponse<OrderResponse> createSuccessResponse(OrderResponse data) {
-        return new ApiResponse<>(true, "Order created successfully", data);
-    }
-
-    private ApiResponse<Void> createErrorResponse(String message, int status) {
-        return new ApiResponse<>(false, message, null, status);
     }
 }
