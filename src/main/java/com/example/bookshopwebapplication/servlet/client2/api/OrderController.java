@@ -4,6 +4,7 @@ import com.example.bookshopwebapplication.http.request.order.OrderCreateRequest;
 import com.example.bookshopwebapplication.http.response.api.ApiResponse;
 import com.example.bookshopwebapplication.http.response.order.OrderPageResponse;
 import com.example.bookshopwebapplication.http.response.order.OrderResponse;
+import com.example.bookshopwebapplication.http.response.order_detail.OrderDetailDTO;
 import com.example.bookshopwebapplication.service.OrderService2;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 
@@ -18,6 +19,7 @@ import java.io.IOException;
         name = "OrderController",
         urlPatterns = {
                 "/api/orders",
+                "/api/orders/detail",
                 "/api/order/*",
         }
 )
@@ -32,15 +34,43 @@ public class OrderController extends HttpServlet {
                 // Lấy danh sách đơn hàng
                 getOrders(req, resp);
                 break;
-            case "/api/order":
+            case "/api/orders/detail":
+                getOrderDetail(req, resp);
+                break;
             default:
                 break;
         }
     }
 
+    private void getOrderDetail(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            Long userId = (Long) req.getAttribute("userId");
+            String orderCode = req.getParameter("code");
+            OrderDetailDTO orderResponse = orderService2.getOrderDetail(userId, orderCode);
+            JsonUtils.out(
+                    resp,
+                    orderResponse,
+                    HttpServletResponse.SC_OK
+            );
+        } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     private void getOrders(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            OrderPageResponse result = orderService2.getUserOrders(6L, null, null, "newest", 1, 10);
+            Long userId = (Long) request.getAttribute("userId");
+            String status = request.getParameter("status");
+            int page = Integer.parseInt(request.getParameter("page"));
+            int limit = Integer.parseInt(request.getParameter("limit"));
+            String search = request.getParameter("search");
+
+            // Lấy danh sách đơn hàng của người dùng
+            OrderPageResponse result = orderService2.getUserOrders(userId, status, search, "newest", page, limit);
             JsonUtils.out(
                     response,
                     result,

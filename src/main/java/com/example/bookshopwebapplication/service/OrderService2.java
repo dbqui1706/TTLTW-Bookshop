@@ -7,9 +7,9 @@ import com.example.bookshopwebapplication.http.request.order.CartItemRequest;
 import com.example.bookshopwebapplication.http.request.order.DeliveryAddressRequest;
 import com.example.bookshopwebapplication.http.request.order.OrderCreateRequest;
 import com.example.bookshopwebapplication.http.response.order.*;
+import com.example.bookshopwebapplication.http.response.order_detail.OrderDetailDTO;
 import com.example.bookshopwebapplication.payment.vnpay.VNPayConfig;
 import com.example.bookshopwebapplication.utils.RequestContext;
-import com.example.bookshopwebapplication.utils.StringUtils;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -744,7 +744,7 @@ public class OrderService2 {
                 .receiverPhone(addressRequest.getPhoneNumber())
                 .addressLine1(addressRequest.getAddressLine1())
                 .addressLine2(null)
-                .city(addressRequest.getDistrictName())
+                .city(addressRequest.getProvinceName())
                 .district(addressRequest.getDistrictName())
                 .ward(addressRequest.getWardName())
                 .postalCode(null)
@@ -1048,5 +1048,9 @@ public class OrderService2 {
                                            int page, int pageSize) {
 
         return orderDAO.getUserOrders(userId, status, searchTerm, sortBy, page, pageSize);
+    }
+
+    public OrderDetailDTO getOrderDetail(Long userId, String orderCode) {
+        return orderDAO.getOrderDetail(orderCode, userId);
     }
 }

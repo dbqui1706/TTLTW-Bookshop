@@ -29,7 +29,8 @@ public class AuthFilter implements Filter {
             "/api/category/publishers",
             "/api/delivery-methods",
             "/api/payment-methods",
-            "/api/coupons"
+            "/api/coupons",
+            "api/payment/vnpay-callback"
     );
 
     @Override
