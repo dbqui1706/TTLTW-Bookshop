@@ -19,11 +19,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @WebServlet(name = "UserRolesApiServlet", urlPatterns = {
-        "/api/users/*/roles",
-        "/api/users/*/roles/*"
+        "/api/users-roles",
+        "/api/users-roles/add",
+        "/api/users-roles/remove",
+        "/api/users-roles/update",
+        "/api/users-roles/remove-all"
 })
 public class UserRolesApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -34,41 +36,50 @@ public class UserRolesApiServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getRequestURI();
-        String[] parts = pathInfo.split("/");
+        System.out.println("UserRolesApiServlet.doGet called - URI: " + req.getRequestURI());
+
+        String requestURI = req.getRequestURI();
 
         try {
-            // Định dạng URI: /api/users/{userId}/roles
-            if (parts.length >= 5 && parts[1].equals("api") && parts[2].equals("users") && parts[4].equals("roles")) {
-                Long userId = Long.parseLong(parts[3]);
-
-                // Kiểm tra người dùng tồn tại
-                if (!userService.isUserExists(userId)) {
+            // GET /api/users-roles - Lấy danh sách vai trò của người dùng
+            if (requestURI.equals("/api/users-roles")) {
+                // Lấy userId từ request parameter
+                String userIdParam = req.getParameter("userId");
+                if (userIdParam == null || userIdParam.trim().isEmpty()) {
                     JsonUtils.out(
                             resp,
-                            new Message(404, "Người dùng không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
+                            new Message(400, "Thiếu tham số userId"),
+                            HttpServletResponse.SC_BAD_REQUEST
                     );
                     return;
                 }
 
-                // Lấy danh sách vai trò của người dùng
-                List<Role> roles = userRoleService.getRolesByUserId(userId);
-                JsonUtils.out(resp, roles, HttpServletResponse.SC_OK);
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
+                Long userId;
+                try {
+                    userId = Long.parseLong(userIdParam);
+                } catch (NumberFormatException e) {
+                    JsonUtils.out(
+                            resp,
+                            new Message(400, "userId không hợp lệ"),
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+                    return;
+                }
+
+                handleGetRolesByUserId(resp, userId);
+                return;
             }
-        } catch (NumberFormatException e) {
+
+            // URI không khớp
             JsonUtils.out(
                     resp,
-                    new Message(400, "ID không hợp lệ"),
+                    new Message(400, "URI không hợp lệ"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
+
         } catch (Exception e) {
+            System.out.println("Exception in UserRolesApiServlet.doGet: " + e.getMessage());
+            e.printStackTrace();
             JsonUtils.out(
                     resp,
                     new Message(500, "Lỗi server: " + e.getMessage()),
@@ -79,85 +90,114 @@ public class UserRolesApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getRequestURI();
-        String[] parts = pathInfo.split("/");
+        System.out.println("UserRolesApiServlet.doPost called - URI: " + req.getRequestURI());
+
+        String requestURI = req.getRequestURI();
 
         try {
-            // Định dạng URI: /api/users/{userId}/roles
-            if (parts.length >= 5 && parts[1].equals("api") && parts[2].equals("users") && parts[4].equals("roles")) {
-                Long userId = Long.parseLong(parts[3]);
+            // Lấy userId từ request parameter
+            String userIdParam = req.getParameter("userId");
+            if (userIdParam == null || userIdParam.trim().isEmpty()) {
+                JsonUtils.out(
+                        resp,
+                        new Message(400, "Thiếu tham số userId"),
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
 
-                // Kiểm tra người dùng tồn tại
-                if (!userService.isUserExists(userId)) {
+            Long userId;
+            try {
+                userId = Long.parseLong(userIdParam);
+            } catch (NumberFormatException e) {
+                JsonUtils.out(
+                        resp,
+                        new Message(400, "userId không hợp lệ"),
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+
+            // POST /api/users-roles/add - Thêm một vai trò cho người dùng
+            if (requestURI.equals("/api/users-roles/add")) {
+                // Lấy roleId từ request parameter
+                String roleIdParam = req.getParameter("roleId");
+                if (roleIdParam == null || roleIdParam.trim().isEmpty()) {
                     JsonUtils.out(
                             resp,
-                            new Message(404, "Người dùng không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
-
-                // Đọc danh sách role IDs từ request body
-                BufferedReader reader = req.getReader();
-                Type listType = new TypeToken<List<Long>>() {}.getType();
-                List<Long> roleIds = gson.fromJson(reader, listType);
-
-                if (roleIds == null || roleIds.isEmpty()) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(400, "Danh sách vai trò không được để trống"),
+                            new Message(400, "Thiếu tham số roleId"),
                             HttpServletResponse.SC_BAD_REQUEST
                     );
                     return;
                 }
 
-                // Kiểm tra tất cả vai trò tồn tại
-                List<Long> nonExistentRoles = roleIds.stream()
-                        .filter(id -> !roleService.isRoleExists(id))
-                        .toList();
-
-                if (!nonExistentRoles.isEmpty()) {
+                Long roleId;
+                try {
+                    roleId = Long.parseLong(roleIdParam);
+                } catch (NumberFormatException e) {
                     JsonUtils.out(
                             resp,
-                            new Message(400, "Một số vai trò không tồn tại: " + nonExistentRoles),
+                            new Message(400, "roleId không hợp lệ"),
                             HttpServletResponse.SC_BAD_REQUEST
                     );
                     return;
                 }
 
-                // Thực hiện gán vai trò cho người dùng
-                boolean success = userRoleService.setRolesForUser(userId, roleIds);
-
-                if (success) {
-                    // Làm mới cache quyền của người dùng
-                    refreshUserPermissionCache(userId);
-
-                    JsonUtils.out(
-                            resp,
-                            new Message(200, "Gán vai trò cho người dùng thành công"),
-                            HttpServletResponse.SC_OK
-                    );
-                } else {
-                    JsonUtils.out(
-                            resp,
-                            new Message(500, "Không thể gán vai trò cho người dùng"),
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                    );
-                }
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
+                handleAddRoleToUser(resp, userId, roleId);
+                return;
             }
-        } catch (NumberFormatException e) {
+
+            // POST /api/users-roles/remove - Xóa một vai trò khỏi người dùng
+            if (requestURI.equals("/api/users-roles/remove")) {
+                // Lấy roleId từ request parameter
+                String roleIdParam = req.getParameter("roleId");
+                if (roleIdParam == null || roleIdParam.trim().isEmpty()) {
+                    JsonUtils.out(
+                            resp,
+                            new Message(400, "Thiếu tham số roleId"),
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+                    return;
+                }
+
+                Long roleId;
+                try {
+                    roleId = Long.parseLong(roleIdParam);
+                } catch (NumberFormatException e) {
+                    JsonUtils.out(
+                            resp,
+                            new Message(400, "roleId không hợp lệ"),
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+                    return;
+                }
+
+                handleRemoveRoleFromUser(resp, userId, roleId);
+                return;
+            }
+
+            // POST /api/users-roles/update - Cập nhật danh sách vai trò cho người dùng
+            if (requestURI.equals("/api/users-roles/update")) {
+                handleSetRolesForUser(req, resp, userId);
+                return;
+            }
+
+            // POST /api/users-roles/remove-all - Xóa tất cả vai trò của người dùng
+            if (requestURI.equals("/api/users-roles/remove-all")) {
+                handleRemoveAllRolesFromUser(resp, userId);
+                return;
+            }
+
+            // URI không khớp
             JsonUtils.out(
                     resp,
-                    new Message(400, "ID không hợp lệ"),
+                    new Message(400, "URI không hợp lệ"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
+
         } catch (Exception e) {
+            System.out.println("Exception in UserRolesApiServlet.doPost: " + e.getMessage());
+            e.printStackTrace();
             JsonUtils.out(
                     resp,
                     new Message(500, "Lỗi server: " + e.getMessage()),
@@ -166,174 +206,200 @@ public class UserRolesApiServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp)  {
-        String pathInfo = req.getRequestURI();
-        String[] parts = pathInfo.split("/");
+    // Các phương thức xử lý
 
-        try {
-            // Định dạng URI: /api/users/{userId}/roles/{roleId}
-            if (parts.length >= 6 && parts[1].equals("api") && parts[2].equals("users") && parts[4].equals("roles")) {
-                Long userId = Long.parseLong(parts[3]);
-                Long roleId = Long.parseLong(parts[5]);
-
-                // Kiểm tra người dùng tồn tại
-                if (!userService.isUserExists(userId)) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(404, "Người dùng không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
-
-                // Kiểm tra vai trò tồn tại
-                if (!roleService.isRoleExists(roleId)) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(404, "Vai trò không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
-
-                // Gán vai trò cho người dùng
-                boolean success = userRoleService.addRoleToUser(userId, roleId);
-
-                if (success) {
-                    // Làm mới cache quyền của người dùng
-                    refreshUserPermissionCache(userId);
-
-                    JsonUtils.out(
-                            resp,
-                            new Message(200, "Gán vai trò cho người dùng thành công"),
-                            HttpServletResponse.SC_OK
-                    );
-                } else {
-                    JsonUtils.out(
-                            resp,
-                            new Message(500, "Không thể gán vai trò cho người dùng"),
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                    );
-                }
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
-            }
-        } catch (NumberFormatException e) {
+    private void handleGetRolesByUserId(HttpServletResponse resp, Long userId) throws IOException {
+        // Kiểm tra người dùng tồn tại
+        if (!userService.isUserExists(userId)) {
             JsonUtils.out(
                     resp,
-                    new Message(400, "ID không hợp lệ"),
+                    new Message(404, "Người dùng không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Lấy danh sách vai trò của người dùng
+        List<Role> roles = userRoleService.getRolesByUserId(userId);
+        JsonUtils.out(resp, roles, HttpServletResponse.SC_OK);
+    }
+
+    private void handleSetRolesForUser(HttpServletRequest req, HttpServletResponse resp, Long userId) throws IOException {
+        // Kiểm tra người dùng tồn tại
+        if (!userService.isUserExists(userId)) {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Người dùng không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Đọc danh sách role IDs từ request body
+        BufferedReader reader = req.getReader();
+        Type listType = new TypeToken<List<Long>>() {}.getType();
+        List<Long> roleIds = gson.fromJson(reader, listType);
+
+        if (roleIds == null || roleIds.isEmpty()) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Danh sách vai trò không được để trống"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
-        } catch (Exception e) {
+            return;
+        }
+
+        // Kiểm tra tất cả vai trò tồn tại
+        List<Long> nonExistentRoles = roleIds.stream()
+                .filter(id -> !roleService.isRoleExists(id))
+                .toList();
+
+        if (!nonExistentRoles.isEmpty()) {
             JsonUtils.out(
                     resp,
-                    new Message(500, "Lỗi server: " + e.getMessage()),
+                    new Message(400, "Một số vai trò không tồn tại: " + nonExistentRoles),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Thực hiện gán vai trò cho người dùng
+        boolean success = userRoleService.setRolesForUser(userId, roleIds);
+
+        if (success) {
+            // Làm mới cache quyền của người dùng
+            refreshUserPermissionCache(userId);
+
+            JsonUtils.out(
+                    resp,
+                    new Message(200, "Gán vai trò cho người dùng thành công"),
+                    HttpServletResponse.SC_OK
+            );
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể gán vai trò cho người dùng"),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR
             );
         }
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        String pathInfo = req.getRequestURI();
-        String[] parts = pathInfo.split("/");
-
-        try {
-            // Định dạng URI: /api/users/{userId}/roles/{roleId} hoặc /api/users/{userId}/roles
-            if (parts.length >= 5 && parts[1].equals("api") && parts[2].equals("users") && parts[4].equals("roles")) {
-                Long userId = Long.parseLong(parts[3]);
-
-                // Kiểm tra người dùng tồn tại
-                if (!userService.isUserExists(userId)) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(404, "Người dùng không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
-
-                boolean success;
-
-                if (parts.length >= 6) {
-                    // Xóa một vai trò cụ thể khỏi người dùng
-                    Long roleId = Long.parseLong(parts[5]);
-
-                    // Kiểm tra vai trò tồn tại
-                    if (!roleService.isRoleExists(roleId)) {
-                        JsonUtils.out(
-                                resp,
-                                new Message(404, "Vai trò không tồn tại"),
-                                HttpServletResponse.SC_NOT_FOUND
-                        );
-                        return;
-                    }
-
-                    success = userRoleService.removeRoleFromUser(userId, roleId);
-
-                    if (success) {
-                        // Làm mới cache quyền của người dùng
-                        refreshUserPermissionCache(userId);
-
-                        JsonUtils.out(
-                                resp,
-                                new Message(200, "Xóa vai trò khỏi người dùng thành công"),
-                                HttpServletResponse.SC_OK
-                        );
-                    } else {
-                        JsonUtils.out(
-                                resp,
-                                new Message(500, "Không thể xóa vai trò khỏi người dùng"),
-                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                        );
-                    }
-                } else {
-                    // Xóa tất cả vai trò của người dùng
-                    success = userRoleService.removeAllRolesFromUser(userId);
-
-                    if (success) {
-                        // Làm mới cache quyền của người dùng
-                        refreshUserPermissionCache(userId);
-
-                        JsonUtils.out(
-                                resp,
-                                new Message(200, "Xóa tất cả vai trò của người dùng thành công"),
-                                HttpServletResponse.SC_OK
-                        );
-                    } else {
-                        JsonUtils.out(
-                                resp,
-                                new Message(500, "Không thể xóa tất cả vai trò của người dùng"),
-                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                        );
-                    }
-                }
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
-            }
-        } catch (NumberFormatException e) {
+    private void handleAddRoleToUser(HttpServletResponse resp, Long userId, Long roleId) throws IOException {
+        // Kiểm tra người dùng tồn tại
+        if (!userService.isUserExists(userId)) {
             JsonUtils.out(
                     resp,
-                    new Message(400, "ID không hợp lệ"),
-                    HttpServletResponse.SC_BAD_REQUEST
+                    new Message(404, "Người dùng không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
             );
-        } catch (Exception e) {
+            return;
+        }
+
+        // Kiểm tra vai trò tồn tại
+        if (!roleService.isRoleExists(roleId)) {
             JsonUtils.out(
                     resp,
-                    new Message(500, "Lỗi server: " + e.getMessage()),
+                    new Message(404, "Vai trò không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Gán vai trò cho người dùng
+        boolean success = userRoleService.addRoleToUser(userId, roleId);
+
+        if (success) {
+            // Làm mới cache quyền của người dùng
+            refreshUserPermissionCache(userId);
+
+            JsonUtils.out(
+                    resp,
+                    new Message(200, "Gán vai trò cho người dùng thành công"),
+                    HttpServletResponse.SC_OK
+            );
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể gán vai trò cho người dùng"),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR
             );
         }
     }
+
+    private void handleRemoveRoleFromUser(HttpServletResponse resp, Long userId, Long roleId) throws IOException {
+        // Kiểm tra người dùng tồn tại
+        if (!userService.isUserExists(userId)) {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Người dùng không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Kiểm tra vai trò tồn tại
+        if (!roleService.isRoleExists(roleId)) {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Vai trò không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Xóa vai trò khỏi người dùng
+        boolean success = userRoleService.removeRoleFromUser(userId, roleId);
+
+        if (success) {
+            // Làm mới cache quyền của người dùng
+            refreshUserPermissionCache(userId);
+
+            JsonUtils.out(
+                    resp,
+                    new Message(200, "Xóa vai trò khỏi người dùng thành công"),
+                    HttpServletResponse.SC_OK
+            );
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể xóa vai trò khỏi người dùng"),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void handleRemoveAllRolesFromUser(HttpServletResponse resp, Long userId) throws IOException {
+        // Kiểm tra người dùng tồn tại
+        if (!userService.isUserExists(userId)) {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Người dùng không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Xóa tất cả vai trò của người dùng
+        boolean success = userRoleService.removeAllRolesFromUser(userId);
+
+        if (success) {
+            // Làm mới cache quyền của người dùng
+            refreshUserPermissionCache(userId);
+
+            JsonUtils.out(
+                    resp,
+                    new Message(200, "Xóa tất cả vai trò của người dùng thành công"),
+                    HttpServletResponse.SC_OK
+            );
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể xóa tất cả vai trò của người dùng"),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     // Phương thức làm mới cache quyền của người dùng
     private void refreshUserPermissionCache(Long userId) {
         // Sử dụng PermissionService để xóa cache quyền của người dùng

@@ -18,6 +18,9 @@ import java.util.Optional;
 
 @WebServlet(name = "RoleApiServlet", urlPatterns = {
         "/api/roles",
+        "/api/roles/create",
+        "/api/roles/update",
+        "/api/roles/delete",
         "/api/roles/*"
 })
 public class RoleApiServlet extends HttpServlet {
@@ -27,37 +30,29 @@ public class RoleApiServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
+        String requestURI = req.getRequestURI();
 
         try {
-            if (pathInfo == null || pathInfo.equals("/")) {
-                // GET /api/roles - Lấy tất cả vai trò
-                List<Role> roles = roleService.getAllRoles();
-                JsonUtils.out(resp, roles, HttpServletResponse.SC_OK);
-            } else {
-                // GET /api/roles/{id} - Lấy vai trò theo ID
-                String[] pathParts = pathInfo.split("/");
-                if (pathParts.length > 1) {
-                    Long roleId = Long.parseLong(pathParts[1]);
-                    Optional<Role> role = roleService.getRoleById(roleId);
-
-                    if (role.isPresent()) {
-                        JsonUtils.out(resp, role.get(), HttpServletResponse.SC_OK);
-                    } else {
-                        JsonUtils.out(
-                                resp,
-                                new Message(404, "Role không tồn tại"),
-                                HttpServletResponse.SC_NOT_FOUND
-                        );
-                    }
-                } else {
-                    JsonUtils.out(
-                            resp,
-                            new Message(400, "URI không hợp lệ"),
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-                }
+            // GET /api/roles/{id} - Lấy vai trò theo ID
+            if (requestURI.matches("/api/roles/\\d+")) {
+                Long roleId = extractIdFromUri(requestURI);
+                handleGetRoleById(resp, roleId);
+                return;
             }
+
+            // GET /api/roles - Lấy tất cả vai trò
+            if (requestURI.equals("/api/roles")) {
+                handleGetAllRoles(resp);
+                return;
+            }
+
+            // URL không khớp với bất kỳ mẫu nào
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "URI không hợp lệ"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+
         } catch (NumberFormatException e) {
             JsonUtils.out(
                     resp,
@@ -75,43 +70,22 @@ public class RoleApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String requestURI = req.getRequestURI();
+
         try {
-            // Đọc dữ liệu từ request body
-            BufferedReader reader = req.getReader();
-            Role Role = gson.fromJson(reader, Role.class);
-
-            // Xác thực dữ liệu
-            if (Role.getName() == null || Role.getName().trim().isEmpty()) {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "Tên vai trò không được để trống"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
+            // POST /api/roles/create - Tạo vai trò mới
+            if (requestURI.equals("/api/roles/create")) {
+                handleCreateRole(req, resp);
                 return;
             }
 
-            // Kiểm tra tên vai trò đã tồn tại
-            if (roleService.isRoleNameExists(Role.getName())) {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "Tên vai trò đã tồn tại"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
-                return;
-            }
+            // URL không khớp với mẫu
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "URI không hợp lệ"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
 
-            // Tạo vai trò mới
-            Optional<Role> createdRole = roleService.createRole(Role);
-
-            if (createdRole.isPresent()) {
-                JsonUtils.out(resp, createdRole.get(), HttpServletResponse.SC_CREATED);
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(500, "Không thể tạo vai trò mới"),
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                );
-            }
         } catch (Exception e) {
             JsonUtils.out(
                     resp,
@@ -123,89 +97,22 @@ public class RoleApiServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            JsonUtils.out(
-                    resp,
-                    new Message(400, "URI không hợp lệ, thiếu ID vai trò"),
-                    HttpServletResponse.SC_BAD_REQUEST
-            );
-            return;
-        }
+        String requestURI = req.getRequestURI();
 
         try {
-            // Lấy ID vai trò từ URI
-            String[] pathParts = pathInfo.split("/");
-            if (pathParts.length > 1) {
-                Long roleId = Long.parseLong(pathParts[1]);
-
-                // Kiểm tra vai trò tồn tại
-                if (!roleService.isRoleExists(roleId)) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(404, "Vai trò không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
-
-                // Đọc dữ liệu cập nhật từ request body
-                BufferedReader reader = req.getReader();
-                Role Role = gson.fromJson(reader, Role.class);
-                Role.setId(roleId); // Đảm bảo ID đúng
-
-                // Xác thực dữ liệu
-                if (Role.getName() == null || Role.getName().trim().isEmpty()) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(400, "Tên vai trò không được để trống"),
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-                    return;
-                }
-
-                // Kiểm tra tên vai trò đã tồn tại (không phải là vai trò hiện tại)
-                if (roleService.isRoleNameExistsExcludeCurrent(Role.getName(), roleId)) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(400, "Tên vai trò đã tồn tại"),
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-                    return;
-                }
-
-                // Kiểm tra nếu là vai trò hệ thống, không cho phép thay đổi is_system
-                Optional<Role> currentRole = roleService.getRoleById(roleId);
-                if (currentRole.isPresent() && currentRole.get().isSystem()) {
-                    Role.setSystem(true); // Bảo toàn trạng thái hệ thống
-                }
-
-                // Cập nhật vai trò
-                Optional<Role> updatedRole = roleService.updateRole(Role);
-
-                if (updatedRole.isPresent()) {
-                    JsonUtils.out(resp, updatedRole.get(), HttpServletResponse.SC_OK);
-                } else {
-                    JsonUtils.out(
-                            resp,
-                            new Message(500, "Không thể cập nhật vai trò"),
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                    );
-                }
-            } else {
-                JsonUtils.out(
-                        resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
+            // PUT /api/roles/update - Cập nhật vai trò
+            if (requestURI.equals("/api/roles/update")) {
+                handleUpdateRole(req, resp);
+                return;
             }
-        } catch (NumberFormatException e) {
+
+            // URL không khớp với mẫu
             JsonUtils.out(
                     resp,
-                    new Message(400, "ID không hợp lệ"),
+                    new Message(400, "URI không hợp lệ"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
+
         } catch (Exception e) {
             JsonUtils.out(
                     resp,
@@ -217,65 +124,205 @@ public class RoleApiServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
+        String requestURI = req.getRequestURI();
 
-        if (pathInfo == null || pathInfo.equals("/")) {
+        try {
+            // DELETE /api/roles/delete - Xóa vai trò
+            if (requestURI.equals("/api/roles/delete")) {
+                handleDeleteRole(req, resp);
+                return;
+            }
+
+            // URL không khớp với mẫu
             JsonUtils.out(
                     resp,
-                    new Message(400, "URI không hợp lệ, thiếu ID vai trò"),
+                    new Message(400, "URI không hợp lệ"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+
+        } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Lỗi server: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    // Các phương thức xử lý
+
+    private void handleGetRoleById(HttpServletResponse resp, Long roleId) throws IOException {
+        Optional<Role> role = roleService.getRoleById(roleId);
+
+        if (role.isPresent()) {
+            JsonUtils.out(resp, role.get(), HttpServletResponse.SC_OK);
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Vai trò không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+        }
+    }
+
+    private void handleGetAllRoles(HttpServletResponse resp) throws IOException {
+        List<Role> roles = roleService.getAllRoles();
+        JsonUtils.out(resp, roles, HttpServletResponse.SC_OK);
+    }
+
+    private void handleCreateRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Đọc dữ liệu từ request body
+        BufferedReader reader = req.getReader();
+        Role role = gson.fromJson(reader, Role.class);
+
+        // Xác thực dữ liệu
+        if (role.getName() == null || role.getName().trim().isEmpty()) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Tên vai trò không được để trống"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Kiểm tra tên vai trò đã tồn tại
+        if (roleService.isRoleNameExists(role.getName())) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Tên vai trò đã tồn tại"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Tạo vai trò mới
+        Optional<Role> createdRole = roleService.createRole(role);
+
+        if (createdRole.isPresent()) {
+            JsonUtils.out(resp, createdRole.get(), HttpServletResponse.SC_CREATED);
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể tạo vai trò mới"),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void handleUpdateRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Đọc dữ liệu cập nhật từ request body
+        BufferedReader reader = req.getReader();
+        Role role = gson.fromJson(reader, Role.class);
+
+        if (role.getId() == null) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Thiếu ID vai trò"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Kiểm tra vai trò tồn tại
+        if (!roleService.isRoleExists(role.getId())) {
+            JsonUtils.out(
+                    resp,
+                    new Message(404, "Vai trò không tồn tại"),
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        // Xác thực dữ liệu
+        if (role.getName() == null || role.getName().trim().isEmpty()) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Tên vai trò không được để trống"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Kiểm tra tên vai trò đã tồn tại (không phải là vai trò hiện tại)
+        if (roleService.isRoleNameExistsExcludeCurrent(role.getName(), role.getId())) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Tên vai trò đã tồn tại"),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+            return;
+        }
+
+        // Kiểm tra nếu là vai trò hệ thống, không cho phép thay đổi is_system
+        Optional<Role> currentRole = roleService.getRoleById(role.getId());
+        if (currentRole.isPresent() && currentRole.get().isSystem()) {
+            role.setSystem(true); // Bảo toàn trạng thái hệ thống
+        }
+
+        // Cập nhật vai trò
+        Optional<Role> updatedRole = roleService.updateRole(role);
+
+        if (updatedRole.isPresent()) {
+            JsonUtils.out(resp, updatedRole.get(), HttpServletResponse.SC_OK);
+        } else {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Không thể cập nhật vai trò"),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void handleDeleteRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Đọc ID từ tham số
+        String roleIdStr = req.getParameter("id");
+        if (roleIdStr == null || roleIdStr.trim().isEmpty()) {
+            JsonUtils.out(
+                    resp,
+                    new Message(400, "Thiếu ID vai trò"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
             return;
         }
 
         try {
-            // Lấy ID vai trò từ URI
-            String[] pathParts = pathInfo.split("/");
-            if (pathParts.length > 1) {
-                Long roleId = Long.parseLong(pathParts[1]);
+            Long roleId = Long.parseLong(roleIdStr);
 
-                // Kiểm tra vai trò tồn tại
-                Optional<Role> role = roleService.getRoleById(roleId);
-                if (!role.isPresent()) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(404, "Vai trò không tồn tại"),
-                            HttpServletResponse.SC_NOT_FOUND
-                    );
-                    return;
-                }
+            // Kiểm tra vai trò tồn tại
+            Optional<Role> role = roleService.getRoleById(roleId);
+            if (!role.isPresent()) {
+                JsonUtils.out(
+                        resp,
+                        new Message(404, "Vai trò không tồn tại"),
+                        HttpServletResponse.SC_NOT_FOUND
+                );
+                return;
+            }
 
-                // Kiểm tra nếu là vai trò hệ thống, không cho phép xóa
-                if (role.get().isSystem()) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(403, "Không thể xóa vai trò hệ thống"),
-                            HttpServletResponse.SC_FORBIDDEN
-                    );
-                    return;
-                }
+            // Kiểm tra nếu là vai trò hệ thống, không cho phép xóa
+            if (role.get().isSystem()) {
+                JsonUtils.out(
+                        resp,
+                        new Message(403, "Không thể xóa vai trò hệ thống"),
+                        HttpServletResponse.SC_FORBIDDEN
+                );
+                return;
+            }
 
-                // Xóa vai trò
-                boolean deleted = roleService.deleteRole(roleId);
+            // Xóa vai trò
+            boolean deleted = roleService.deleteRole(roleId);
 
-                if (deleted) {
-                    JsonUtils.out(
-                            resp,
-                            new Message(200, "Xóa vai trò thành công"),
-                            HttpServletResponse.SC_OK
-                    );
-                } else {
-                    JsonUtils.out(
-                            resp,
-                            new Message(500, "Không thể xóa vai trò"),
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                    );
-                }
+            if (deleted) {
+                JsonUtils.out(
+                        resp,
+                        new Message(200, "Xóa vai trò thành công"),
+                        HttpServletResponse.SC_OK
+                );
             } else {
                 JsonUtils.out(
                         resp,
-                        new Message(400, "URI không hợp lệ"),
-                        HttpServletResponse.SC_BAD_REQUEST
+                        new Message(500, "Không thể xóa vai trò"),
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR
                 );
             }
         } catch (NumberFormatException e) {
@@ -284,12 +331,12 @@ public class RoleApiServlet extends HttpServlet {
                     new Message(400, "ID không hợp lệ"),
                     HttpServletResponse.SC_BAD_REQUEST
             );
-        } catch (Exception e) {
-            JsonUtils.out(
-                    resp,
-                    new Message(500, "Lỗi server: " + e.getMessage()),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-            );
         }
+    }
+
+    // Phương thức tiện ích
+    private Long extractIdFromUri(String uri) {
+        String[] parts = uri.split("/");
+        return Long.parseLong(parts[parts.length - 1]);
     }
 }
