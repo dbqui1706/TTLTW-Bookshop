@@ -41,7 +41,6 @@ import java.util.UUID;
 public class UserController extends HttpServlet {
     private final UserService userService = new UserService();
     private final UserAddressService userAddressService = new UserAddressService();
-    private final PermissionService permissionService = new PermissionService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -134,8 +133,6 @@ public class UserController extends HttpServlet {
             // Save user to session
             request.getSession().setAttribute("currentUser", user.get());
             // Lưu quyền vào session để hạn chế việc truy vấn cơ sở dữ liệu
-            List<String> permissions = permissionService.getUserPermissions(user.get().getId());
-            request.getSession().setAttribute("permissions", permissions);
 
             // Lưu trạng thái người dùng
             // Kiểm tra xem session của người dùng đã tồn tại chưa nếu chưa thì save vào database và cache

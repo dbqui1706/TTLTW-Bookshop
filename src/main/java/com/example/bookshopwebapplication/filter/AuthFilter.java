@@ -3,6 +3,7 @@ package com.example.bookshopwebapplication.filter;
 import com.example.bookshopwebapplication.dao.UserSessionDao;
 import com.example.bookshopwebapplication.entities.UserSession;
 import com.example.bookshopwebapplication.utils.JsonUtils;
+import com.example.bookshopwebapplication.utils.StringUtils;
 import com.google.gson.Gson;
 
 import javax.servlet.*;
@@ -48,7 +49,6 @@ public class AuthFilter implements Filter {
         // Log thông tin request để debug
         String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
         String method = httpRequest.getMethod();
-        System.out.println("AuthFilter: Processing " + method + " request to " + path);
 
         // Luôn cho phép OPTIONS request đi qua (CORS preflight)
         if ("OPTIONS".equalsIgnoreCase(method)) {
@@ -65,7 +65,7 @@ public class AuthFilter implements Filter {
         }
 
         // Lấy token từ request
-        String token = extractToken(httpRequest);
+        String token = StringUtils.extractToken(httpRequest);
 
         if (token == null) {
             System.out.println("AuthFilter: No token found in request");
@@ -99,27 +99,6 @@ public class AuthFilter implements Filter {
 
         // Cho phép request đi tiếp
         chain.doFilter(request, response);
-    }
-
-    /**
-     * Extract token from request with following priority:
-     * 1. Authorization header
-     * 2. Request parameter
-     */
-    private String extractToken(HttpServletRequest request) {
-        // 1. Kiểm tra Authorization header
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // Skip "Bearer "
-            return token;
-        }
-
-        // 2. Kiểm tra request parameter
-        String tokenParam = request.getParameter("token");
-        if (tokenParam != null && !tokenParam.trim().isEmpty()) {
-            return tokenParam;
-        }
-        return null;
     }
 
     @Override
