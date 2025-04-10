@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  * - Quản lý quyền (permissions)
  * - Quản lý phân quyền người dùng (user-roles, role-permissions, user-permissions)
  */
-@WebFilter("/api/*")
+@WebFilter("/api/admin/*")
 public class PermissionApiFilter implements Filter {
     private static final Logger LOGGER = Logger.getLogger(PermissionApiFilter.class.getName());
 
@@ -36,11 +36,21 @@ public class PermissionApiFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // Thêm các đường dẫn public không cần kiểm tra quyền
-        publicPaths.add("/api/login");
-        publicPaths.add("/api/register");
-        publicPaths.add("/api/products");
-        publicPaths.add("/api/categories");
-        // Các API public khác...
+        publicPaths.addAll(Arrays.asList(
+                "/api/auth/forgot-password",
+                "/api/auth/reset-password",
+                "/api/auth/confirm-email",
+                "/api/auth/login",
+                "/api/auth/register",
+                "/api/products",
+                "/api/product",
+                "/api/categories",
+                "/api/category/publishers",
+                "/api/delivery-methods",
+                "/api/payment-methods",
+                "/api/coupons",
+                "/api/payment/vnpay-callback"
+        ));
 
         // Đọc file cấu hình permission
         try {
@@ -175,8 +185,7 @@ public class PermissionApiFilter implements Filter {
         response.setContentType("application/json");
         Map<String, Object> responseBody = Map.of(
                 "success", false,
-                "message", message,
-                "data", null
+                "message", message
         );
         response.getWriter().write(new Gson().toJson(responseBody));
     }
@@ -189,8 +198,7 @@ public class PermissionApiFilter implements Filter {
         response.setContentType("application/json");
         Map<String, Object> responseBody = Map.of(
                 "success", false,
-                "message", message,
-                "data", null
+                "message", message
         );
         response.getWriter().write(new Gson().toJson(responseBody));
     }

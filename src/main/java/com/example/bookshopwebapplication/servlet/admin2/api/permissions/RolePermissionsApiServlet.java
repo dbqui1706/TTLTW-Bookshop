@@ -20,11 +20,11 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 @WebServlet(name = "RolePermissionsApiServlet", urlPatterns = {
-        "/api/roles-permissions",
-        "/api/roles-permissions/add",
-        "/api/roles-permissions/remove",
-        "/api/roles-permissions/update",
-        "/api/roles-permissions/remove-all",
+        "/api/admin/roles-permissions",
+        "/api/admin/roles-permissions/add",
+        "/api/admin/roles-permissions/remove",
+        "/api/admin/roles-permissions/update",
+        "/api/admin/roles-permissions/remove-all",
 })
 public class RolePermissionsApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -41,7 +41,7 @@ public class RolePermissionsApiServlet extends HttpServlet {
 
         try {
             // GET /api/roles-permissions - Lấy danh sách quyền của vai trò
-            if (requestURI.equals("/api/roles-permissions")) {
+            if (requestURI.equals("/api/admin/roles-permissions")) {
                 // Lấy roleId từ request parameter
                 String roleIdParam = req.getParameter("roleId");
                 if (roleIdParam == null || roleIdParam.trim().isEmpty()) {
@@ -118,7 +118,7 @@ public class RolePermissionsApiServlet extends HttpServlet {
             }
 
             // POST /api/roles-permissions/add - Thêm một quyền vào vai trò
-            if (requestURI.equals("/api/roles-permissions/add")) {
+            if (requestURI.equals("/api/admin/roles-permissions/add")) {
                 // Lấy permissionId từ request parameter
                 String permissionIdParam = req.getParameter("permissionId");
                 if (permissionIdParam == null || permissionIdParam.trim().isEmpty()) {
@@ -147,7 +147,7 @@ public class RolePermissionsApiServlet extends HttpServlet {
             }
 
             // POST /api/roles-permissions/remove - Xóa một quyền khỏi vai trò
-            if (requestURI.equals("/api/roles-permissions/remove")) {
+            if (requestURI.equals("/api/admin/roles-permissions/remove")) {
                 // Lấy permissionId từ request parameter
                 String permissionIdParam = req.getParameter("permissionId");
                 if (permissionIdParam == null || permissionIdParam.trim().isEmpty()) {
@@ -176,13 +176,13 @@ public class RolePermissionsApiServlet extends HttpServlet {
             }
 
             // POST /api/roles-permissions/update - Cập nhật danh sách quyền cho vai trò
-            if (requestURI.equals("/api/roles-permissions/update")) {
+            if (requestURI.equals("/api/admin/roles-permissions/update")) {
                 handleSetPermissionsForRole(req, resp, roleId);
                 return;
             }
 
             // POST /api/roles-permissions/remove-all - Xóa tất cả quyền của vai trò
-            if (requestURI.equals("/api/roles-permissions/remove-all")) {
+            if (requestURI.equals("/api/admin/roles-permissions/remove-all")) {
                 handleRemoveAllPermissionsFromRole(resp, roleId);
                 return;
             }

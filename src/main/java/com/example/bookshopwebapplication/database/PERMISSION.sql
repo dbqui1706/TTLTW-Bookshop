@@ -227,8 +227,44 @@ INSERT INTO bookshopdb.permissions (name, code, module, description) VALUES
 ('Quản lý phân quyền', 'system.manage_permissions', 'system', 'Quản lý quyền hạn trong hệ thống'),
 ('Quản lý tích hợp', 'system.manage_integrations', 'system', 'Quản lý tích hợp với các dịch vụ bên thứ ba');
 
--- ========== BẢNG LIÊN KẾT VAI TRÒ - QUYỀN (ROLE_PERMISSIONS) ==========
+-- Quản lý Vai trò (Roles)
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Xem danh sách vai trò', 'system.view_roles', 'system', 'Cho phép xem danh sách và thông tin chi tiết của tất cả các vai trò trong hệ thống', 1),
+('Tạo vai trò mới', 'system.create_role', 'system', 'Cho phép tạo vai trò mới trong hệ thống', 1),
+('Chỉnh sửa vai trò', 'system.edit_role', 'system', 'Cho phép chỉnh sửa thông tin của vai trò đã tồn tại', 1),
+('Xóa vai trò', 'system.delete_role', 'system', 'Cho phép xóa vai trò khỏi hệ thống (chỉ áp dụng cho vai trò không phải hệ thống)', 1);
 
+-- Quản lý Quyền hạn (Permissions)
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Xem danh sách quyền', 'system.view_permissions', 'system', 'Cho phép xem danh sách và thông tin chi tiết của tất cả các quyền trong hệ thống', 1),
+('Tạo quyền mới', 'system.create_permission', 'system', 'Cho phép tạo quyền mới trong hệ thống', 1),
+('Chỉnh sửa quyền', 'system.edit_permission', 'system', 'Cho phép chỉnh sửa thông tin của quyền đã tồn tại', 1),
+('Xóa quyền', 'system.delete_permission', 'system', 'Cho phép xóa quyền khỏi hệ thống (chỉ áp dụng cho quyền không phải hệ thống)', 1);
+
+-- Gán Quyền cho Vai trò (Role-Permissions)
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Gán quyền cho vai trò', 'system.assign_permission_to_role', 'system', 'Cho phép gán quyền cụ thể cho vai trò trong hệ thống', 1),
+('Hủy quyền từ vai trò', 'system.remove_permission_from_role', 'system', 'Cho phép hủy bỏ quyền đã gán cho vai trò', 1);
+
+-- Gán Vai trò cho Người dùng (User-Roles)
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Xem vai trò người dùng', 'system.view_user_roles', 'system', 'Cho phép xem các vai trò đã được gán cho từng người dùng', 1),
+('Gán vai trò cho người dùng', 'system.assign_role_to_user', 'system', 'Cho phép gán vai trò cụ thể cho người dùng', 1),
+('Hủy vai trò từ người dùng', 'system.remove_role_from_user', 'system', 'Cho phép hủy bỏ vai trò đã gán cho người dùng', 1);
+
+-- Quyền Đặc biệt cho Người dùng (User-Permissions)
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Xem quyền đặc biệt của người dùng', 'system.view_user_permissions', 'system', 'Cho phép xem danh sách quyền đặc biệt đã gán trực tiếp cho người dùng', 1),
+('Cấp quyền đặc biệt cho người dùng', 'system.grant_permission_to_user', 'system', 'Cho phép cấp quyền đặc biệt trực tiếp cho người dùng, bất kể vai trò của họ', 1),
+('Từ chối quyền đặc biệt cho người dùng', 'system.deny_permission_to_user', 'system', 'Cho phép từ chối quyền đặc biệt cho người dùng, kể cả khi vai trò của họ có quyền đó', 1),
+('Xóa quyền đặc biệt từ người dùng', 'system.remove_special_permission', 'system', 'Cho phép xóa cấp/từ chối quyền đặc biệt từ người dùng, để trở về trạng thái mặc định theo vai trò', 1);
+
+-- Kiểm tra Quyền
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Kiểm tra quyền', 'system.check_permission', 'system', 'Cho phép kiểm tra quyền của người dùng trong hệ thống', 1);
+
+
+-- ========== BẢNG LIÊN KẾT VAI TRÒ - QUYỀN (ROLE_PERMISSIONS) ==========
 -- 1. Phân quyền cho ADMIN (Có tất cả quyền)
 INSERT INTO bookshopdb.role_permissions (role_id, permission_id)
 SELECT 

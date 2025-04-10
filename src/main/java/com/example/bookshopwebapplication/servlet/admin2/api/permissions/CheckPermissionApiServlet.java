@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet(name = "CheckPermissionApiServlet", urlPatterns = {
-        "/api/check-permission",
-        "/api/check-current-permission"
+        "/api/admin/check-permission",
+        "/api/admin/check-current-permission"
 })
 public class CheckPermissionApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -37,7 +37,7 @@ public class CheckPermissionApiServlet extends HttpServlet {
 
         try {
             // GET /api/check-permission - Kiểm tra quyền của một người dùng cụ thể
-            if (requestURI.equals("/api/check-permission")) {
+            if (requestURI.equals("/api/admin/check-permission")) {
                 handleCheckPermissionForUser(req, resp);
                 return;
             }
@@ -68,7 +68,7 @@ public class CheckPermissionApiServlet extends HttpServlet {
 
         try {
             // POST /api/check-current-permission - Kiểm tra quyền của người dùng hiện tại
-            if (requestURI.equals("/api/check-current-permission")) {
+            if (requestURI.equals("/api/admin/check-current-permission")) {
                 handleCheckPermissionForCurrentUser(req, resp);
                 return;
             }

@@ -19,10 +19,10 @@ import java.io.Serial;
 import java.util.List;
 
 @WebServlet(name = "UserSpecialPermissionsApiServlet", urlPatterns = {
-        "/api/users-special-permissions",
-        "/api/users-special-permissions/grant",
-        "/api/users-special-permissions/deny",
-        "/api/users-special-permissions/remove"
+        "/api/admin/users-special-permissions",
+        "/api/admin/users-special-permissions/grant",
+        "/api/admin/users-special-permissions/deny",
+        "/api/admin/users-special-permissions/remove"
 })
 public class UserSpecialPermissionsApiServlet extends HttpServlet {
     @Serial
@@ -40,7 +40,7 @@ public class UserSpecialPermissionsApiServlet extends HttpServlet {
 
         try {
             // GET /api/users-special-permissions - Lấy danh sách quyền đặc biệt của người dùng
-            if (requestURI.equals("/api/users-special-permissions")) {
+            if (requestURI.equals("/api/admin/users-special-permissions")) {
                 // Lấy userId từ request parameter
                 String userIdParam = req.getParameter("userId");
                 if (userIdParam == null || userIdParam.trim().isEmpty()) {
@@ -117,13 +117,13 @@ public class UserSpecialPermissionsApiServlet extends HttpServlet {
             }
 
             // POST /api/users-special-permissions/grant - Cấp quyền đặc biệt cho người dùng
-            if (requestURI.equals("/api/users-special-permissions/grant")) {
+            if (requestURI.equals("/api/admin/users-special-permissions/grant")) {
                 handleGrantSpecialPermission(req, resp, userId, true); // grant = true
                 return;
             }
 
             // POST /api/users-special-permissions/deny - Từ chối quyền đặc biệt cho người dùng
-            if (requestURI.equals("/api/users-special-permissions/deny")) {
+            if (requestURI.equals("/api/admin/users-special-permissions/deny")) {
                 handleGrantSpecialPermission(req, resp, userId, false); // grant = false
                 return;
             }
@@ -154,7 +154,7 @@ public class UserSpecialPermissionsApiServlet extends HttpServlet {
 
         try {
             // DELETE /api/users-special-permissions/remove - Xóa quyền đặc biệt cho người dùng
-            if (requestURI.equals("/api/users-special-permissions/remove")) {
+            if (requestURI.equals("/api/admin/users-special-permissions/remove")) {
                 // Lấy userId từ request parameter
                 String userIdParam = req.getParameter("userId");
                 if (userIdParam == null || userIdParam.trim().isEmpty()) {

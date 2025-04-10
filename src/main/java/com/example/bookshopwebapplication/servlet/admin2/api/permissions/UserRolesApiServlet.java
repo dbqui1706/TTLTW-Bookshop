@@ -21,11 +21,11 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 @WebServlet(name = "UserRolesApiServlet", urlPatterns = {
-        "/api/users-roles",
-        "/api/users-roles/add",
-        "/api/users-roles/remove",
-        "/api/users-roles/update",
-        "/api/users-roles/remove-all"
+        "/api/admin/users-roles",
+        "/api/admin/users-roles/add",
+        "/api/admin/users-roles/remove",
+        "/api/admin/users-roles/update",
+        "/api/admin/users-roles/remove-all"
 })
 public class UserRolesApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -42,7 +42,7 @@ public class UserRolesApiServlet extends HttpServlet {
 
         try {
             // GET /api/users-roles - Lấy danh sách vai trò của người dùng
-            if (requestURI.equals("/api/users-roles")) {
+            if (requestURI.equals("/api/admin/users-roles")) {
                 // Lấy userId từ request parameter
                 String userIdParam = req.getParameter("userId");
                 if (userIdParam == null || userIdParam.trim().isEmpty()) {
@@ -119,7 +119,7 @@ public class UserRolesApiServlet extends HttpServlet {
             }
 
             // POST /api/users-roles/add - Thêm một vai trò cho người dùng
-            if (requestURI.equals("/api/users-roles/add")) {
+            if (requestURI.equals("/api/admin/users-roles/add")) {
                 // Lấy roleId từ request parameter
                 String roleIdParam = req.getParameter("roleId");
                 if (roleIdParam == null || roleIdParam.trim().isEmpty()) {
@@ -148,7 +148,7 @@ public class UserRolesApiServlet extends HttpServlet {
             }
 
             // POST /api/users-roles/remove - Xóa một vai trò khỏi người dùng
-            if (requestURI.equals("/api/users-roles/remove")) {
+            if (requestURI.equals("/api/admin/users-roles/remove")) {
                 // Lấy roleId từ request parameter
                 String roleIdParam = req.getParameter("roleId");
                 if (roleIdParam == null || roleIdParam.trim().isEmpty()) {
@@ -177,13 +177,13 @@ public class UserRolesApiServlet extends HttpServlet {
             }
 
             // POST /api/users-roles/update - Cập nhật danh sách vai trò cho người dùng
-            if (requestURI.equals("/api/users-roles/update")) {
+            if (requestURI.equals("/api/admin/users-roles/update")) {
                 handleSetRolesForUser(req, resp, userId);
                 return;
             }
 
             // POST /api/users-roles/remove-all - Xóa tất cả vai trò của người dùng
-            if (requestURI.equals("/api/users-roles/remove-all")) {
+            if (requestURI.equals("/api/admin/users-roles/remove-all")) {
                 handleRemoveAllRolesFromUser(resp, userId);
                 return;
             }

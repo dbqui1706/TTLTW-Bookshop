@@ -31,7 +31,7 @@ public class AuthFilter implements Filter {
             "/api/delivery-methods",
             "/api/payment-methods",
             "/api/coupons",
-            "api/payment/vnpay-callback"
+            "/api/payment/vnpay-callback"
     );
 
     @Override

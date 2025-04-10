@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 @WebServlet(name = "RoleApiServlet", urlPatterns = {
-        "/api/roles",
-        "/api/roles/create",
-        "/api/roles/update",
-        "/api/roles/delete",
-        "/api/roles/*"
+        "/api/admin/roles",
+        "/api/admin/roles/create",
+        "/api/admin/roles/update",
+        "/api/admin/roles/delete",
+        "/api/admin/roles/*"
 })
 public class RoleApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -34,14 +34,14 @@ public class RoleApiServlet extends HttpServlet {
 
         try {
             // GET /api/roles/{id} - Lấy vai trò theo ID
-            if (requestURI.matches("/api/roles/\\d+")) {
+            if (requestURI.matches("/api/admin/roles/\\d+")) {
                 Long roleId = extractIdFromUri(requestURI);
                 handleGetRoleById(resp, roleId);
                 return;
             }
 
             // GET /api/roles - Lấy tất cả vai trò
-            if (requestURI.equals("/api/roles")) {
+            if (requestURI.equals("/api/admin/roles")) {
                 handleGetAllRoles(resp);
                 return;
             }
@@ -74,7 +74,7 @@ public class RoleApiServlet extends HttpServlet {
 
         try {
             // POST /api/roles/create - Tạo vai trò mới
-            if (requestURI.equals("/api/roles/create")) {
+            if (requestURI.equals("/api/admin/roles/create")) {
                 handleCreateRole(req, resp);
                 return;
             }
@@ -101,7 +101,7 @@ public class RoleApiServlet extends HttpServlet {
 
         try {
             // PUT /api/roles/update - Cập nhật vai trò
-            if (requestURI.equals("/api/roles/update")) {
+            if (requestURI.equals("/api/admin/roles/update")) {
                 handleUpdateRole(req, resp);
                 return;
             }
@@ -128,7 +128,7 @@ public class RoleApiServlet extends HttpServlet {
 
         try {
             // DELETE /api/roles/delete - Xóa vai trò
-            if (requestURI.equals("/api/roles/delete")) {
+            if (requestURI.equals("/api/admin/roles/delete")) {
                 handleDeleteRole(req, resp);
                 return;
             }

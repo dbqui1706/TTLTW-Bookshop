@@ -18,8 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 
 @WebServlet(name = "PermissionApiServlet", urlPatterns = {
-        "/api/permissions",
-        "/api/permissions/*"
+        "/api/admin/permissions",
+        "/api/admin/permissions/*"
 })
 public class PermissionApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -32,20 +32,20 @@ public class PermissionApiServlet extends HttpServlet {
 
         try {
             // GET /api/permissions/modules - Lấy danh sách các module
-            if (requestURI.equals("/api/permissions/modules")) {
+            if (requestURI.equals("/api/admin/permissions/modules")) {
                 handleGetModules(resp);
                 return;
             }
 
             // GET /api/permissions/{id} - Lấy quyền theo ID
-            if (requestURI.matches("/api/permissions/\\d+")) {
+            if (requestURI.matches("/api/admin/permissions/\\d+")) {
                 Long permissionId = extractIdFromUri(requestURI);
                 handleGetPermissionById(resp, permissionId);
                 return;
             }
 
             // GET /api/permissions - Lấy tất cả quyền hoặc theo module
-            if (requestURI.equals("/api/permissions")) {
+            if (requestURI.equals("/api/admin/permissions")) {
                 String moduleParam = req.getParameter("module");
                 handleGetAllPermissions(resp, moduleParam);
                 return;
@@ -79,7 +79,7 @@ public class PermissionApiServlet extends HttpServlet {
 
         try {
             // POST /api/permissions/create - Tạo quyền mới
-            if (requestURI.equals("/api/permissions/create")) {
+            if (requestURI.equals("/api/admin/permissions/create")) {
                 handleCreatePermission(req, resp);
                 return;
             }
@@ -106,7 +106,7 @@ public class PermissionApiServlet extends HttpServlet {
 
         try {
             // PUT /api/permissions/update - Cập nhật quyền
-            if (requestURI.equals("/api/permissions/update")) {
+            if (requestURI.equals("/api/admin/permissions/update")) {
                 handleUpdatePermission(req, resp);
                 return;
             }
@@ -133,7 +133,7 @@ public class PermissionApiServlet extends HttpServlet {
 
         try {
             // DELETE /api/permissions/delete - Xóa quyền
-            if (requestURI.equals("/api/permissions/delete")) {
+            if (requestURI.equals("/api/admin/permissions/delete")) {
                 handleDeletePermission(req, resp);
                 return;
             }
