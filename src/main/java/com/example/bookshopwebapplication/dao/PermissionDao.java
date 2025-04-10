@@ -1,16 +1,16 @@
 package com.example.bookshopwebapplication.dao;
 
+import com.example.bookshopwebapplication.dao._interface.IPermissionDao;
 import com.example.bookshopwebapplication.dao.mapper.PermissionMapper;
 import com.example.bookshopwebapplication.entities.Permission;
 
-import java.awt.font.TextHitInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class PermissionDao extends AbstractDao<Permission> {
+public class PermissionDao extends AbstractDao<Permission> implements IPermissionDao {
     public PermissionDao() {
         super("permissions");
     }
@@ -132,5 +132,83 @@ public class PermissionDao extends AbstractDao<Permission> {
         }finally {
             close(conn, null, null);
         }
+    }
+
+
+    @Override
+    public List<Permission> findAll() {
+        String sql = "SELECT * FROM permissions";
+        return query(sql, new PermissionMapper());
+    }
+
+    @Override
+    public List<Permission> findByModule(String module) {
+        String sql = "SELECT * FROM permissions WHERE module = ?";
+        return query(sql, new PermissionMapper(), module);
+    }
+
+    @Override
+    public Optional<Permission> findById(Long id) {
+        String sql = "SELECT * FROM permissions WHERE id = ?";
+        return getById(sql, new PermissionMapper(), id);
+    }
+
+    @Override
+    public Optional<Permission> findByCode(String code) {
+        String sql = "SELECT * FROM permissions WHERE code = ?";
+        List<Permission> permissions = query(sql, new PermissionMapper(), code);
+        return permissions.isEmpty() ? Optional.empty() : Optional.of(permissions.get(0));
+    }
+
+    @Override
+    public Set<String> findAllModules() {
+        String sql = "SELECT * FROM permissions";
+        List<Permission> permissions = query(sql, new PermissionMapper());
+        Set<String> modules = new HashSet<>();
+        for (Permission permission : permissions) {
+            modules.add(permission.getModule());
+        }
+        return modules;
+    }
+
+    @Override
+    public Long save(Permission permission) {
+        String sql = "INSERT INTO permissions (name, code, module, description, is_system) VALUES (?, ?, ?, ?, ?)";
+        return insert(sql, permission.getName(), permission.getCode(), permission.getModule(),
+                permission.getDescription(), permission.getIsSystem() ? 1 : 0);
+    }
+
+    @Override
+    public boolean update(Permission permission) {
+        String sql = "UPDATE permissions SET name = ?, code = ?, module = ?, description = ?, " +
+                "is_system = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        update(sql, permission.getName(), permission.getCode(), permission.getModule(),
+                permission.getDescription(), permission.getIsSystem() ? 1 : 0, permission.getId());
+        return true;
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        String sql = "DELETE FROM permissions WHERE id = ?";
+        delete(sql, id);
+        return true;
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM permissions WHERE id = ?";
+        return count(sql, id) > 0;
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        String sql = "SELECT COUNT(*) FROM permissions WHERE code = ?";
+        return count(sql, code) > 0;
+    }
+
+    @Override
+    public boolean existsByCodeExcludingId(String code, Long id) {
+        String sql = "SELECT COUNT(*) FROM permissions WHERE code = ? AND id <> ?";
+        return count(sql, code, id) > 0;
     }
 }
