@@ -231,4 +231,8 @@ public class UserService implements IUserService {
         user.setIsActiveEmail(true);
         userDao.update(user);
     }
+
+    public boolean isUserExists(Long userId) {
+        return userDao.getById(userId).isPresent();
+    }
 }
