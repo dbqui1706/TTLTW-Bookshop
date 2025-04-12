@@ -117,14 +117,14 @@ public class PermissionService {
 
     /**
      * Update an existing permission
-     * @param Permission Permission data with updated fields
+     * @param permission Permission data with updated fields
      * @return Optional containing the updated permission, empty if failed
      */
-    public Optional<Permission> updatePermission(Permission Permission) {
-        if (permissionDao.update(Permission)) {
+    public Optional<Permission> updatePermission(Permission permission) {
+        if (permissionDao.update(permission)) {
             // Clear all permission caches since permission details changed
             clearAllCache();
-            return permissionDao.findById(Permission.getId());
+            return permissionDao.findById(permission.getId());
         }
         return Optional.empty();
     }
@@ -169,6 +169,40 @@ public class PermissionService {
      */
     public boolean isPermissionCodeExistsExcludeCurrent(String code, Long id) {
         return permissionDao.existsByCodeExcludingId(code, id);
+    }
+
+    /**
+     * Lấy tổng số quyền
+     * @return Tổng số quyền
+     */
+    public int getTotalPermissionsCount() {
+        return permissionDao.countAll();
+    }
+
+    /**
+     * Lấy tổng số quyền thỏa mãn điều kiện tìm kiếm
+     * @param searchValue Giá trị tìm kiếm
+     * @param module Module lọc (có thể null)
+     * @return Số lượng quyền thỏa mãn
+     */
+    public int getTotalPermissionsCountWithFilter(String searchValue, String module) {
+        return permissionDao.countWithSearch(searchValue, module);
+    }
+
+    /**
+     * Lấy danh sách quyền có phân trang, sắp xếp và tìm kiếm
+     * @param start Vị trí bắt đầu
+     * @param length Số lượng bản ghi
+     * @param orderColumn Cột sắp xếp
+     * @param orderDirection Hướng sắp xếp
+     * @param searchValue Giá trị tìm kiếm
+     * @param module Module lọc (có thể null)
+     * @return Danh sách quyền đã được lọc, sắp xếp và phân trang
+     */
+    public List<Permission> getPermissionsByPage(int start, int length, String orderColumn,
+                                                 String orderDirection, String searchValue, String module) {
+        return permissionDao.findWithPaginationAndSearch(
+                start, length, orderColumn, orderDirection, searchValue, module);
     }
 
     public void clearUserCache(Long userId) {

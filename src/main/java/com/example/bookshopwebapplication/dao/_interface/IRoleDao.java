@@ -68,4 +68,29 @@ public interface IRoleDao {
      * @return true if exists, false otherwise
      */
     boolean existsByNameExcludingId(String name, Long id);
+
+    /**
+     * Lấy tổng số vai trò
+     * @return Tổng số vai trò
+     */
+    int countAll();
+
+    /**
+     * Lấy danh sách vai trò có phân trang, sắp xếp và tìm kiếm
+     * @param start Vị trí bắt đầu
+     * @param length Số lượng bản ghi cần lấy
+     * @param orderColumn Cột sắp xếp
+     * @param orderDirection Hướng sắp xếp (ASC/DESC)
+     * @param searchValue Giá trị tìm kiếm
+     * @return Danh sách vai trò đã lọc, sắp xếp và phân trang
+     */
+    List<Role> findWithPaginationAndSearch(int start, int length, String orderColumn,
+                                           String orderDirection, String searchValue);
+
+    /**
+     * Đếm số vai trò phù hợp với điều kiện tìm kiếm
+     * @param searchValue Giá trị tìm kiếm
+     * @return Số vai trò phù hợp
+     */
+    int countWithSearch(String searchValue);
 }

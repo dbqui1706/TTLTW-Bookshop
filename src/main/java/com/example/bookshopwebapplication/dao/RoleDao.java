@@ -6,8 +6,7 @@ import com.example.bookshopwebapplication.entities.Role;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class RoleDao extends AbstractDao<Role> implements IRoleDao {
     public RoleDao() {
@@ -69,6 +68,57 @@ public class RoleDao extends AbstractDao<Role> implements IRoleDao {
     public boolean existsByNameExcludingId(String name, Long id) {
         String sql = "SELECT COUNT(*) FROM roles WHERE name = ? AND id <> ?";
         return count(sql, name, id) > 0;
+    }
+
+    @Override
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM roles";
+        return count(sql);
+    }
+
+    @Override
+    public List<Role> findWithPaginationAndSearch(int start, int length, String orderColumn, String orderDirection, String searchValue) {
+        List<Role> roles = new LinkedList<>();
+        // Map tên cột từ DataTable sang tên cột trong DB
+        Map<String, String> columnMap = new HashMap<>();
+        columnMap.put("id", "id");
+        columnMap.put("name", "name");
+        columnMap.put("description", "description");
+        columnMap.put("system", "is_system");
+        columnMap.put("created_at", "created_at");
+
+        // Đảm bảo tên cột hợp lệ
+        String dbColumn = columnMap.getOrDefault(orderColumn, "id");
+
+        // Đảm bảo hướng sắp xếp hợp lệ
+        String direction = "ASC".equalsIgnoreCase(orderDirection) ? "ASC" : "DESC";
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM roles");
+
+        // Thêm điều kiện tìm kiếm
+        List<Object> params = new ArrayList<>();
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql.append(" WHERE (name LIKE ? OR description LIKE ?)");
+            String searchPattern = "%" + searchValue + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        // Thêm sắp xếp
+        sql.append(" ORDER BY ").append(dbColumn).append(" ").append(direction);
+
+        // Thêm phân trang
+        if (length > 0) {
+            sql.append(" LIMIT ").append(start).append(", ").append(length);
+        }
+        // Thực hiện truy vấn
+        roles = query(sql.toString(), new RoleMapper(), params.toArray());
+        return roles.isEmpty() ? new LinkedList<>() : roles;
+    }
+
+    @Override
+    public int countWithSearch(String searchValue) {
+        return 0;
     }
 
     @Override

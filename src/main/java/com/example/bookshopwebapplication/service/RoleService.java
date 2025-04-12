@@ -105,4 +105,36 @@ public class RoleService {
     public boolean isRoleNameExistsExcludeCurrent(String name, Long id) {
         return roleDao.existsByNameExcludingId(name, id);
     }
+
+    /**
+     * Lấy tổng số vai trò
+     * @return Tổng số vai trò
+     */
+    public int getTotalRolesCount() {
+        return roleDao.countAll();
+    }
+
+    /**
+     * Lấy tổng số vai trò thỏa mãn điều kiện tìm kiếm
+     * @param searchValue Giá trị tìm kiếm
+     * @return Số lượng vai trò thỏa mãn
+     */
+    public int getTotalRolesCountWithFilter(String searchValue) {
+        return roleDao.countWithSearch(searchValue);
+    }
+
+    /**
+     * Lấy danh sách vai trò có phân trang, sắp xếp và tìm kiếm
+     * @param start Vị trí bắt đầu
+     * @param length Số lượng bản ghi
+     * @param orderColumn Cột sắp xếp
+     * @param orderDirection Hướng sắp xếp
+     * @param searchValue Giá trị tìm kiếm
+     * @return Danh sách vai trò đã được lọc, sắp xếp và phân trang
+     */
+    public List<Role> getRolesByPage(int start, int length, String orderColumn,
+                                     String orderDirection, String searchValue) {
+        return roleDao.findWithPaginationAndSearch(
+                start, length, orderColumn, orderDirection, searchValue);
+    }
 }
