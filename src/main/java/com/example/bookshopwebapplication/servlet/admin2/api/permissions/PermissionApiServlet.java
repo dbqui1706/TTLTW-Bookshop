@@ -5,6 +5,8 @@ import com.example.bookshopwebapplication.message.Message;
 import com.example.bookshopwebapplication.service.PermissionService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -13,9 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @WebServlet(name = "PermissionApiServlet", urlPatterns = {
         "/api/admin/permissions",
@@ -23,6 +23,7 @@ import java.util.Set;
 })
 public class PermissionApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PermissionApiServlet.class);
     private final PermissionService permissionService = new PermissionService();
     private final Gson gson = new Gson();
 
@@ -47,7 +48,7 @@ public class PermissionApiServlet extends HttpServlet {
             // GET /api/permissions - Lấy tất cả quyền hoặc theo module
             if (requestURI.equals("/api/admin/permissions")) {
                 String moduleParam = req.getParameter("module");
-                handleGetAllPermissions(resp, moduleParam);
+                handleGetAllPermissions(req, resp, moduleParam);
                 return;
             }
 
@@ -175,18 +176,59 @@ public class PermissionApiServlet extends HttpServlet {
         }
     }
 
-    private void handleGetAllPermissions(HttpServletResponse resp, String moduleParam) throws IOException {
-        List<Permission> permissions;
+    private void handleGetAllPermissions(HttpServletRequest req, HttpServletResponse resp, String moduleParam) throws IOException {
+        try {
+            // Lấy các tham số từ DataTable
+            int draw = Integer.parseInt(req.getParameter("draw"));
+            int start = Integer.parseInt(req.getParameter("start"));
+            int length = Integer.parseInt(req.getParameter("length"));
 
-        if (moduleParam != null && !moduleParam.isEmpty()) {
-            // Lấy quyền theo module nếu có tham số module
-            permissions = permissionService.getPermissionsByModule(moduleParam);
-        } else {
-            // Lấy tất cả quyền
-            permissions = permissionService.getAllPermissions();
+            // Lấy thông tin sắp xếp
+            String orderColumnIndex = req.getParameter("order[0][column]");
+            String orderColumnName = req.getParameter("columns[" + orderColumnIndex + "][data]");
+            String orderDirection = req.getParameter("order[0][dir]");
+
+            // Lấy thông tin tìm kiếm
+            String searchValue = req.getParameter("search[value]") != null ?
+                    req.getParameter("search[value]") : "";
+
+            // Lấy thông tin lọc theo module (nếu có)
+            String moduleFilter = req.getParameter("module");
+
+            // Log thông tin request
+            LOGGER.debug("DataTable request - draw: {}, start: {}, length: {}", draw, start, length);
+            LOGGER.debug("DataTable order - column: {}, direction: {}", orderColumnName, orderDirection);
+            LOGGER.debug("DataTable search - value: {}", searchValue);
+            LOGGER.debug("Module filter: {}", moduleFilter);
+
+            // Lấy tổng số bản ghi không có filter
+            int totalRecords = permissionService.getTotalPermissionsCount();
+
+            // Lấy tổng số bản ghi có filter
+            int totalRecordsFiltered = permissionService.getTotalPermissionsCountWithFilter(searchValue, moduleFilter);
+
+            // Lấy dữ liệu đã được phân trang, sắp xếp và lọc từ database
+            List<Permission> permissions = permissionService.getPermissionsByPage(
+                    start, length, orderColumnName, orderDirection, searchValue, moduleFilter);
+
+            // Tạo response cho DataTable
+            Map<String, Object> response = new HashMap<>();
+            response.put("draw", draw);
+            response.put("recordsTotal", totalRecords);
+            response.put("recordsFiltered", totalRecordsFiltered);
+            response.put("data", permissions);
+
+            // Gửi response
+            JsonUtils.out(resp, response, HttpServletResponse.SC_OK);
+
+        } catch (Exception e) {
+            LOGGER.error("Error processing DataTable request", e);
+
+            // Xử lý lỗi
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            JsonUtils.out(resp, errorResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-
-        JsonUtils.out(resp, permissions, HttpServletResponse.SC_OK);
     }
 
     private void handleCreatePermission(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -248,8 +290,7 @@ public class PermissionApiServlet extends HttpServlet {
 
     private void handleUpdatePermission(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         // Đọc dữ liệu cập nhật từ request body
-        BufferedReader reader = req.getReader();
-        Permission permission = gson.fromJson(reader, Permission.class);
+        Permission permission = JsonUtils.get(req, Permission.class);
 
         if (permission.getId() == null) {
             JsonUtils.out(

@@ -129,7 +129,7 @@ public class PermissionDao extends AbstractDao<Permission> implements IPermissio
             }
         } catch (SQLException e) {
             System.out.println("Error loading permissions: " + e);
-        }finally {
+        } finally {
             close(conn, null, null);
         }
     }
@@ -210,5 +210,84 @@ public class PermissionDao extends AbstractDao<Permission> implements IPermissio
     public boolean existsByCodeExcludingId(String code, Long id) {
         String sql = "SELECT COUNT(*) FROM permissions WHERE code = ? AND id <> ?";
         return count(sql, code, id) > 0;
+    }
+
+    @Override
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM permissions";
+        return count(sql);
+    }
+
+    @Override
+    public int countWithSearch(String searchValue, String module) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM permissions WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        // Thêm điều kiện lọc theo module nếu có
+        if (module != null && !module.trim().isEmpty()) {
+            sql.append(" AND module = ?");
+            params.add(module);
+        }
+
+        // Thêm điều kiện tìm kiếm
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql.append(" AND (name LIKE ? OR code LIKE ? OR description LIKE ?)");
+            String searchPattern = "%" + searchValue + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        return count(sql.toString(), params.toArray());
+    }
+
+    @Override
+    public List<Permission> findWithPaginationAndSearch(int start, int length, String orderColumn, String orderDirection, String searchValue, String module) {
+        List<Permission> permissions = new ArrayList<>();
+
+        // Map tên cột từ DataTable sang tên cột trong DB
+        Map<String, String> columnMap = new HashMap<>();
+        columnMap.put("id", "id");
+        columnMap.put("name", "name");
+        columnMap.put("code", "code");
+        columnMap.put("module", "module");
+        columnMap.put("description", "description");
+        columnMap.put("isSystem", "is_system");
+        columnMap.put("createdAt", "created_at");
+
+        // Đảm bảo tên cột hợp lệ
+        String dbColumn = columnMap.getOrDefault(orderColumn, "id");
+
+        // Đảm bảo hướng sắp xếp hợp lệ
+        String direction = "ASC".equalsIgnoreCase(orderDirection) ? "ASC" : "DESC";
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM permissions WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        // Thêm điều kiện lọc theo module nếu có
+        if (module != null && !module.trim().isEmpty()) {
+            sql.append(" AND module = ?");
+            params.add(module);
+        }
+
+        // Thêm điều kiện tìm kiếm
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql.append(" AND (name LIKE ? OR code LIKE ? OR description LIKE ?)");
+            String searchPattern = "%" + searchValue + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        // Thêm sắp xếp
+        sql.append(" ORDER BY ").append(dbColumn).append(" ").append(direction);
+
+        // Thêm phân trang
+        if (length > 0) {
+            sql.append(" LIMIT ").append(start).append(" , ").append(length);
+        }
+        permissions = query(sql.toString(), new PermissionMapper(), params.toArray());
+
+        return permissions;
     }
 }

@@ -13,7 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @WebServlet(name = "RoleApiServlet", urlPatterns = {
@@ -27,6 +29,7 @@ public class RoleApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final RoleService roleService = new RoleService();
     private final Gson gson = new Gson();
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(RoleApiServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -42,7 +45,7 @@ public class RoleApiServlet extends HttpServlet {
 
             // GET /api/roles - Lấy tất cả vai trò
             if (requestURI.equals("/api/admin/roles")) {
-                handleGetAllRoles(resp);
+                handleGetAllRoles(req, resp);
                 return;
             }
 
@@ -165,9 +168,46 @@ public class RoleApiServlet extends HttpServlet {
         }
     }
 
-    private void handleGetAllRoles(HttpServletResponse resp) throws IOException {
-        List<Role> roles = roleService.getAllRoles();
-        JsonUtils.out(resp, roles, HttpServletResponse.SC_OK);
+    private void handleGetAllRoles(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Lấy các tham số từ DataTable
+        int draw = Integer.parseInt(req.getParameter("draw"));
+        int start = Integer.parseInt(req.getParameter("start"));
+        int length = Integer.parseInt(req.getParameter("length"));
+
+        // Lấy thông tin sắp xếp
+        String orderColumnIndex = req.getParameter("order[0][column]");
+        String orderColumnName = req.getParameter("columns[" + orderColumnIndex + "][data]");
+        String orderDirection = req.getParameter("order[0][dir]");
+
+        // Lấy thông tin tìm kiếm
+        String searchValue = req.getParameter("search[value]") != null ?
+                req.getParameter("search[value]") : "";
+
+        // Log thông tin request
+        LOGGER.debug("DataTable request - draw: {}, start: {}, length: {}", draw, start, length);
+        LOGGER.debug("DataTable order - column: {}, direction: {}", orderColumnName, orderDirection);
+        LOGGER.debug("DataTable search - value: {}", searchValue);
+
+        // Lấy tổng số bản ghi không có filter
+        int totalRecords = roleService.getTotalRolesCount();
+
+        // Lấy tổng số bản ghi có filter
+        int totalRecordsFiltered = searchValue.isEmpty() ?
+                totalRecords : roleService.getTotalRolesCountWithFilter(searchValue);
+
+        // Lấy dữ liệu đã được phân trang, sắp xếp và lọc từ database
+        List<Role> roles = roleService.getRolesByPage(
+                start, length, orderColumnName, orderDirection, searchValue);
+
+        // Tạo response cho DataTable
+        Map<String, Object> response = new HashMap<>();
+        response.put("draw", draw);
+        response.put("recordsTotal", totalRecords);
+        response.put("recordsFiltered", totalRecordsFiltered);
+        response.put("data", roles);
+
+        // Gửi response
+        JsonUtils.out(resp, response, HttpServletResponse.SC_OK);
     }
 
     private void handleCreateRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
