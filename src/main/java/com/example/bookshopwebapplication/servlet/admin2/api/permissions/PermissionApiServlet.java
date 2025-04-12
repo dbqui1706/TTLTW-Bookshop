@@ -19,6 +19,7 @@ import java.util.*;
 
 @WebServlet(name = "PermissionApiServlet", urlPatterns = {
         "/api/admin/permissions",
+        "/api/admin/permissions/getAll",
         "/api/admin/permissions/*"
 })
 public class PermissionApiServlet extends HttpServlet {
@@ -51,6 +52,10 @@ public class PermissionApiServlet extends HttpServlet {
                 handleGetAllPermissions(req, resp, moduleParam);
                 return;
             }
+            if (requestURI.equals("/api/admin/permissions/getAll")) {
+                handleGetAllPermissions(req, resp);
+                return;
+            }
 
             // URL không khớp với bất kỳ mẫu nào
             JsonUtils.out(
@@ -66,6 +71,23 @@ public class PermissionApiServlet extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST
             );
         } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Lỗi server: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void handleGetAllPermissions(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            // Lấy danh sách quyền từ service
+            List<Permission> permissions = permissionService.getAllPermissions();
+
+            // Gửi phản hồi
+            JsonUtils.out(resp, permissions, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            LOGGER.error("Error fetching all permissions", e);
             JsonUtils.out(
                     resp,
                     new Message(500, "Lỗi server: " + e.getMessage()),

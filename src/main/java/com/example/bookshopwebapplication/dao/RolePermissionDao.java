@@ -4,6 +4,7 @@ import com.example.bookshopwebapplication.dao._interface.IRolePermissionDao;
 import com.example.bookshopwebapplication.dao.mapper.PermissionMapper;
 import com.example.bookshopwebapplication.entities.Permission;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,14 +56,23 @@ public class RolePermissionDao extends AbstractDao<Object> implements IRolePermi
 
     @Override
     public boolean removePermissionFromRole(Long roleId, Long permissionId) {
-        String sql = "DELETE FROM role_permissions WHERE role_id = ? AND permission_id = ?";
+        StringBuilder sql = new StringBuilder().append("DELETE FROM role_permissions WHERE role_id = ? AND permission_id = ?");
+        Connection connection = null;
+        PreparedStatement stmt = null;
         try {
-            delete(sql, roleId, permissionId);
-            return true;
-        } catch (Exception e) {
+            connection = getConnection();
+            stmt = connection.prepareStatement(sql.toString());
+            stmt.setLong(1, roleId);
+            stmt.setLong(2, permissionId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            close(connection, stmt, null);
         }
+
     }
 
     @Override
