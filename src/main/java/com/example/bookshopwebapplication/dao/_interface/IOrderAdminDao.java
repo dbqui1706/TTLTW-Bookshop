@@ -32,6 +32,14 @@ public interface IOrderAdminDao {
     public OrderDetailResponse getOrderDetail(Long orderId);
 
     /**
+     * Lấy chi tiết đơn hàng theo code
+     *
+     * @param code Mã đơn hàng
+     * @return OrderDetailResponse Đối tượng chứa thông tin chi tiết đơn hàng
+     */
+    public OrderDetailResponse getOrderDetailByCode(String code) ;
+
+    /**
      * Cập nhật trạng thái đơn hàng và ghi lịch sử
      *
      * @param orderId ID đơn hàng

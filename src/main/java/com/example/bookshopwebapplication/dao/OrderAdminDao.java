@@ -5,6 +5,8 @@ import com.example.bookshopwebapplication.dao.mapper.OrderDTOMapper;
 import com.example.bookshopwebapplication.dao.mapper.OrderItemDTOMapper;
 import com.example.bookshopwebapplication.dao.utils.QueryBuilderResult;
 import com.example.bookshopwebapplication.entities.Order2;
+import com.example.bookshopwebapplication.http.response.order_detail.OrderItemDetailDTO;
+import com.example.bookshopwebapplication.http.response.order_detail.OrderSummaryDTO;
 import com.example.bookshopwebapplication.http.response_admin.orders.*;
 
 import java.sql.Connection;
@@ -62,6 +64,7 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
             close(conn, pstmt, rs);
         }
     }
+
     /**
      * Tạo PreparedStatement và đặt các tham số
      */
@@ -79,9 +82,9 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
      * Đếm tổng số bản ghi không áp dụng filter
      */
     private int countTotalRecords(Connection conn) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM orders";
+        StringBuilder sql = new StringBuilder().append("SELECT COUNT(*) FROM orders");
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString());
              ResultSet rs = pstmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
@@ -259,12 +262,12 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
      */
     private List<OrderItemDTO> getOrderItems(Connection conn, Long orderId) throws SQLException {
         List<OrderItemDTO> items = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT oi.id, oi.product_id, oi.product_name, oi.product_image, ");
+        sql.append("oi.base_price, oi.discount_percent, oi.price, oi.quantity, oi.subtotal ");
+        sql.append("FROM order_item oi WHERE oi.order_id = ?");
 
-        String sql = "SELECT oi.id, oi.product_id, oi.product_name, oi.product_image, " +
-                "oi.base_price, oi.discount_percent, oi.price, oi.quantity, oi.subtotal " +
-                "FROM order_item oi WHERE oi.order_id = ?";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             pstmt.setLong(1, orderId);
 
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -282,6 +285,305 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
     public OrderDetailResponse getOrderDetail(Long orderId) {
         return null;
     }
+
+    @Override
+    public OrderDetailResponse getOrderDetailByCode(String code) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+
+            // 1. Lấy thông tin cơ bản của đơn hàng
+            OrderInfoDTO orderInfo = getOrderInfo(conn, code);
+            if (orderInfo == null) {
+                return null; // Không tìm thấy đơn hàng
+            }
+
+            // 2. Lấy thông tin phương thức giao hàng
+            DeliveryMethodDTO deliveryMethod = getDeliveryMethod(conn, orderInfo.getId());
+
+            // 3. Lấy thông tin phương thức thanh toán
+            PaymentMethodDTO paymentMethod = getPaymentMethod(conn, orderInfo.getId());
+
+            // 4. Lấy thông tin giao hàng
+            ShippingInfoDTO shippingInfo = getShippingInfo(conn, orderInfo.getId());
+
+            // 5. Lấy thông tin giao dịch thanh toán
+            PaymentTransactionDTO paymentTransaction = getPaymentTransaction(conn, orderInfo.getId());
+
+            // 6. Lấy danh sách sản phẩm trong đơn hàng
+            List<OrderItemDetailDTO> orderItems = getOrderItemDetails(conn, orderInfo.getId());
+
+            // 7. Lấy lịch sử trạng thái đơn hàng
+            List<OrderStatusHistoryDTO> timeline = getOrderStatusHistory(conn, orderInfo.getId());
+
+            // 8. Kiểm tra xem đơn hàng có thể hủy không
+            boolean canCancel = canCancelOrder(orderInfo.getStatus());
+
+            // 9. Lấy thông tin tổng hợp đơn hàng
+            OrderSummaryDTO summary = getOrderSummary(conn, orderInfo.getId());
+
+            // 10. Tạo và trả về đối tượng OrderDetailResponse
+            return OrderDetailResponse.builder()
+                    .order(orderInfo)
+                    .delivery(deliveryMethod)
+                    .payment(paymentMethod)
+                    .shipping(shippingInfo)
+                    .paymentTransaction(paymentTransaction)
+                    .items(orderItems)
+                    .timeLine(timeline)
+                    .canCancel(canCancel)
+                    .summary(summary)
+                    .build();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi lấy chi tiết đơn hàng: " + e.getMessage(), e);
+        } finally {
+            close(conn, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin cơ bản của đơn hàng theo mã
+     */
+    private OrderInfoDTO getOrderInfo(Connection conn, String orderCode) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT o.id, o.order_code AS code, o.created_at, o.status, o.note, ");
+        sql.append("o.user_id, os.receiver_name AS customer_name, ");
+        sql.append("os.receiver_phone AS customer_phone, os.receiver_email AS customer_email, ");
+        sql.append("os.address_line1 AS customer_address_line1, os.address_line2 AS customer_address_line2, ");
+        sql.append("CONCAT(os.address_line1, ");
+        sql.append("       CASE WHEN os.address_line2 IS NOT NULL THEN CONCAT(', ', os.address_line2) ELSE '' END, ");
+        sql.append("       ', ', os.ward, ");
+        sql.append("       ', ', os.district, ");
+        sql.append("       ', ', os.city) AS customer_full_address, ");
+        sql.append("o.coupon_code, o.subtotal, o.discount_amount AS discount, ");
+        sql.append("o.delivery_price AS shipping, o.total_amount AS total ");
+        sql.append("FROM bookshopdb.orders o ");
+        sql.append("JOIN bookshopdb.order_shipping os ON o.id = os.order_id ");
+        sql.append("WHERE o.order_code = ?");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setString(1, orderCode);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new OrderInfoDTO(rs);
+            }
+
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin phương thức giao hàng
+     */
+    private DeliveryMethodDTO getDeliveryMethod(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT dm.id, dm.name, dm.description, dm.price, dm.estimated_days, dm.icon ");
+        sql.append("FROM delivery_method dm ");
+        sql.append("JOIN orders o ON o.delivery_method_id = dm.id ");
+        sql.append("WHERE o.id = ?");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new DeliveryMethodDTO(rs);
+            }
+
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin phương thức thanh toán
+     */
+    private PaymentMethodDTO getPaymentMethod(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT pm.id, pm.name, pm.code, pm.description, pm.icon ");
+        sql.append("FROM payment_method pm ");
+        sql.append("JOIN orders o ON o.payment_method_id = pm.id ");
+        sql.append("WHERE o.id = ?");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new PaymentMethodDTO(rs);
+            }
+
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin giao hàng
+     */
+    private ShippingInfoDTO getShippingInfo(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT os.receiver_name, os.receiver_email, os.receiver_phone, ");
+        sql.append("os.address_line1, os.address_line2, os.city, os.district, os.ward, ");
+        sql.append("os.postal_code, os.shipping_notes, os.tracking_number, os.shipping_carrier ");
+        sql.append("FROM order_shipping os ");
+        sql.append("WHERE os.order_id = ?");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new ShippingInfoDTO(rs);
+            }
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin giao dịch thanh toán gần nhất
+     */
+    private PaymentTransactionDTO getPaymentTransaction(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT pt.id, pt.transaction_code, pt.payment_provider_ref, pt.amount, ");
+        sql.append("pt.status, pt.payment_date, pt.note, pt.created_at, pt.updated_at ");
+        sql.append("FROM payment_transaction pt ");
+        sql.append("WHERE pt.order_id = ? ");
+        sql.append("ORDER BY pt.id DESC LIMIT 1");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new PaymentTransactionDTO().mapRow(rs);
+            }
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy danh sách sản phẩm trong đơn hàng
+     */
+    private List<OrderItemDetailDTO> getOrderItemDetails(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT oi.id, oi.product_id, oi.product_name, oi.product_image, ");
+        sql.append("p.author, oi.base_price, oi.discount_percent, oi.price, oi.quantity, oi.subtotal ");
+        sql.append("FROM order_item oi ");
+        sql.append("LEFT JOIN product p ON oi.product_id = p.id ");
+        sql.append("WHERE oi.order_id = ?");
+
+        List<OrderItemDetailDTO> items = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                items.add(new OrderItemDetailDTO().mapRow(rs));
+            }
+            return items;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy lịch sử trạng thái đơn hàng
+     */
+    private List<OrderStatusHistoryDTO> getOrderStatusHistory(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT osh.id, osh.status, osh.note, osh.changed_by, osh.created_at, ");
+        sql.append("CASE ");
+        sql.append("    WHEN osh.changed_by IS NOT NULL THEN ");
+        sql.append("        (SELECT fullname FROM user WHERE id = osh.changed_by) ");
+        sql.append("    ELSE NULL ");
+        sql.append("END AS changed_by_name ");
+        sql.append("FROM order_status_history osh ");
+        sql.append("WHERE osh.order_id = ? ");
+        sql.append("ORDER BY osh.created_at ASC");
+
+        List<OrderStatusHistoryDTO> statusHistory = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                OrderStatusHistoryDTO history = new OrderStatusHistoryDTO().mapRow(rs);
+                statusHistory.add(history);
+            }
+
+            return statusHistory;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
+    /**
+     * Lấy thông tin tổng hợp đơn hàng
+     */
+    private OrderSummaryDTO getOrderSummary(Connection conn, Long orderId) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT o.subtotal, o.discount_amount, o.delivery_price, o.tax_amount, o.total_amount, o.coupon_code ");
+        sql.append("FROM orders o WHERE o.id = ?");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setLong(1, orderId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new OrderSummaryDTO().mapRow(rs);
+            }
+            return null;
+        } finally {
+            close(null, pstmt, rs);
+        }
+    }
+
 
     @Override
     public boolean updateOrderStatus(Long orderId, String status, String note, Long userId) {

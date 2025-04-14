@@ -1,6 +1,7 @@
 package com.example.bookshopwebapplication.service;
 
 import com.example.bookshopwebapplication.dao.OrderAdminDao;
+import com.example.bookshopwebapplication.http.response_admin.orders.OrderDetailResponse;
 import com.example.bookshopwebapplication.http.response_admin.orders.OrderListResponse;
 
 import java.util.Map;
@@ -20,5 +21,15 @@ public class OrderAdminService {
      */
     public OrderListResponse getOrdersWithPagination(Map<String, String> params) {
         return orderAdminDao.getOrdersWithPagination(params);
+    }
+
+    /**
+     * Lấy chi tiết đơn hàng theo mã đơn hàng
+     *
+     * @param code Mã đơn hàng
+     * @return OrderDetailResponse Đối tượng chứa thông tin chi tiết đơn hàng
+     */
+    public OrderDetailResponse getOrderDetailByCode(String code) {
+        return orderAdminDao.getOrderDetailByCode(code);
     }
 }

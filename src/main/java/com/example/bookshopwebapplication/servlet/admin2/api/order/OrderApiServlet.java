@@ -1,5 +1,6 @@
 package com.example.bookshopwebapplication.servlet.admin2.api.order;
 
+import com.example.bookshopwebapplication.http.response_admin.orders.OrderDetailResponse;
 import com.example.bookshopwebapplication.http.response_admin.orders.OrderListResponse;
 import com.example.bookshopwebapplication.message.Message;
 import com.example.bookshopwebapplication.service.OrderAdminService;
@@ -28,15 +29,50 @@ public class OrderApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String requestURI = req.getRequestURI();
         try {
+
             // Lấy danh sách đơn hàng có phân trang
             if (requestURI.equals("/api/admin/orders")) {
-                handleGetOrders(req, resp);
+                String code = req.getParameter("code");
+                if (code == null || code.trim().isEmpty()) {
+                    handleGetOrders(req, resp);
+                    return;
+                }
+
+                // Nếu có mã đơn hàng, gọi hàm lấy chi tiết đơn hàng
+                handleGetOrderDetail(req, resp, code);
                 return;
             }
         } catch (Exception e) {
             JsonUtils.out(
                     resp,
                     new Message(500, "Lỗi server: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Xử lý request lấy chi tiết đơn hàng
+     */
+    private void handleGetOrderDetail(HttpServletRequest req, HttpServletResponse resp, String code) {
+        try {
+            OrderDetailResponse result = orderAdminService.getOrderDetailByCode(code);
+            if (result == null) {
+                JsonUtils.out(
+                        resp,
+                        new Message(404, "Không tìm thấy đơn hàng với mã: " + code),
+                        HttpServletResponse.SC_NOT_FOUND
+                );
+                return;
+            }
+
+            // Trả về kết quả
+            JsonUtils.out(resp, result, HttpServletResponse.SC_OK);
+
+        } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Lỗi khi lấy chi tiết đơn hàng: " + e.getMessage()),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR
             );
         }
