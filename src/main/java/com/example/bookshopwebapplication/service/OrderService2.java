@@ -386,119 +386,6 @@ public class OrderService2 {
     }
 
     /**
-     * Xử lý khi đơn hàng được xác nhận thanh toán
-     *
-     * @param orderId ID đơn hàng
-     * @return true nếu xử lý thành công
-     */
-    public boolean processOrderConfirmation(Long orderId) {
-        Optional<Order2> orderOpt = orderDAO.findById(orderId);
-        if (orderOpt.isEmpty()) {
-            throw new BadRequestException("Không tìm thấy đơn hàng");
-        }
-
-        Order2 order = orderOpt.get();
-
-        // Kiểm tra trạng thái đơn hàng
-        if (!"pending".equals(order.getStatus())) {
-            throw new BadRequestException("Đơn hàng không ở trạng thái có thể xác nhận");
-        }
-
-        // Cập nhật trạng thái đơn hàng
-        order.setStatus("processing");
-        orderDAO.updateStatus(orderId, "processing");
-
-        // Ghi lịch sử trạng thái
-        OrderStatusHistory statusHistory = OrderStatusHistory.builder()
-                .orderId(orderId)
-                .status("processing")
-                .note("Payment confirmed, order is being processed")
-                .changedBy(order.getUserId())
-                .createdAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-        orderStatusHistoryDAO.save(statusHistory);
-
-        return true;
-    }
-
-    /**
-     * Xử lý khi đơn hàng được giao đi
-     *
-     * @param orderId ID đơn hàng
-     * @return true nếu xử lý thành công
-     */
-    public boolean processOrderShipping(Long orderId) {
-        Optional<Order2> orderOpt = orderDAO.findById(orderId);
-        if (!orderOpt.isPresent()) {
-            throw new BadRequestException("Không tìm thấy đơn hàng");
-        }
-
-        Order2 order = orderOpt.get();
-
-        // Kiểm tra trạng thái đơn hàng
-        if (!"processing".equals(order.getStatus())) {
-            throw new BadRequestException("Đơn hàng không ở trạng thái có thể giao");
-        }
-
-        // Xử lý thông qua OrderInventoryService - giảm số lượng tồn kho thực tế
-        if (!orderInventoryService.processShippingOrder(orderId)) {
-            throw new BadRequestException("Lỗi khi cập nhật tồn kho cho đơn hàng đang giao");
-        }
-
-        // Cập nhật trạng thái đơn hàng
-        order.setStatus("shipping");
-        orderDAO.updateStatus(orderId, "shipping");
-
-        // Ghi lịch sử trạng thái
-        OrderStatusHistory statusHistory = OrderStatusHistory.builder()
-                .orderId(orderId)
-                .status("shipping")
-                .note("Order is being shipped")
-                .changedBy(order.getUserId())
-                .createdAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-        orderStatusHistoryDAO.save(statusHistory);
-
-        return true;
-    }
-
-    /**
-     * Xử lý khi đơn hàng được giao thành công
-     *
-     * @param orderId ID đơn hàng
-     * @return true nếu xử lý thành công
-     */
-    public boolean processOrderDelivered(Long orderId) {
-        Optional<Order2> orderOpt = orderDAO.findById(orderId);
-        if (orderOpt.isEmpty()) {
-            throw new BadRequestException("Không tìm thấy đơn hàng");
-        }
-
-        Order2 order = orderOpt.get();
-
-        // Kiểm tra trạng thái đơn hàng
-        if (!"shipping".equals(order.getStatus())) {
-            throw new BadRequestException("Đơn hàng không ở trạng thái đang giao");
-        }
-
-        // Cập nhật trạng thái đơn hàng - không cần giảm số lượng tồn kho vì đã giảm khi bắt đầu giao hàng
-        order.setStatus("delivered");
-        orderDAO.updateStatus(orderId, "delivered");
-
-        // Ghi lịch sử trạng thái
-        OrderStatusHistory statusHistory = OrderStatusHistory.builder()
-                .orderId(orderId)
-                .status("delivered")
-                .note("Order delivered successfully")
-                .changedBy(order.getUserId())
-                .createdAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-        orderStatusHistoryDAO.save(statusHistory);
-
-        return true;
-    }
-
-    /**
      * Xử lý hủy đơn hàng
      *
      * @param orderId ID đơn hàng
@@ -908,7 +795,7 @@ public class OrderService2 {
 
                     orderStatusHistoryDAO.saveWithConnection(statusHistory, conn);
 
-                    // 4. Xử lý tồn kho: Chuyển từ reserved_quantity sang thực tế bán
+                    // 4. Xử lý tồn kho: Log lịch sử tồn kho
                     List<OrderItem2> orderItems = orderItemDAO.findByOrderId(orderId);
 
                     for (OrderItem2 item : orderItems) {
@@ -918,27 +805,14 @@ public class OrderService2 {
                         if (inventoryOpt.isPresent()) {
                             InventoryStatus inventory = inventoryOpt.get();
 
-                            // Số lượng sản phẩm trong đơn hàng
-                            int quantity = item.getQuantity();
-
-                            // Khi thanh toán thành công, chuyển từ reserved sang actual
-                            // actualQuantity không cần thay đổi vì đã được reserved trước đó khi tạo đơn hàng
-                            // reservedQuantity cần giảm đi vì sản phẩm đã được "xác nhận" bán
-                            int currentReserved = inventory.getReservedQuantity();
-                            int newReservedQuantity = currentReserved - quantity;
-                            inventory.setReservedQuantity(newReservedQuantity);
-
-                            // Cập nhật lại reserved_quantity trong inventory_status
-                            inventoryStatusDAO.updateWithConnection(inventory, conn);
-
                             // Thêm lịch sử inventory
                             InventoryHistory history = InventoryHistory.builder()
                                     .productId(item.getProductId())
-                                    .quantityChange(0) // Tổng số lượng không thay đổi
+                                    .quantityChange(0) // không có sự thay đổi thực tế về số lượng
                                     .previousQuantity(inventory.getActualQuantity())
                                     .currentQuantity(inventory.getActualQuantity())
                                     .actionType(InventoryHistory.ActionType.ADJUSTMENT)
-                                    .reason("Đơn hàng được xác nhận thanh toán")
+                                    .reason("Đơn hàng thanh toán thành công")
                                     .referenceId(orderId)
                                     .referenceType("order")
                                     .notes("Đơn hàng #" + orderCode + " đã thanh toán thành công qua VNPay")

@@ -5,6 +5,7 @@ import com.example.bookshopwebapplication.http.response_admin.orders.OrderListRe
 import com.example.bookshopwebapplication.message.Message;
 import com.example.bookshopwebapplication.service.OrderAdminService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
+import lombok.Data;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -101,6 +102,57 @@ public class OrderApiServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String requestURI = req.getRequestURI();
+        try {
+            // Xử lý cập nhật trạng thái đơn hàng
+            if (requestURI.equals("/api/admin/orders/update-status")) {
+                handleUpdateOrderStatus(req, resp);
+                return;
+            }
+        } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    new Message(500, "Lỗi server: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private void handleUpdateOrderStatus(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            Long userIdUpdate = (Long) req.getAttribute("userId");
+            UpdateOrderStatusRequest uos = JsonUtils.get(req, UpdateOrderStatusRequest.class);
+            if (uos == null) {
+                JsonUtils.out(
+                        resp,
+                        new Message(400, "Dữ liệu không hợp lệ"),
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+            boolean result = orderAdminService.updateOrderStatus(
+                    uos.getId(),
+                    uos.getStatus(),
+                    uos.getNote(),
+                    userIdUpdate
+            );
+
+            JsonUtils.out(
+                    resp,
+                    "Cập nhật trạng thái đơn hàng thành công",
+                    HttpServletResponse.SC_OK
+            );
+        } catch (Exception e) {
+            JsonUtils.out(
+                    resp,
+                    "Lỗi khi cập nhật trạng thái đơn hàng: " + e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     /**
      * Thu thập tất cả tham số từ request
      */
@@ -173,5 +225,13 @@ public class OrderApiServlet extends HttpServlet {
      */
     private Long extractIdFromUri(String uri, String prefix) {
         return Long.parseLong(uri.substring(prefix.length()));
+    }
+
+    @Data
+    private static class UpdateOrderStatusRequest {
+        private Long id;
+        private String status;
+        private String note;
+        // Getters and Setters
     }
 }

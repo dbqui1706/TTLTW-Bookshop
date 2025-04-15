@@ -1,6 +1,7 @@
 package com.example.bookshopwebapplication.dao;
 
 import com.example.bookshopwebapplication.dao._interface.IOrderAdminDao;
+import com.example.bookshopwebapplication.dao.mapper.Order2Mapper;
 import com.example.bookshopwebapplication.dao.mapper.OrderDTOMapper;
 import com.example.bookshopwebapplication.dao.mapper.OrderItemDTOMapper;
 import com.example.bookshopwebapplication.dao.utils.QueryBuilderResult;
@@ -21,9 +22,28 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
         super("orders");
     }
 
+    public void updateWithConnection(Order2 order, Connection conn){
+        clearSQL();
+        builderSQL.append("UPDATE orders SET status = ?, delivery_method_id = ?, payment_method_id = ?, ");
+        builderSQL.append("subtotal = ?, delivery_price = ?, discount_amount = ?, tax_amount = ?, total_amount = ?, ");
+        builderSQL.append("coupon_code = ?, is_verified = ?, note = ? WHERE id = ?");
+        updateWithConnection(conn, builderSQL.toString(), order.getStatus(), order.getDeliveryMethodId(),
+                order.getPaymentMethodId(), order.getSubtotal(), order.getDeliveryPrice(), order.getDiscountAmount(),
+                order.getTaxAmount(), order.getTotalAmount(), order.getCouponCode(), order.getIsVerified() ? 1 : 0,
+                order.getNote(), order.getId());
+    }
+
+
     @Override
     public Order2 mapResultSetToEntity(ResultSet resultSet) throws SQLException {
         return null;
+    }
+
+    @Override
+    public Order2 getOrderById(Long orderId) {
+        clearSQL();
+        builderSQL.append("SELECT * FROM orders WHERE id = ?");
+        return query(builderSQL.toString(), new Order2Mapper(), orderId).get(0);
     }
 
     @Override
@@ -82,9 +102,8 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
      * Đếm tổng số bản ghi không áp dụng filter
      */
     private int countTotalRecords(Connection conn) throws SQLException {
-        StringBuilder sql = new StringBuilder().append("SELECT COUNT(*) FROM orders");
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM orders");
              ResultSet rs = pstmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
@@ -262,12 +281,11 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
      */
     private List<OrderItemDTO> getOrderItems(Connection conn, Long orderId) throws SQLException {
         List<OrderItemDTO> items = new ArrayList<>();
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT oi.id, oi.product_id, oi.product_name, oi.product_image, ");
-        sql.append("oi.base_price, oi.discount_percent, oi.price, oi.quantity, oi.subtotal ");
-        sql.append("FROM order_item oi WHERE oi.order_id = ?");
+        String sql = "SELECT oi.id, oi.product_id, oi.product_name, oi.product_image, " +
+                "oi.base_price, oi.discount_percent, oi.price, oi.quantity, oi.subtotal " +
+                "FROM order_item oi WHERE oi.order_id = ?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, orderId);
 
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -586,13 +604,34 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
 
 
     @Override
-    public boolean updateOrderStatus(Long orderId, String status, String note, Long userId) {
+    public boolean updateOrderStatus(Connection conn, Long orderId, String status, String note, Long userId) {
         return false;
     }
 
     @Override
     public boolean isValidStatusTransition(String oldStatus, String newStatus) {
-        return false;
+        // Định nghĩa các chuyển trạng thái hợp lệ
+        Map<String, List<String>> validTransitions = new HashMap<>();
+
+        // Các chuyển trạng thái hợp lệ từ mỗi trạng thái
+        validTransitions.put("pending", Arrays.asList("processing", "waiting_payment", "cancelled"));
+        validTransitions.put("waiting_payment", Arrays.asList("processing", "payment_failed", "cancelled"));
+        validTransitions.put("payment_failed", Arrays.asList("waiting_payment", "cancelled"));
+        validTransitions.put("processing", Arrays.asList("shipping", "cancelled"));
+        validTransitions.put("shipping", Arrays.asList("delivered", "cancelled"));
+        validTransitions.put("delivered", List.of("refunded"));
+        validTransitions.put("cancelled", List.of("refunded"));
+        validTransitions.put("refunded", new ArrayList<>()); // Không thể chuyển từ refunded sang trạng thái khác
+
+        List<String> allowedNewStatuses = validTransitions.get(oldStatus);
+
+        // Nếu trạng thái hiện tại không nằm trong danh sách hoặc không có chuyển đổi hợp lệ
+        if (allowedNewStatuses == null) {
+            return false;
+        }
+
+        // Kiểm tra xem trạng thái mới có nằm trong danh sách cho phép không
+        return allowedNewStatuses.contains(newStatus);
     }
 
     @Override
@@ -618,5 +657,32 @@ public class OrderAdminDao extends AbstractDao<Order2> implements IOrderAdminDao
     @Override
     public List<CustomerSearchDTO> searchCustomers(String keyword) {
         return List.of();
+    }
+
+    /**
+     * Lấy trạng thái và phương thức thanh toán theo ID đơn hàng
+     *
+     * @param conn    Kết nối cơ sở dữ liệu
+     * @param orderId ID đơn hàng
+     * @return Map chứa trạng thái và phương thức thanh toán
+     */
+    public Map<String, Object> getStatusAndPaymentMethodByOrderId(Connection conn, Long orderId) {
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT status, payment_method_id FROM orders WHERE id = ?")) {
+            pstmt.setLong(1, orderId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String status = rs.getString("status");
+                    Long paymentMethodId = rs.getLong("payment_method_id");
+                    // Xử lý thông tin trạng thái và phương thức thanh toán
+                    return Map.of(
+                            "status", status,
+                            "paymentMethodId", paymentMethodId
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi lấy trạng thái và phương thức thanh toán: " + e.getMessage(), e);
+        }
+        return Map.of();
     }
 }
