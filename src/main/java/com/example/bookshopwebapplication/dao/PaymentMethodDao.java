@@ -21,6 +21,15 @@ public class PaymentMethodDao extends AbstractDao<PaymentMethod> {
         return query(builderSQL.toString(), new PaymentMethodMapper());
     }
 
+    public PaymentMethod findById(Long id) {
+        clearSQL();
+        builderSQL.append(
+                "SELECT * FROM bookshopdb.payment_method WHERE id = ? AND is_active = 1"
+        );
+        List<PaymentMethod> rs = query(builderSQL.toString(), new PaymentMethodMapper(), id);
+        return rs.isEmpty() ? null : rs.get(0);
+    }
+
     @Override
     public PaymentMethod mapResultSetToEntity(ResultSet resultSet) throws SQLException {
         try {

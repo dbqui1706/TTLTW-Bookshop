@@ -1,11 +1,20 @@
 package com.example.bookshopwebapplication.dao._interface;
 
+import com.example.bookshopwebapplication.entities.Order2;
 import com.example.bookshopwebapplication.http.response_admin.orders.*;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
 public interface IOrderAdminDao {
+    /**
+     * Lấy thông tin đơn hàng theo ID
+     * @param orderId ID đơn hàng
+     * @Return Order2 Đối tượng chứa thông tin đơn hàng
+     */
+    Order2 getOrderById(Long orderId);
+
     /**
      * Lấy danh sách đơn hàng với các tùy chọn lọc và phân trang
      *
@@ -32,6 +41,14 @@ public interface IOrderAdminDao {
     public OrderDetailResponse getOrderDetail(Long orderId);
 
     /**
+     * Lấy chi tiết đơn hàng theo code
+     *
+     * @param code Mã đơn hàng
+     * @return OrderDetailResponse Đối tượng chứa thông tin chi tiết đơn hàng
+     */
+    public OrderDetailResponse getOrderDetailByCode(String code) ;
+
+    /**
      * Cập nhật trạng thái đơn hàng và ghi lịch sử
      *
      * @param orderId ID đơn hàng
@@ -40,8 +57,7 @@ public interface IOrderAdminDao {
      * @param userId  ID người dùng thực hiện thay đổi
      * @return boolean Kết quả cập nhật
      */
-    boolean updateOrderStatus(Long orderId, String status, String note, Long userId);
-
+    boolean updateOrderStatus(Connection conn, Long orderId, String status, String note, Long userId);
     /**
      * Kiểm tra xem chuyển đổi trạng thái có hợp lệ không
      * @param oldStatus Trạng thái cũ
