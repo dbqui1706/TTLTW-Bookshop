@@ -19,7 +19,7 @@ CREATE TABLE bookshopdb.inventory_import
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 );
-
+SELECT * FROM bookshopdb.inventory_import;
 -- Bảng quản lý tồn kho hiện tại của sản phẩm
 CREATE TABLE bookshopdb.inventory_status
 (
@@ -103,99 +103,253 @@ SELECT * FROM bookshopdb.inventory_import;
 
 SELECT * FROM bookshopdb.orders;
 
--- Truy vấn lấy thông tin đơn hàng dựa trên mã đơn hàng
+WITH daily_stock_changes AS (
+    -- Thu thập tất cả các giao dịch tồn kho theo ngày
+    SELECT 
+        DATE(ih.created_at) AS transaction_date,
+        ih.product_id,
+        ih.quantity_change
+    FROM 
+        bookshopdb.inventory_history ih
+    WHERE 
+        ih.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        -- Lọc theo sản phẩm cụ thể (nếu cần)
+        -- AND (? IS NULL OR ih.product_id = ?)
+        -- Lọc theo danh mục sản phẩm (nếu cần)
+        -- AND (? IS NULL OR EXISTS (
+--             SELECT 1 FROM bookshopdb.product_category pc 
+--             WHERE pc.productId = ih.product_id AND pc.categoryId = ?
+--         ))
+),
+daily_balance AS (
+    -- Tính tổng thay đổi cho mỗi ngày
+    SELECT 
+        transaction_date,
+        SUM(quantity_change) AS daily_change
+    FROM 
+        daily_stock_changes
+    GROUP BY 
+        transaction_date
+),
+dates_series AS (
+    -- Tạo chuỗi ngày liền mạch trong 30 ngày gần nhất
+    SELECT 
+        DATE_SUB(CURRENT_DATE(), INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) AS date_day
+    FROM 
+        (SELECT 0 AS a UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) AS a,
+        (SELECT 0 AS a UNION SELECT 1 UNION SELECT 2) AS b,
+        (SELECT 0 AS a) AS c
+    WHERE 
+        DATE_SUB(CURRENT_DATE(), INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+    ORDER BY 
+        date_day
+),
+daily_running_total AS (
+    -- Kết hợp chuỗi ngày với thay đổi tồn kho
+    SELECT 
+        ds.date_day,
+        COALESCE(db.daily_change, 0) AS daily_change,
+        @running_total := @running_total + COALESCE(db.daily_change, 0) AS running_total
+    FROM 
+        dates_series ds
+    LEFT JOIN 
+        daily_balance db ON ds.date_day = db.transaction_date
+    CROSS JOIN 
+        (SELECT @running_total := (
+            -- Lấy số lượng tồn kho ban đầu (trước khoảng thời gian phân tích)
+            SELECT 
+                COALESCE(SUM(ih.quantity_change), 0)
+            FROM 
+                bookshopdb.inventory_history ih
+            WHERE 
+                ih.created_at < DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+                -- Lọc theo sản phẩm cụ thể (nếu cần)
+                -- AND (? IS NULL OR ih.product_id = ?)
+                -- Lọc theo danh mục sản phẩm (nếu cần)
+                -- AND (? IS NULL OR EXISTS (
+                --    SELECT 1 FROM bookshopdb.product_category pc 
+                --    WHERE pc.productId = ih.product_id AND pc.categoryId = ?
+                -- ))
+        )) AS vars
+    ORDER BY 
+        ds.date_day
+)
 SELECT 
-    o.id,
-    o.order_code AS code,
-    o.created_at AS orderDate,
-    o.status,
-    CASE 
-        WHEN EXISTS (SELECT 1 FROM bookshopdb.payment_transaction pt WHERE pt.order_id = o.id AND pt.status = 'completed') 
-        THEN 'Đã thanh toán'
-        WHEN EXISTS (SELECT 1 FROM bookshopdb.payment_transaction pt WHERE pt.order_id = o.id AND pt.status = 'processing') 
-        THEN 'Đang xử lý thanh toán'
-        ELSE 'Chưa thanh toán'
-    END AS paymentStatus,
-    pm.name AS paymentMethod,
-    o.note,
-    -- Thông tin khách hàng
-    u.fullname AS customer_name,
-    u.phoneNumber AS customer_phone,
-    u.email AS customer_email,
-    os.address_line1 AS customer_address_line1,
-    os.address_line2 AS customer_address_line2,
-    dm.name AS name_shipping,
-    dm.description as description_shipping,
-    CONCAT(os.address_line1, 
-           CASE WHEN os.address_line2 IS NOT NULL THEN CONCAT(', ', os.address_line2) ELSE '' END,
-           ', ', os.ward, 
-           ', ', os.district, 
-           ', ', os.city) AS customer_full_address,
-    -- Tổng hợp đơn hàng
-    o.subtotal,
-    o.discount_amount AS discount,
-    o.delivery_price AS shipping,
-    o.total_amount AS total
+    date_day AS ngay,
+    date_day AS ngay_goc,
+    daily_change AS thay_doi_trong_ngay,
+    running_total AS ton_kho_tich_luy
 FROM 
-    bookshopdb.orders o
-JOIN 
-    bookshopdb.user u ON o.user_id = u.id
-JOIN 
-    bookshopdb.order_shipping os ON o.id = os.order_id
-JOIN 
-    bookshopdb.payment_method pm ON o.payment_method_id = pm.id
-JOIN 
-	bookshopdb.delivery_method dm on o.delivery_method_id = dm.id
-LEFT JOIN 
-    bookshopdb.payment_transaction pt ON o.id = pt.order_id
-WHERE 
-    o.order_code = 'ORD-2565e296';
-
--- Truy vấn lấy các mặt hàng trong đơn hàng
-SELECT 
-    oi.id,
-    p.imageName AS image,
-    oi.product_name AS name,
-    p.id AS sku,
-    oi.price,
-    oi.base_price,
-    oi.quantity,
-    oi.subtotal AS total
-FROM 
-    bookshopdb.order_item oi
-JOIN 
-    bookshopdb.product p ON oi.product_id = p.id
-JOIN 
-    bookshopdb.orders o ON oi.order_id = o.id
-WHERE 
-    o.order_code = 'ORD-2565e296';
-
--- Truy vấn lấy lịch sử trạng thái đơn hàng
-SELECT 
-    osh.created_at AS date,
-    osh.status as status_code,
-    CASE 
-        WHEN osh.status = 'pending' THEN 'Đơn hàng đã đặt'
-        WHEN osh.status = 'waiting_payment' THEN 'Chờ thanh toán'
-        WHEN osh.status = 'payment_failed' THEN 'Thanh toán thất bại'
-        WHEN osh.status = 'processing' THEN 'Đã xác nhận'
-        WHEN osh.status = 'shipping' THEN 'Đang giao hàng'
-        WHEN osh.status = 'delivered' THEN 'Đã giao hàng'
-        WHEN osh.status = 'cancelled' THEN 'Đã hủy'
-        WHEN osh.status = 'refunded' THEN 'Đã hoàn tiền'
-        ELSE osh.status
-    END AS status,
-    osh.note AS description,
-    CASE 
-        WHEN osh.changed_by IS NOT NULL THEN 
-            (SELECT fullname FROM bookshopdb.user WHERE id = osh.changed_by)
-        ELSE NULL
-    END AS changed_by_name
-FROM 
-    bookshopdb.order_status_history osh
-JOIN 
-    bookshopdb.orders o ON osh.order_id = o.id
-WHERE 
-    o.order_code = 'ORD-2565e296'
+    daily_running_total
 ORDER BY 
-    osh.created_at ASC;
+    date_day;
+
+USE bookshopdb;
+-- Tạo bảng tạm chứa lịch sử giá trị tồn kho theo ngày
+CREATE TEMPORARY TABLE IF NOT EXISTS temp_daily_inventory AS
+SELECT 
+    DATE(ih.created_at) AS report_date,
+    SUM(ih.quantity_change) AS daily_change
+FROM 
+    bookshopdb.inventory_history ih
+WHERE 
+    ih.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+GROUP BY 
+    DATE(ih.created_at);
+SELECT * FROM temp_daily_inventory;
+
+-- Tạo chuỗi ngày liên tục 7 ngày gần nhất
+CREATE TEMPORARY TABLE IF NOT EXISTS temp_date_range AS
+SELECT 
+    DATE_SUB(CURRENT_DATE(), INTERVAL (seq-1) DAY) AS report_date
+FROM (
+    SELECT 1 AS seq UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 
+    UNION SELECT 5 UNION SELECT 6 UNION SELECT 7
+) AS dates;
+
+-- Truy vấn chính - Trả về xu hướng giá trị tồn kho theo ngày
+SELECT 
+    DATE_FORMAT(dr.report_date, '%d/%m') AS label,
+    (
+        SELECT 
+            SUM(p.price * is2.actual_quantity)
+        FROM 
+            bookshopdb.product p
+        JOIN 
+            bookshopdb.inventory_status is2 ON p.id = is2.product_id
+    ) - 
+    COALESCE(
+        (
+            SELECT 
+                SUM(di.daily_change * p.price)
+            FROM 
+                temp_daily_inventory di
+            JOIN 
+                bookshopdb.inventory_history ih ON DATE(ih.created_at) = di.report_date
+            JOIN 
+                bookshopdb.product p ON ih.product_id = p.id
+            WHERE 
+                di.report_date > dr.report_date
+        ), 0
+    ) AS value
+FROM 
+    temp_date_range dr
+ORDER BY 
+    dr.report_date ASC;
+
+-- Dọn dẹp bảng tạm
+DROP TEMPORARY TABLE IF EXISTS temp_daily_inventory;
+DROP TEMPORARY TABLE IF EXISTS temp_date_range;
+
+-- ---------------------------------------------------------------
+-- 2. XU HƯỚNG TỒN KHO THEO TUẦN (trong 6 tuần gần nhất)
+-- ---------------------------------------------------------------
+
+-- Cách đơn giản hơn: Lấy giá trị vào cuối mỗi tuần
+SELECT 
+    CONCAT('Tuần ', WEEK(date_point, 1)) AS label,
+    (
+        SELECT 
+            SUM(p.price * 
+                (
+                    COALESCE(
+                        (
+                            SELECT SUM(ih.quantity_change) 
+                            FROM bookshopdb.inventory_history ih 
+                            WHERE ih.product_id = p.id 
+                            AND ih.created_at <= date_point
+                        ), 0
+                    )
+                )
+            )
+        FROM 
+            bookshopdb.product p
+        WHERE 
+            p.id BETWEEN 1 AND 100
+    ) AS value
+FROM (
+    SELECT CURRENT_DATE() - INTERVAL (seq-1)*7 DAY AS date_point
+    FROM (
+        SELECT 1 AS seq UNION SELECT 2 UNION SELECT 3 
+        UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 
+        UNION SELECT 7 UNION SELECT 8 UNION SELECT 9
+        UNION SELECT 10 UNION SELECT 11 UNION SELECT 12
+    ) AS weeks
+) AS date_points
+ORDER BY 
+    date_point DESC;
+    
+-- ---------------------------------------------------------------
+-- 3. XU HƯỚNG TỒN KHO THEO THÁNG (trong 6 tháng gần nhất)
+-- ---------------------------------------------------------------
+
+-- Lấy giá trị tồn kho vào cuối mỗi tháng
+SELECT 
+    DATE_FORMAT(last_day_of_month, '%m/%Y') AS label,
+    (
+        SELECT 
+            SUM(p.price * 
+                (
+                    COALESCE(
+                        (
+                            SELECT SUM(ih.quantity_change) 
+                            FROM bookshopdb.inventory_history ih 
+                            WHERE ih.product_id = p.id 
+                            AND ih.created_at <= last_day_of_month
+                        ), 0
+                    )
+                )
+            )
+        FROM 
+            bookshopdb.product p
+        WHERE 
+            p.id BETWEEN 1 AND 100
+    ) AS value
+FROM (
+    SELECT 
+        LAST_DAY(DATE_SUB(CURRENT_DATE(), INTERVAL seq MONTH)) AS last_day_of_month
+    FROM (
+        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 
+        UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+    ) AS months
+) AS month_ends
+ORDER BY 
+    last_day_of_month ASC;
+
+-- ---------------------------------------------------------------
+-- 4. XU HƯỚNG TỒN KHO THEO QUÝ (trong 4 quý gần nhất)
+-- ---------------------------------------------------------------
+
+-- Lấy giá trị tồn kho vào cuối mỗi quý
+SELECT 
+    CONCAT('Q', QUARTER(quarter_end), '/', YEAR(quarter_end)) AS label,
+    (
+        SELECT 
+            SUM(p.price * 
+                (
+                    COALESCE(
+                        (
+                            SELECT SUM(ih.quantity_change) 
+                            FROM bookshopdb.inventory_history ih 
+                            WHERE ih.product_id = p.id 
+                            AND ih.created_at <= quarter_end
+                        ), 0
+                    )
+                )
+            )
+        FROM 
+            bookshopdb.product p
+        WHERE 
+            p.id BETWEEN 1 AND 100
+    ) AS value
+FROM (
+    SELECT 
+        LAST_DAY(DATE_SUB(CURRENT_DATE(), INTERVAL seq*3 MONTH - DAY(CURRENT_DATE()) + 1 DAY)) AS quarter_end
+    FROM (
+        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3
+    ) AS quarters
+) AS quarter_ends
+ORDER BY 
+    quarter_end ASC;
+    
+SELECT * FROM bookshopdb.inventory_status;

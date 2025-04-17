@@ -1,6 +1,5 @@
 package com.example.bookshopwebapplication.http.response_admin.orders;
 
-import com.example.bookshopwebapplication.entities.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
