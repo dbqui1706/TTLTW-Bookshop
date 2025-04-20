@@ -293,7 +293,7 @@ public abstract class AbstractDao<T> implements IGenericDao<T> {
      * @param parameters Các tham số cần đặt vào
      * @throws SQLException Nếu có lỗi khi đặt tham số
      */
-    private void setParameters(PreparedStatement stmt, Object... parameters) throws SQLException {
+    protected void setParameters(PreparedStatement stmt, Object... parameters) throws SQLException {
         for (int i = 0; i < parameters.length; i++) {
             Object param = parameters[i];
             int index = i + 1;

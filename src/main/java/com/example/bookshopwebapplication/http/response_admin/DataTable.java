@@ -1,5 +1,6 @@
 package com.example.bookshopwebapplication.http.response_admin;
 
+import com.example.bookshopwebapplication.http.response_admin.invetory.InventorySummary;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +17,5 @@ public class DataTable<T> {
     private int draw;
     private int recordsTotal;
     private int recordsFiltered;
+    private InventorySummary summary;
 }
