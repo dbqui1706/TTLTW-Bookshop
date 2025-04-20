@@ -2,10 +2,7 @@ package com.example.bookshopwebapplication.service;
 
 import com.example.bookshopwebapplication.dao.InventoryStatisticsDao;
 import com.example.bookshopwebapplication.http.response_admin.DataTable;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryDistributionData;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryItem;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryRecently;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryTrendData;
+import com.example.bookshopwebapplication.http.response_admin.invetory.*;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -158,7 +155,7 @@ public class InventoryStatisticsService {
      *
      * @return List<InventoryRecently>
      */
-    public List<InventoryRecently> getInventoryImportRecently(){
+    public List<InventoryRecently> getInventoryImportRecently() {
         return inventoryStatisticsDao.getInventoryImportRecently();
     }
 
@@ -167,7 +164,107 @@ public class InventoryStatisticsService {
      *
      * @return List<InventoryRecently>
      */
-    public List<InventoryRecently> getInventoryExportRecently(){
+    public List<InventoryRecently> getInventoryExportRecently() {
         return inventoryStatisticsDao.getInventoryExportRecently();
+    }
+
+    /**
+     * Lấy danh sách lịch sử tồn kho với các tham số lọc
+     *
+     * @param draw                 Request counter từ client (DataTables)
+     * @param start                Vị trí bắt đầu của bản ghi
+     * @param length               Số lượng bản ghi trên mỗi trang
+     * @param searchValue          Chuỗi tìm kiếm toàn cục
+     * @param orderColumnIndex     Cột để sắp xếp (index)
+     * @param orderDirection       Hướng sắp xếp (asc hoặc desc)
+     * @param productId            ID sản phẩm cần lọc
+     * @param actionType           Loại hành động (import/export/adjustment)
+     * @param quantityChangeFilter Hướng thay đổi số lượng (increase/decrease)
+     * @param referenceFilter      Mã tham chiếu
+     * @param reasonFilter         Lý do
+     * @param startDate            Ngày bắt đầu (định dạng ISO: YYYY-MM-DD)
+     * @param endDate              Ngày kết thúc (định dạng ISO: YYYY-MM-DD)
+     * @param userFilter           Người thực hiện
+     * @param groupByDay           Nhóm kết quả theo ngày (1/0)
+     * @return DataTable<InventoryHistoryItem>
+     */
+    public DataTable<InventoryHistoryItem> getInventoryHistory(int draw, int start,
+                                                               int length, String searchValue,
+                                                               int orderColumnIndex, String orderDirection,
+                                                               String productId, String actionType,
+                                                               String quantityChangeFilter,
+                                                               String referenceFilter, String reasonFilter,
+                                                               String startDate, String endDate,
+                                                               String userFilter, boolean groupByDay) {
+        return inventoryStatisticsDao.getInventoryHistory(draw, start, length, searchValue,
+                orderColumnIndex, orderDirection, productId, actionType, quantityChangeFilter,
+                referenceFilter, reasonFilter, startDate, endDate, userFilter, groupByDay);
+    }
+
+    /**
+     * Lấy danh sách sản phẩm có giá trị tồn kho cao nhất
+     *
+     * @param limit Số lượng sản phẩm cần lấy
+     * @return List<InventoryValueItem>
+     */
+    public List<InventoryValueItem> getTopInventoryValue(int limit) {
+        return inventoryStatisticsDao.getTopInventoryValueProducts(limit);
+    }
+
+    /**
+     * Lấy biến động xuất nhập tồn kho theo giai đoạn
+     *
+     * @param period    Giai đoạn (day, week, month, quarter)
+     * @param startDate Ngày bắt đầu
+     * @param endDate   Ngày kết thúc
+     */
+
+    public List<InventoryMovementData> getInventoryMovementData(String period, Date startDate, Date endDate) {
+        if (period == null || period.isEmpty()) {
+            period = "day"; // Default period
+        }
+
+        switch (period.toLowerCase()) {
+            case "week":
+                return inventoryStatisticsDao.getInventoryMovementByWeek(startDate, endDate);
+            case "month":
+                return inventoryStatisticsDao.getInventoryMovementByMonth(startDate, endDate);
+            case "quarter":
+                return inventoryStatisticsDao.getInventoryMovementByQuarter(startDate, endDate);
+            case "day":
+            default:
+                return inventoryStatisticsDao.getInventoryMovementByDay(startDate, endDate);
+        }
+    }
+
+
+    /**
+     * Lấy danh sách hàng chậm luân chuyển dựa trên bộ lọc
+     *
+     * @param draw           Request counter từ client (DataTables)
+     * @param start          Vị trí bắt đầu của bản ghi
+     * @param length         Số lượng bản ghi trên mỗi trang
+     * @param searchValue    Chuỗi tìm kiếm toàn cục
+     * @param categoryId     ID danh mục sản phẩm
+     * @param minPrice       Giá tối thiểu
+     * @param maxPrice       Giá tối đa
+     * @param minDaysInStock Số ngày tồn kho tối thiểu
+     * @param maxTurnover    Vòng quay tồn kho tối đa
+     * @return DataTable<SlowMovingItem> chứa tổng số bản ghi và danh sách hàng chậm luân chuyển
+     */
+    public DataTable<SlowMovingItem> getSlowMovingProducts(
+            int draw, int start, int length, String searchValue,
+            int orderColumnIndex, String orderDirection,
+            Long categoryId, Double minPrice, Double maxPrice,
+            Integer minDaysInStock, Double maxTurnover) {
+
+
+        DataTable<SlowMovingItem> result = inventoryStatisticsDao.getSlowMovingProducts(
+                draw, start, length, searchValue,
+                orderColumnIndex, orderDirection,
+                categoryId, minPrice, maxPrice,
+                minDaysInStock, maxTurnover);
+        result.setDraw(draw);
+        return result;
     }
 }

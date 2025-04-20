@@ -1,12 +1,10 @@
 package com.example.bookshopwebapplication.servlet.admin2.api.inventory;
 
 import com.example.bookshopwebapplication.http.response_admin.DataTable;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryDistributionData;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryItem;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryRecently;
-import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryTrendData;
+import com.example.bookshopwebapplication.http.response_admin.invetory.*;
 import com.example.bookshopwebapplication.service.InventoryStatisticsService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
+import org.apache.http.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,6 +21,12 @@ import java.util.*;
         "/api/admin/inventory/inventory-status",
         "/api/admin/inventory/import-recently",
         "/api/admin/inventory/export-recently",
+        "/api/admin/inventory/history",
+        "/api/admin/inventory/top-10",
+        "/api/admin/inventory/movement",
+        "/api/admin/inventory/slow-moving",
+        "/api/admin/inventory/fast-moving",
+        "/api/admin/inventory/stock-out-frequency",
 })
 public class InventoryApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -46,15 +50,141 @@ public class InventoryApiServlet extends HttpServlet {
             case "/api/admin/inventory/inventory-status":
                 getInventoryStatus(req, resp);
                 break;
-            case  "/api/admin/inventory/import-recently":
+            case "/api/admin/inventory/import-recently":
                 getInventoryImportRecently(req, resp);
                 break;
             case "/api/admin/inventory/export-recently":
                 getInventoryExportRecently(req, resp);
                 break;
+            case "/api/admin/inventory/history":
+                getInventoryHistory(req, resp);
+                break;
+            case "/api/admin/inventory/top-10":
+                getTop10Inventory(req, resp);
+                break;
+            case "/api/admin/inventory/movement":
+                getInventoryMovement(req, resp);
+                break;
+            case "/api/admin/inventory/slow-moving":
+                getInventorySlowMoving(req, resp);
+                break;
             default:
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "API not found");
                 break;
+        }
+    }
+
+    private void getInventorySlowMoving(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            // Params
+            // General params
+            String sDraw = req.getParameter("draw");
+            String sStart = req.getParameter("start");
+            String sLength = req.getParameter("length");
+            String searchValue = req.getParameter("search[value]");
+
+            String orderColumn = req.getParameter("order[0][column]");
+            int orderColumnIndex = Integer.parseInt(orderColumn == null ? "0" : orderColumn);
+            String orderDirection = req.getParameter("order[0][dir]") == null ? "desc" : req.getParameter("order[0][dir]");
+            String categoryId = req.getParameter("categoryId");
+            String minPrice = req.getParameter("minPrice");
+            String maxPrice = req.getParameter("maxPrice");
+
+            // Filter params
+            String minDaysInStock = req.getParameter("minDaysInStock");
+            String maxTurnover = req.getParameter("maxTurnover");
+
+            // Convert params
+            int draw = sDraw != null ? Integer.parseInt(sDraw) : 0;
+            int start = sStart != null ? Integer.parseInt(sStart) : 0;
+            int length = sLength != null ? Integer.parseInt(sLength) : 10;
+            Long categoryIdValue = categoryId != null ? Long.valueOf(categoryId) : null;
+            Double minPriceValue = !minPrice.isEmpty() ? Double.valueOf(minPrice) : null;
+            Double maxPriceValue = !maxPrice.isEmpty() ? Double.valueOf(maxPrice) : null;
+            Integer minDaysInStockValue = minDaysInStock != null ? Integer.valueOf(minDaysInStock) : null;
+            Double maxTurnoverValue = maxTurnover != null ? Double.valueOf(maxTurnover) : null;
+            DataTable<SlowMovingItem> result = inventoryStatisticsService.getSlowMovingProducts(
+                    draw, start, length, searchValue, orderColumnIndex, orderDirection,
+                    categoryIdValue, minPriceValue, maxPriceValue,
+                    minDaysInStockValue, maxTurnoverValue);
+
+            JsonUtils.out(resp, result, HttpServletResponse.SC_OK);
+
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void getInventoryMovement(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            String period = req.getParameter("period");
+            String startDate = req.getParameter("startDate");
+            String endDate = req.getParameter("endDate");
+            Date start = new Date(startDate);
+            Date end = new Date(endDate);
+
+            List<InventoryMovementData> rs = inventoryStatisticsService.getInventoryMovementData(period, start, end);
+            JsonUtils.out(resp, rs, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void getTop10Inventory(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            int limit = 10;
+            List<InventoryValueItem> rs = inventoryStatisticsService.getTopInventoryValue(limit);
+            JsonUtils.out(resp, rs, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void getInventoryHistory(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            // Lấy tham số từ request
+            int draw = Integer.parseInt(request.getParameter("draw"));
+            int start = Integer.parseInt(request.getParameter("start"));
+            int length = Integer.parseInt(request.getParameter("length"));
+
+            // Lấy tham số tìm kiếm toàn cục
+            String searchValue = request.getParameter("search[value]");
+
+            // Lấy tham số sắp xếp
+            String orderColumn = request.getParameter("order[0][column]");
+            int orderColumnIndex = Integer.parseInt(orderColumn == null ? "0" : orderColumn);
+            String orderDirection = request.getParameter("order[0][dir]") == null ? "desc" : request.getParameter("order[0][dir]");
+
+            // Lấy các tham số lọc nâng cao
+            String productId = request.getParameter("productId");
+            String actionType = request.getParameter("actionType");
+            String quantityChangeFilter = request.getParameter("quantityChangeFilter");
+            String referenceFilter = request.getParameter("referenceFilter");
+            String reasonFilter = request.getParameter("reasonFilter");
+            String startDate = request.getParameter("startDate");
+            String endDate = request.getParameter("endDate");
+            String userFilter = request.getParameter("userFilter");
+            boolean groupByDay = "1".equals(request.getParameter("groupByDay"));
+
+            // Chuyển đổi định dạng ngày tháng
+            if (startDate != null && !startDate.isEmpty()) {
+                startDate = convertToTimestampFormat(startDate + " 00:00:00");
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                endDate = convertToTimestampFormat(endDate + " 23:59:59");
+            }
+
+            // Goi service để lấy dữ liệu
+            DataTable<InventoryHistoryItem> result = inventoryStatisticsService.getInventoryHistory(
+                    draw, start, length, searchValue, orderColumnIndex, orderDirection,
+                    productId, actionType, quantityChangeFilter, referenceFilter,
+                    reasonFilter, startDate, endDate, userFilter, groupByDay
+            );
+            result.setDraw(draw);
+
+            JsonUtils.out(response, result, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(response, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -63,7 +193,7 @@ public class InventoryApiServlet extends HttpServlet {
             List<InventoryRecently> result = inventoryStatisticsService.getInventoryExportRecently();
 
             JsonUtils.out(resp, result, HttpServletResponse.SC_OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -73,7 +203,7 @@ public class InventoryApiServlet extends HttpServlet {
             List<InventoryRecently> result = inventoryStatisticsService.getInventoryImportRecently();
 
             JsonUtils.out(resp, result, HttpServletResponse.SC_OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
