@@ -195,4 +195,18 @@ public class InventoryStatusDao extends AbstractDao<InventoryStatus> {
             return false;
         }
     }
+
+    public List<InventoryStatus> findByProductIds(List<Long> ids) {
+        clearSQL();
+        builderSQL.append("SELECT * FROM inventory_status WHERE product_id IN (");
+        for (int i = 0; i < ids.size(); i++) {
+            builderSQL.append("?");
+            if (i < ids.size() - 1) {
+                builderSQL.append(", ");
+            }
+        }
+        builderSQL.append(")");
+
+        return query(builderSQL.toString(), new InventoryStatusMapper(), ids.toArray());
+    }
 }

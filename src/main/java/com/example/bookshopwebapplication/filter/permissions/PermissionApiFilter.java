@@ -141,6 +141,7 @@ public class PermissionApiFilter implements Filter {
             return;
         }
 
+        request.setAttribute("userId", userSession.getUserId());
         // Ghi log hành động (có thể lưu vào DB để audit)
         LOGGER.info("User ID: " + userSession.getUserId() + " accessed: " + url);
 

@@ -1,34 +1,35 @@
 package com.example.bookshopwebapplication.service;
 
-import com.example.bookshopwebapplication.dao.InventoryHistoryDao;
-import com.example.bookshopwebapplication.dao.InventoryImportDao;
-import com.example.bookshopwebapplication.dao.InventoryStatusDao;
-import com.example.bookshopwebapplication.entities.InventoryHistory;
-import com.example.bookshopwebapplication.entities.InventoryImport;
-import com.example.bookshopwebapplication.entities.InventoryStatus;
+import com.example.bookshopwebapplication.dao.*;
+import com.example.bookshopwebapplication.entities.*;
 import com.example.bookshopwebapplication.utils.RequestContext;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service xử lý các nghiệp vụ liên quan đến quản lý tồn kho
  */
 public class InventoryService {
-
     private final InventoryStatusDao inventoryStatusDao;
     private final InventoryImportDao inventoryImportDao;
     private final InventoryHistoryDao inventoryHistoryDao;
+    private final InventoryReceiptsDao inventoryReceiptsDao;
 
     public InventoryService() {
         this.inventoryStatusDao = new InventoryStatusDao();
         this.inventoryImportDao = new InventoryImportDao();
         this.inventoryHistoryDao = new InventoryHistoryDao();
+        this.inventoryReceiptsDao = new InventoryReceiptsDao();
     }
 
     /**
      * Nhập kho hàng hóa
+     *
      * @param importRecord Thông tin phiếu nhập kho
      * @return ID của phiếu nhập kho
      */
@@ -46,9 +47,10 @@ public class InventoryService {
 
     /**
      * Xuất kho sản phẩm (khi giao hàng)
+     *
      * @param productId ID sản phẩm
-     * @param quantity Số lượng xuất
-     * @param orderId ID đơn hàng
+     * @param quantity  Số lượng xuất
+     * @param orderId   ID đơn hàng
      * @return true nếu xuất kho thành công
      */
     public boolean exportProduct(Long productId, int quantity, Long orderId) {
@@ -74,8 +76,9 @@ public class InventoryService {
 
     /**
      * Đặt trước số lượng sản phẩm (khi đặt hàng)
+     *
      * @param productId ID sản phẩm
-     * @param quantity Số lượng đặt
+     * @param quantity  Số lượng đặt
      * @return true nếu đặt trước thành công
      */
     public boolean reserveProduct(Long productId, int quantity) {
@@ -84,8 +87,9 @@ public class InventoryService {
 
     /**
      * Hủy đặt trước sản phẩm (khi hủy đơn hàng)
+     *
      * @param productId ID sản phẩm
-     * @param quantity Số lượng cần hủy đặt
+     * @param quantity  Số lượng cần hủy đặt
      * @return true nếu hủy đặt trước thành công
      */
     public boolean cancelReserveProduct(Long productId, int quantity) {
@@ -94,10 +98,11 @@ public class InventoryService {
 
     /**
      * Điều chỉnh số lượng tồn kho (kiểm kê, hủy hàng hỏng,...)
-     * @param productId ID sản phẩm
+     *
+     * @param productId   ID sản phẩm
      * @param newQuantity Số lượng mới
-     * @param reason Lý do điều chỉnh
-     * @param notes Ghi chú bổ sung
+     * @param reason      Lý do điều chỉnh
+     * @param notes       Ghi chú bổ sung
      * @return true nếu điều chỉnh thành công
      */
     public boolean adjustInventory(Long productId, int newQuantity, String reason, String notes) {
@@ -125,6 +130,7 @@ public class InventoryService {
 
     /**
      * Cập nhật ngưỡng cảnh báo tồn kho
+     *
      * @param productId ID sản phẩm
      * @param threshold Ngưỡng mới
      * @return true nếu cập nhật thành công
@@ -144,6 +150,7 @@ public class InventoryService {
 
     /**
      * Lấy danh sách sản phẩm có số lượng dưới ngưỡng cảnh báo
+     *
      * @return Danh sách thông tin tồn kho
      */
     public List<InventoryStatus> getProductsBelowThreshold() {
@@ -152,6 +159,7 @@ public class InventoryService {
 
     /**
      * Lấy lịch sử nhập kho của sản phẩm
+     *
      * @param productId ID sản phẩm
      * @return Danh sách phiếu nhập kho
      */
@@ -161,6 +169,7 @@ public class InventoryService {
 
     /**
      * Lấy lịch sử thay đổi tồn kho của sản phẩm
+     *
      * @param productId ID sản phẩm
      * @return Danh sách lịch sử thay đổi
      */
@@ -170,6 +179,7 @@ public class InventoryService {
 
     /**
      * Lấy thông tin tồn kho của sản phẩm
+     *
      * @param productId ID sản phẩm
      * @return Thông tin tồn kho
      */
@@ -179,7 +189,8 @@ public class InventoryService {
 
     /**
      * Cập nhật số lượng trong bảng product
-     * @param productId ID sản phẩm
+     *
+     * @param productId   ID sản phẩm
      * @param newQuantity Số lượng mới
      */
     private void updateProductQuantity(Long productId, int newQuantity) {
@@ -215,5 +226,182 @@ public class InventoryService {
         inventoryHistoryDao.recordImport(productId, quantity, "Nhập kho", null);
 
         return true;
+    }
+
+
+    /*
+     * Xử lý xuất/nhập kho
+     */
+    public Long processInventoryTransaction(InventoryReceipts inventoryReceipts) {
+        // Sử dụng transaction để đảm bảo tính nhất quán
+        inventoryReceiptsDao.executeTransaction(conn -> {
+            // 1. Khởi tạo phiếu nhập kho
+            // Lưu xuống database với trạng thái là "draft"
+            // Tạo mã phiếu nhập kho tự động "NK-20250422-XXXXXXXX"
+            String receiptCode = generateReceiptCode(inventoryReceipts.getReceiptType());
+            inventoryReceipts.setReceiptCode(receiptCode);
+            inventoryReceipts.setStatus("draft");
+            Long receiptId = inventoryReceiptsDao.saveWithConnection(conn, inventoryReceipts);
+            if (receiptId == null) {
+                throw new RuntimeException("Lỗi khi tạo phiếu");
+            }
+            inventoryReceipts.setId(receiptId);
+
+            // 2. Thêm sản phẩm vào phiếu nhập
+            List<InventoryReceiptItems> items = inventoryReceipts.getItems();
+            for (InventoryReceiptItems item : items) {
+                // Lưu từng sản phẩm vào bảng inventory_receipt_items
+                item.setReceiptId(receiptId);
+            }
+            boolean isSaved = inventoryReceiptsDao.saveItemsWithConnection(conn, items);
+            if (!isSaved) {
+                throw new RuntimeException("Lỗi khi lưu sản phẩm vào phiếu");
+            }
+            // 3. Cập nhật trạng thái phiếu từ "draft" sang "pending"
+            inventoryReceipts.setStatus("pending");
+            boolean isUpdated = inventoryReceiptsDao.updateWithConnection(conn, inventoryReceipts);
+            if (!isUpdated) {
+                throw new RuntimeException("Lỗi khi cập nhật trạng thái phiếu sang 'pending'");
+            }
+        });
+        return inventoryReceipts.getId();
+    }
+
+    /**
+     * Cập nhập trạng thái phiếu xuất/nhập kho
+     *
+     * @param code   Mã phiếu
+     * @param status Trạng thái chỉ có thể là "cancelled" hoặc "completed"
+     */
+    public boolean updateInventoryReceiptsStatus(String code, String status) {
+        try {
+            inventoryReceiptsDao.executeTransaction(conn -> {
+                // 1. Kiểm tra và cập nhật trạng thái phiếu xuất/nhập kho "pending" sang "completed"
+                InventoryReceipts inventoryReceipts = inventoryReceiptsDao.findByCode(code);
+                if (inventoryReceipts == null) {
+                    throw new RuntimeException("Không tìm thấy phiếu xuất/nhập kho với mã: " + code);
+                }
+
+                // Kiểm tra trạng thái
+                if (!status.equals("completed") && !status.equals("cancelled")) {
+                    throw new RuntimeException("Trạng thái không hợp lệ");
+                }
+
+                // Kiểm tra chuyển trạng thái hợp lệ
+                if (!inventoryReceipts.getStatus().equals("pending")) {
+                    throw new RuntimeException("Chỉ có thể cập nhật trạng thái của phiếu ở trạng thái 'pending'");
+                }
+
+                // Cập nhật trạng thái phiếu
+                inventoryReceipts.setStatus(status);
+                inventoryReceipts.setCompletedAt(new Timestamp(System.currentTimeMillis()));
+                inventoryReceiptsDao.updateWithConnection(conn, inventoryReceipts);
+
+                // 2. Nếu trạng thái là "cancelled", dừng xử lý ở đây
+                if (status.equals("cancelled")) {
+                    return;
+                }
+
+                // Tiếp tục xử lý cho trạng thái "completed"
+                // Lấy danh sách sản phẩm trong phiếu
+                List<InventoryReceiptItems> items = inventoryReceipts.getItems();
+
+                // Xác định dấu cho số lượng dựa vào loại phiếu
+                // Với phiếu xuất, quantity sẽ âm trong inventory_history
+                boolean isExport = inventoryReceipts.getReceiptType().equals("export");
+
+                // Lấy danh sách ID sản phẩm
+                List<Long> productIds = items.stream()
+                        .map(InventoryReceiptItems::getProductId)
+                        .collect(Collectors.toList());
+
+                // Lấy thông tin tồn kho hiện tại của các sản phẩm
+                Map<Long, InventoryStatus> inventoryStatusMap = new HashMap<>();
+                List<InventoryStatus> inventoryStatuses = inventoryStatusDao.findByProductIds(productIds);
+
+                for (InventoryStatus inventoryStatus : inventoryStatuses) {
+                    inventoryStatusMap.put(inventoryStatus.getProductId(), inventoryStatus);
+                }
+
+                // Xử lý từng sản phẩm trong phiếu
+                for (InventoryReceiptItems item : items) {
+                    Long productId = item.getProductId();
+                    int quantityChange = isExport ? -item.getQuantity() : item.getQuantity();
+
+                    // Lấy số lượng hiện tại
+                    int currentQuantity = inventoryStatuses.stream()
+                            .filter(ist -> ist.getProductId().equals(productId))
+                            .findFirst()
+                            .map(InventoryStatus::getActualQuantity)
+                            .orElse(0);
+
+                    // Kiểm tra số lượng nếu là xuất kho
+                    if (isExport && currentQuantity < item.getQuantity()) {
+                        throw new RuntimeException("Không đủ số lượng để xuất kho cho sản phẩm: " + productId);
+                    }
+
+                    // Tính toán số lượng mới
+                    int newQuantity = currentQuantity + quantityChange;
+
+                    // 3.2 Tạo bản ghi trong inventory_history
+                    InventoryHistory history = new InventoryHistory();
+                    history.setProductId(productId);
+                    history.setQuantityChange(quantityChange);
+                    history.setPreviousQuantity(currentQuantity);
+                    history.setCurrentQuantity(newQuantity);
+                    history.setActionType(InventoryHistory.ActionType.fromValue(inventoryReceipts.getReceiptType())); // "import" hoặc "export"
+                    history.setReason("Phiếu " + (isExport ? "xuất" : "nhập") + " kho: " + code);
+                    history.setReferenceId(inventoryReceipts.getId());
+                    history.setReferenceType("inventory_receipts");
+                    history.setNotes(inventoryReceipts.getNotes());
+                    history.setCreatedBy(inventoryReceipts.getCreatedBy());
+
+                    // Lưu lịch sử
+                    inventoryHistoryDao.saveWithConnection(history, conn);
+
+                    // Cập nhật inventory_status
+                    InventoryStatus inventoryStatus = inventoryStatusMap.get(productId);
+                    // Cập nhật nếu đã tồn tại
+                    inventoryStatus.setActualQuantity(inventoryStatus.getActualQuantity() + quantityChange);
+                    inventoryStatus.setAvailableQuantity(inventoryStatus.getAvailableQuantity() + quantityChange);
+                    inventoryStatus.setLastUpdated(new Timestamp(System.currentTimeMillis()));
+                    inventoryStatusDao.updateWithConnection(inventoryStatus, conn);
+
+
+                    // 3.1 Cập nhật số lượng trong bảng inventory_import
+                    if (isExport) {
+                        // Nếu là xuất kho, không cần lưu vào inventory_import
+                        continue;
+                    }
+                    InventoryImport inventoryImport = new InventoryImport();
+                    inventoryImport.setProductId(productId);
+                    inventoryImport.setQuantity(item.getQuantity());
+                    inventoryImport.setSupplier(inventoryReceipts.getSupplier());
+                    inventoryImport.setCostPrice(item.getUnitPrice());
+                    inventoryImport.setNotes(item.getNotes());
+                    inventoryImport.setCreatedBy(inventoryReceipts.getCreatedBy());
+                    inventoryImport.setImportDate(new Timestamp(System.currentTimeMillis()));
+
+                    // Lưu vào bảng inventory_import
+                    inventoryImportDao.saveWithConnection(conn, inventoryImport);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi cập nhật trạng thái phiếu xuất/nhập kho", e);
+        }
+
+        return true;
+    }
+
+    private String generateReceiptCode(String status) {
+        // Lấy ngày hiện tại theo định dạng YYYYMMDD
+        java.time.LocalDate today = java.time.LocalDate.now();
+        String datePart = today.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        // Tạo phần mã ngẫu nhiên (8 ký tự)
+        String randomPart = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String prefix = status.equals("import") ? "NK" : "XK";
+        return prefix + datePart + "-" + randomPart;
     }
 }

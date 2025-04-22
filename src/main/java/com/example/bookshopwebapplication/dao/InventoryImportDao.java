@@ -4,6 +4,7 @@ import com.example.bookshopwebapplication.dao.mapper.InventoryImportMapper;
 import com.example.bookshopwebapplication.entities.InventoryImport;
 import com.example.bookshopwebapplication.utils.RequestContext;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -134,5 +135,17 @@ public class InventoryImportDao extends AbstractDao<InventoryImport> {
                 .createdBy(rs.getLong("created_by"))
                 .createdAt(rs.getTimestamp("created_at"))
                 .build();
+    }
+
+    public void saveWithConnection(Connection conn, InventoryImport inventoryImport) {
+        clearSQL();
+        builderSQL.append("INSERT INTO inventory_import ");
+        builderSQL.append("(product_id, quantity, cost_price, supplier, import_date, notes, created_by) ");
+        builderSQL.append("VALUES (?, ?, ?, ?, ?, ?, ?)");
+        insertWithConnection(conn, builderSQL.toString(), inventoryImport.getProductId(),
+                inventoryImport.getQuantity(), inventoryImport.getCostPrice(), inventoryImport.getSupplier(),
+                inventoryImport.getImportDate() != null ? inventoryImport.getImportDate() : new Timestamp(System.currentTimeMillis())
+                , inventoryImport.getNotes(), inventoryImport.getCreatedBy()
+                );
     }
 }

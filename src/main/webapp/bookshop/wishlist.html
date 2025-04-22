@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu thích - BookStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/sidebar-account.css">
+    <link rel="stylesheet" href="css/wishlist.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <!-- Logo và thanh tìm kiếm -->
+            <div class="row py-3 align-items-center">
+                <div class="col-md-2 col-sm-4 col-5 mb-2 mb-md-0">
+                    <a class="navbar-brand" href="/">
+                        <img src="/asset/logo.jpg" alt="BookStore Logo" class="navbar-logo img-fluid">
+                    </a>
+                </div>
+                <div class="col-md-7 col-sm-8 col-12 mb-2 mb-md-0">
+                    <div class="search-bar">
+                        <div class="input-group">
+                            <input type="text" class="form-control search-input"
+                                placeholder="Tìm kiếm sách, tác giả, thể loại...">
+                            <button class="btn search-button" type="button" id="searchBtn">
+                                <i class="fas fa-search me-1 d-none d-sm-inline-block"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-12">
+                    <div class="user-menu">
+                        <a href="/bookshop/index.html" title="Trang chủ" class="menu-item">
+                            <i class="fas fa-home"></i>
+                            <span>Trang chủ</span>
+                        </a>
+                        <a href="/bookshop/account-info.html" title="Tài khoản" class="menu-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                        <a href="/bookshop/cart.html" class="cart-icon menu-item" title="Giỏ hàng">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">0</span>
+                            <span>Giỏ hàng</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commitment Bar -->
+        <div class="commitment-bar">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg col-md-4 col-6 commitment-item-wrapper">
+                        <div class="commitment-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>100% hàng thật</span>
+                        </div>
+                    </div>
+                    <div class="col-lg col-md-4 col-6 commitment-item-wrapper">
+                        <div class="commitment-item">
+                            <i class="fas fa-truck"></i>
+                            <span>Freeship mọi đơn</span>
+                        </div>
+                    </div>
+                    <div class="col-lg col-md-4 col-6 commitment-item-wrapper">
+                        <div class="commitment-item">
+                            <i class="fas fa-undo"></i>
+                            <span>Hoàn 200% nếu hàng giả</span>
+                        </div>
+                    </div>
+                    <div class="col-lg col-md-4 col-6 commitment-item-wrapper">
+                        <div class="commitment-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>30 ngày đổi trả</span>
+                        </div>
+                    </div>
+                    <div class="col-lg col-md-4 col-6 commitment-item-wrapper">
+                        <div class="commitment-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>Giao nhanh 2h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
+                    <li class="breadcrumb-item active">Sản phẩm yêu thích</li>
+                </ol>
+            </nav>
+
+            <!-- Order Info Section -->
+            <div class="account-section">
+                <div class="row">
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-3 col-md-4">
+                        <div class="account-sidebar">
+                            <div class="user-profile">
+                                <div class="user-avatar">
+                                    <img src="/asset/images/sunset.jpg" alt="Avatar">
+                                </div>
+                                <div class="user-info">
+                                    <h6>Tài khoản của</h6>
+                                    <p class="user-name">Quý Đặng</p>
+                                </div>
+                            </div>
+
+                            <ul class="account-menu">
+                                <li>
+                                    <i class="fas fa-user"></i>
+                                    <span>Thông tin tài khoản</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-shopping-bag"></i>
+                                    <span>Đơn hàng của tôi</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-bell"></i>
+                                    <span>Thông báo của tôi</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Sổ địa chỉ</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Thông tin thanh toán</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-star"></i>
+                                    <span>Đánh giá sản phẩm</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-eye"></i>
+                                    <span>Sản phẩm bạn đã xem</span>
+                                </li>
+                                <li class="active">
+                                    <i class="fas fa-heart"></i>
+                                    <span>Sản phẩm yêu thích</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>Nhận xét của tôi</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-tags"></i>
+                                    <span>Mã giảm giá</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="col-lg-9 col-md-8">
+                        <div class="wishlist-content">
+                            <!-- Header -->
+                            <div class="wishlist-header">
+                                <h1 class="wishlist-title">Sản phẩm yêu thích</h1>
+                            </div>
+
+                            <!-- Search and Filter Section -->
+                            <div class="wishlist-search-filter mb-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control"
+                                                placeholder="Tìm kiếm trong danh sách yêu thích...">
+                                            <button class="btn btn-outline-secondary" type="button">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-md-end">
+                                            <select class="form-select me-2" style="width: auto;">
+                                                <option selected>Sắp xếp theo</option>
+                                                <option value="price-asc">Giá: Thấp đến cao</option>
+                                                <option value="price-desc">Giá: Cao đến thấp</option>
+                                                <option value="name-asc">Tên: A-Z</option>
+                                                <option value="name-desc">Tên: Z-A</option>
+                                                <option value="newest">Mới nhất</option>
+                                            </select>
+                                            <select class="form-select" style="width: auto;">
+                                                <option selected>Tất cả</option>
+                                                <option value="fiction">Tiểu thuyết</option>
+                                                <option value="self-help">Kỹ năng</option>
+                                                <option value="business">Kinh doanh</option>
+                                                <option value="science">Khoa học</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Actions Footer -->
+                                <div class="wishlist-actions">
+                                    <div class="d-flex justify-content-end gap-2 align-items-center">
+                                        <button class="btn btn-outline-secondary">
+                                            <i class="fas fa-trash me-1"></i> Xóa tất cả
+                                        </button>
+                                        <button class="btn btn-primary">
+                                            <i class="fas fa-shopping-cart me-1"></i> Thêm tất cả
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wishlist Items -->
+                            <div class="wishlist-items">
+                                <!-- Item 1 -->
+                                <div class="wishlist-item">
+                                    <div class="item-image">
+                                        <img src="https://placehold.co/120x160" alt="Sách 1">
+                                    </div>
+                                    <div class="item-details">
+                                        <h3 class="item-title">Đắc Nhân Tâm</h3>
+                                        <p class="item-author">Dale Carnegie</p>
+                                        <div class="item-rating">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star-half-alt"></i>
+                                            <span>(120)</span>
+                                        </div>
+                                        <p class="item-price">89.000₫ <span class="original-price">129.000₫</span></p>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-primary add-to-cart-btn">
+                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                        </button>
+                                        <button class="btn btn-outline-danger remove-btn">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Item 2 -->
+                                <div class="wishlist-item">
+                                    <div class="item-image">
+                                        <img src="https://placehold.co/120x160" alt="Sách 2">
+                                    </div>
+                                    <div class="item-details">
+                                        <h3 class="item-title">Nhà Giả Kim</h3>
+                                        <p class="item-author">Paulo Coelho</p>
+                                        <div class="item-rating">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <span>(208)</span>
+                                        </div>
+                                        <p class="item-price">75.000₫ <span class="original-price">99.000₫</span></p>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-primary add-to-cart-btn">
+                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                        </button>
+                                        <button class="btn btn-outline-danger remove-btn">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Item 3 -->
+                                <div class="wishlist-item">
+                                    <div class="item-image">
+                                        <img src="https://placehold.co/120x160" alt="Sách 3">
+                                    </div>
+                                    <div class="item-details">
+                                        <h3 class="item-title">Tư Duy Phản Biện</h3>
+                                        <p class="item-author">Albert Rutherford</p>
+                                        <div class="item-rating">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                            <span>(95)</span>
+                                        </div>
+                                        <p class="item-price">112.000₫ <span class="original-price">149.000₫</span></p>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-primary add-to-cart-btn">
+                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                        </button>
+                                        <button class="btn btn-outline-danger remove-btn">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Empty Wishlist State (hidden by default) -->
+                            <div class="empty-wishlist" style="display: none;">
+                                <div class="text-center py-5">
+                                    <i class="far fa-heart fa-4x text-muted mb-3"></i>
+                                    <h3>Danh sách yêu thích trống</h3>
+                                    <p class="text-muted">Bạn chưa có sản phẩm nào trong danh sách yêu thích</p>
+                                    <a href="#" class="btn btn-primary mt-3">Khám phá sách ngay</a>
+                                </div>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div class="wishlist-pagination d-flex justify-content-between">
+                                <div class="text-center mt-2">
+                                    <span class="text-muted">Hiển thị 1-3 trên tổng số 8 sản phẩm</span>
+                                </div>
+                                <nav aria-label="Phân trang">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="modern-footer">
+        <div class="container">
+            <!-- Footer Top - Logo và Newsletter -->
+            <div class="footer-top">
+                <div class="row align-items-center">
+                    <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
+                        <div class="footer-brand d-flex align-items-center">
+                            <div class="footer-logo-container me-3">
+                                <img src="/asset/logo.jpg" alt="BookStore Logo" class="footer-logo">
+                            </div>
+                            <p class="mb-0 footer-description">BookStore - Nơi tri thức gặp gỡ đam mê đọc sách của bạn.
+                                Cung cấp hàng nghìn đầu sách chất lượng với dịch vụ giao hàng nhanh chóng.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 offset-lg-3 col-md-6">
+                        <div class="newsletter-box">
+                            <h5>Đăng ký nhận thông tin</h5>
+                            <p>Nhận thông báo về sách mới và ưu đãi đặc biệt</p>
+                            <div class="newsletter-form">
+                                <div class="input-group">
+                                    <input type="email" class="form-control" placeholder="Email của bạn">
+                                    <button class="btn btn-primary" type="button">Đăng ký</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="footer-divider">
+
+            <!-- Footer Main - Menu Links -->
+            <div class="footer-main">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2 mb-lg-0">
+                        <div class="footer-widget">
+                            <h5 class="widget-title">Hỗ Trợ Khách Hàng</h5>
+                            <ul class="footer-links">
+                                <li><a href="#">Trung tâm trợ giúp</a></li>
+                                <li><a href="#">Hướng dẫn mua hàng</a></li>
+                                <li><a href="#">Phương thức vận chuyển</a></li>
+                                <li><a href="#">Chính sách đổi trả</a></li>
+                                <li><a href="#">Câu hỏi thường gặp</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2 mb-lg-0">
+                        <div class="footer-widget">
+                            <h5 class="widget-title">Về BookStore</h5>
+                            <ul class="footer-links">
+                                <li><a href="#">Giới thiệu</a></li>
+                                <li><a href="#">Tuyển dụng</a></li>
+                                <li><a href="#">Điều khoản sử dụng</a></li>
+                                <li><a href="#">Chính sách bảo mật</a></li>
+                                <li><a href="#">Liên hệ</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2 mb-lg-0">
+                        <div class="footer-widget">
+                            <h5 class="widget-title">Hợp tác & Liên kết</h5>
+                            <ul class="footer-links">
+                                <li><a href="#">Bán hàng cùng BookStore</a></li>
+                                <li><a href="#">Đối tác giao hàng</a></li>
+                                <li><a href="#">Đối tác thanh toán</a></li>
+                                <li><a href="#">Chương trình affiliate</a></li>
+                                <li><a href="#">Hợp tác xuất bản</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2 mb-lg-0">
+                        <div class="footer-widget">
+                            <h5 class="widget-title">Kết nối với chúng tôi</h5>
+                            <div class="social-links">
+                                <a href="#" class="social-link facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-link instagram"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-link youtube"><i class="fab fa-youtube"></i></a>
+                                <a href="#" class="social-link twitter"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="social-link tiktok"><i class="fab fa-tiktok"></i></a>
+                            </div>
+
+                            <h5 class="widget-title mt-4">Phương thức thanh toán</h5>
+                            <div class="payment-methods">
+                                <div class="payment-icon visa"><i class="fab fa-cc-visa"></i></div>
+                                <div class="payment-icon mastercard"><i class="fab fa-cc-mastercard"></i></div>
+                                <div class="payment-icon paypal"><i class="fab fa-cc-paypal"></i></div>
+                                <div class="payment-icon jcb"><i class="fab fa-cc-jcb"></i></div>
+                                <div class="payment-icon cash"><i class="fas fa-money-bill-wave"></i></div>
+                                <div class="payment-icon momo">MoMo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="footer-divider">
+
+            <!-- Footer Bottom - App Download & Copyright -->
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+
+                    <div class="col-lg-6 col-md-6">
+                        <div class="copyright">
+                            <p>© 2025 BookStore. Tất cả các quyền được bảo lưu.</p>
+                            <p class="address">Địa chỉ: 123 Đường Sách, Phường Văn Chương, Quận Đống Đa, Hà Nội</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Script xử lý tìm kiếm, lọc và phân trang
+        document.addEventListener('DOMContentLoaded', function () {
+            // Xử lý tìm kiếm
+            const searchInput = document.querySelector('.wishlist-search-filter input');
+            const searchButton = document.querySelector('.wishlist-search-filter button');
+            const wishlistItems = document.querySelectorAll('.wishlist-item');
+
+            searchButton.addEventListener('click', function () {
+                searchWishlist();
+            });
+
+            searchInput.addEventListener('keyup', function (e) {
+                if (e.key === 'Enter') {
+                    searchWishlist();
+                }
+            });
+
+            function searchWishlist() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                let foundItems = 0;
+
+                wishlistItems.forEach(item => {
+                    const title = item.querySelector('.item-title').textContent.toLowerCase();
+                    const author = item.querySelector('.item-author').textContent.toLowerCase();
+
+                    if (title.includes(searchTerm) || author.includes(searchTerm)) {
+                        item.style.display = '';
+                        foundItems++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Hiển thị trạng thái trống nếu không tìm thấy kết quả
+                const emptyState = document.querySelector('.empty-wishlist');
+                if (foundItems === 0 && searchTerm !== '') {
+                    emptyState.style.display = 'block';
+                    emptyState.querySelector('h3').textContent = 'Không tìm thấy kết quả';
+                    emptyState.querySelector('p').textContent = `Không tìm thấy sản phẩm phù hợp với "${searchTerm}"`;
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            // Xử lý sắp xếp
+            const sortSelect = document.querySelector('select[class="form-select me-2"]');
+            sortSelect.addEventListener('change', function () {
+                const sortValue = this.value;
+                const itemsArray = Array.from(wishlistItems);
+                const container = document.querySelector('.wishlist-items');
+
+                // Sắp xếp mảng sản phẩm dựa vào lựa chọn
+                itemsArray.sort((a, b) => {
+                    const titleA = a.querySelector('.item-title').textContent;
+                    const titleB = b.querySelector('.item-title').textContent;
+                    const priceA = parseFloat(a.querySelector('.item-price').textContent.replace(/[^\d]/g, ''));
+                    const priceB = parseFloat(b.querySelector('.item-price').textContent.replace(/[^\d]/g, ''));
+
+                    switch (sortValue) {
+                        case 'price-asc':
+                            return priceA - priceB;
+                        case 'price-desc':
+                            return priceB - priceA;
+                        case 'name-asc':
+                            return titleA.localeCompare(titleB);
+                        case 'name-desc':
+                            return titleB.localeCompare(titleA);
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Gắn lại các phần tử đã sắp xếp
+                itemsArray.forEach(item => {
+                    container.appendChild(item);
+                });
+            });
+
+            // Xử lý phân trang
+            const pageLinks = document.querySelectorAll('.page-link');
+            pageLinks.forEach(link => {
+                if (link.textContent.trim() !== 'Previous' && link.textContent.trim() !== 'Next') {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        // Xóa trạng thái active
+                        document.querySelectorAll('.page-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+
+                        // Thêm trạng thái active cho trang được chọn
+                        this.parentElement.classList.add('active');
+
+                        // Ở đây bạn sẽ thêm logic để tải dữ liệu cho trang được chọn
+                        // Hoặc ẩn/hiện các sản phẩm tương ứng
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

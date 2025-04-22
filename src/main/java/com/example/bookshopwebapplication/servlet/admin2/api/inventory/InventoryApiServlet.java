@@ -1,10 +1,11 @@
 package com.example.bookshopwebapplication.servlet.admin2.api.inventory;
 
+import com.example.bookshopwebapplication.entities.InventoryReceipts;
 import com.example.bookshopwebapplication.http.response_admin.DataTable;
 import com.example.bookshopwebapplication.http.response_admin.invetory.*;
+import com.example.bookshopwebapplication.service.InventoryService;
 import com.example.bookshopwebapplication.service.InventoryStatisticsService;
 import com.example.bookshopwebapplication.utils.JsonUtils;
-import org.apache.http.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -27,14 +28,19 @@ import java.util.*;
         "/api/admin/inventory/slow-moving",
         "/api/admin/inventory/fast-moving",
         "/api/admin/inventory/stock-out-frequency",
+        "/api/admin/inventory/transaction",
+        "/api/admin/inventory/transaction-status",
+
 })
 public class InventoryApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private InventoryStatisticsService inventoryStatisticsService;
+    private InventoryService inventoryService;
 
     @Override
     public void init() throws ServletException {
         this.inventoryStatisticsService = new InventoryStatisticsService();
+        this.inventoryService = new InventoryService();
     }
 
     @Override
@@ -68,9 +74,61 @@ public class InventoryApiServlet extends HttpServlet {
             case "/api/admin/inventory/slow-moving":
                 getInventorySlowMoving(req, resp);
                 break;
+            case "/api/admin/inventory/transaction":
+                processInventoryTransaction(req, resp);
+                break;
+            case "/api/admin/inventory/transaction-status":
+                updateInventoryTransactionStatus(req, resp);
+                break;
             default:
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "API not found");
                 break;
+        }
+    }
+
+    private void updateInventoryTransactionStatus(HttpServletRequest req, HttpServletResponse resp) {
+        try{
+            Long userId = (Long) req.getAttribute("userId");
+            if (userId == null) {
+                JsonUtils.out(resp, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+            String code = req.getParameter("code");
+            String status = req.getParameter("status");
+            if (code == null || status == null) {
+                JsonUtils.out(resp, "Invalid request parameters", HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            inventoryService.updateInventoryReceiptsStatus(code, status);
+            JsonUtils.out(resp, "Inventory transaction status updated successfully", HttpServletResponse.SC_OK);
+        }catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void processInventoryTransaction(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            InventoryReceipts receipts = JsonUtils.get(req, InventoryReceipts.class);
+            if (receipts == null) {
+                JsonUtils.out(resp, "Invalid request body", HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            Long userId = (Long) req.getAttribute("userId");
+            if (userId == null) {
+                JsonUtils.out(resp, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+            receipts.setCreatedBy(userId);
+            Long id = inventoryService.processInventoryTransaction(receipts);
+            if (id != null) {
+                JsonUtils.out(resp,
+                        "Inventory transaction processed successfully"
+                        , HttpServletResponse.SC_OK);
+                return;
+            }
+            JsonUtils.out(resp, "Failed to process transaction Inventory receipts", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

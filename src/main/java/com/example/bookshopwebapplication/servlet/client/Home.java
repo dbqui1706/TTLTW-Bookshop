@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@WebServlet(name = "HomeClient", value = {""})
+//@WebServlet(name = "HomeClient", value = {""})
 public class Home extends HttpServlet {
     private CategoryService categoryService = new CategoryService();
     private ProductService productService = new ProductService();

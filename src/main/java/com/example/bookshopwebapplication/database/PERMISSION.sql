@@ -263,8 +263,26 @@ INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) 
 INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
 ('Kiểm tra quyền', 'system.check_permission', 'system', 'Cho phép kiểm tra quyền của người dùng trong hệ thống', 1);
 
+-- Quyền cho quản lý tồn kho
+INSERT INTO bookshopdb.permissions (name, code, module, description, is_system) VALUES
+('Xem tồn kho', 'inventory.view_list', 'inventory', 'Cho phép xem các tính năng liên quan đến tồn kho', 1),
+('Thực hiện nhập/xuất tồn kho cho các sản phẩm', 'inventory.transaction', 'inventory', 'Cho phép tạo xuất/nhập các phiếu tồn kho', 1);
 
 -- ========== BẢNG LIÊN KẾT VAI TRÒ - QUYỀN (ROLE_PERMISSIONS) ==========
+
+INSERT INTO bookshopdb.role_permissions (role_id, permission_id)
+SELECT 
+    (SELECT id FROM bookshopdb.roles WHERE name = 'ADMIN'), 
+    id 
+FROM bookshopdb.permissions WHERE module = 'inventory';
+
+SELECT p.* 
+FROM bookshopdb.permissions p 
+JOIN bookshopdb.role_permissions rp on p.id = rp.permission_id
+JOIN bookshopdb.roles r on rp.role_id = r.id
+WHERE r.name = 'ADMIN';
+
+
 -- 1. Phân quyền cho ADMIN (Có tất cả quyền)
 INSERT INTO bookshopdb.role_permissions (role_id, permission_id)
 SELECT 

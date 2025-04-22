@@ -26,15 +26,15 @@ public class CorsFilter implements Filter {
         System.out.println("CorsFilter: Processing " + method + " request to " + httpRequest.getRequestURI());
 
         // Thiết lập CORS headers
-        if (origin != null) {
-            // Cho phép các origins nhất định
-            if (origin.equals("http://localhost:5500") ||
-                    origin.equals("http://127.0.0.1:5500")) {
-                httpResponse.setHeader("Access-Control-Allow-Origin", origin);
-                System.out.println("CorsFilter: Allowed origin: " + origin);
-            }
-        }
-
+//        if (origin != null) {
+//            // Cho phép các origins nhất định
+//            if (origin.equals("http://localhost:5500") ||
+//                    origin.equals("http://127.0.0.1:5500")) {
+//                httpResponse.setHeader("Access-Control-Allow-Origin", origin);
+//                System.out.println("CorsFilter: Allowed origin: " + origin);
+//            }
+//        }
+        httpResponse.setHeader("Access-Control-Allow-Origin", origin);
         // Vẫn giữ credentials mặc dù chúng ta dùng token
         // Điều này giúp nếu ứng dụng sử dụng kết hợp cả token và cookies
         httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
