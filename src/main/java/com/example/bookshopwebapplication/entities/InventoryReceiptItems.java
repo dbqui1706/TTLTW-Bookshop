@@ -19,7 +19,6 @@ public class InventoryReceiptItems {
     private String createdAt; // Thời gian tạo
 }
 
-
 //id BIGINT AUTO_INCREMENT PRIMARY KEY,
 //receipt_id BIGINT NOT NULL,  -- ID phiếu
 //product_id BIGINT NOT NULL,  -- ID sản phẩm
