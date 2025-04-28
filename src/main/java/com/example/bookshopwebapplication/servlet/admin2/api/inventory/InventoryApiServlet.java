@@ -30,6 +30,9 @@ import java.util.*;
         "/api/admin/inventory/stock-out-frequency",
         "/api/admin/inventory/transaction",
         "/api/admin/inventory/transaction-status",
+        "/api/admin/inventory/import",
+        "/api/admin/inventory/receipt-detail",
+        "/api/admin/inventory/inventory-products",
 
 })
 public class InventoryApiServlet extends HttpServlet {
@@ -74,11 +77,19 @@ public class InventoryApiServlet extends HttpServlet {
             case "/api/admin/inventory/slow-moving":
                 getInventorySlowMoving(req, resp);
                 break;
-            case "/api/admin/inventory/transaction":
-                processInventoryTransaction(req, resp);
-                break;
             case "/api/admin/inventory/transaction-status":
                 updateInventoryTransactionStatus(req, resp);
+                break;
+            case "/api/admin/inventory/import":
+                // Handle get list import inventory
+                getInventoryImport(req, resp);
+                break;
+            case "/api/admin/inventory/receipt-detail":
+                // Handle get list import inventory
+                getReceiptDetailByCode(req, resp);
+                break;
+            case "/api/admin/inventory/inventory-products":
+                getInventoryProducts(req, resp);
                 break;
             default:
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "API not found");
@@ -86,8 +97,126 @@ public class InventoryApiServlet extends HttpServlet {
         }
     }
 
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String uri = req.getRequestURI();
+        switch (uri){
+            case "/api/admin/inventory/transaction":
+                processInventoryTransaction(req, resp);
+                break;
+//            case "/api/admin/inventory/transaction-status":
+//                updateInventoryTransactionStatus(req, resp);
+//                break;
+            default:
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "API not found");
+                break;
+        }
+    }
+
+    private void getReceiptDetailByCode(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            String code = req.getParameter("code");
+            if (code == null || code.isEmpty()) {
+                JsonUtils.out(resp, "Code is required", HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            List<ReceiptItemDetailDTO> items = inventoryService.getItemDetailsByReceiptCode(code);
+            JsonUtils.out(resp, items, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void getInventoryProducts(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            // Đọc các tham số từ request
+            int draw = Integer.parseInt(req.getParameter("draw") != null ? req.getParameter("draw") : "1");
+            int start = Integer.parseInt(req.getParameter("start") != null ? req.getParameter("start") : "0");
+            int length = Integer.parseInt(req.getParameter("length") != null ? req.getParameter("length") : "10");
+
+            // Lấy tham số tìm kiếm
+            String searchValue = req.getParameter("search");
+
+            // Lấy tham số sắp xếp
+            // Lấy tham số sắp xếp
+            String orderColumn = req.getParameter("order[0][column]");
+            int orderColumnIndex = Integer.parseInt(orderColumn == null ? "0" : orderColumn);
+            String orderDirection = req.getParameter("order[0][dir]") == null ? "desc" : req.getParameter("order[0][dir]");
+
+            // Lấy tham số lọc danh mục
+            Long categoryId = null;
+            String categoryIdParam = req.getParameter("categoryId");
+            if (categoryIdParam != null && !categoryIdParam.isEmpty()) {
+                try {
+                    categoryId = Long.parseLong(categoryIdParam);
+                } catch (NumberFormatException e) {
+                    // Bỏ qua nếu không phải số
+                }
+            }
+
+            // Lấy tham số lọc tồn kho
+            String stockFilter = req.getParameter("stockFilter");
+
+            DataTable<ProductInventoryDTO> result = inventoryService.getProductsForInventory(
+                    draw, start, length, searchValue,
+                    orderColumnIndex, orderDirection,
+                    categoryId, stockFilter
+            );
+
+            JsonUtils.out(resp, result, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void getInventoryImport(HttpServletRequest request, HttpServletResponse resp) {
+        try {
+            // Lấy tham số từ request
+            int draw = Integer.parseInt(request.getParameter("draw"));
+            int start = Integer.parseInt(request.getParameter("start"));
+            int length = Integer.parseInt(request.getParameter("length"));
+
+            // Lấy tham số tìm kiếm toàn cục
+            String searchValue = request.getParameter("search[value]");
+
+            // Lấy tham số sắp xếp
+            String orderColumn = request.getParameter("order[0][column]");
+            int orderColumnIndex = Integer.parseInt(orderColumn == null ? "0" : orderColumn);
+            String orderDirection = request.getParameter("order[0][dir]") == null ? "desc" : request.getParameter("order[0][dir]");
+            String receiptType = request.getParameter("receiptType");
+            String supplier = request.getParameter("supplier");
+            String receiptCode = request.getParameter("receiptCode");
+            String status = request.getParameter("status");
+            String startDate = request.getParameter("startDate");
+            String endDate = request.getParameter("endDate");
+
+            Date startDateDate = null;
+            Date endDateDate = null;
+            if (startDate != null) {
+                startDateDate = new SimpleDateFormat("yyyy-MM-dd").parse(startDate);
+            }
+            if (endDate != null) {
+                endDateDate = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
+
+            }
+
+            DataTable<InventoryReceiptDTO> rs = inventoryService.getInventoryReceipts(
+                    draw, start, length, searchValue,
+                    orderColumnIndex, orderDirection,
+                    receiptType, supplier,
+                    startDateDate, endDateDate,
+                    null, status
+            );
+
+            JsonUtils.out(resp, rs, HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private void updateInventoryTransactionStatus(HttpServletRequest req, HttpServletResponse resp) {
-        try{
+        try {
             Long userId = (Long) req.getAttribute("userId");
             if (userId == null) {
                 JsonUtils.out(resp, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
@@ -101,7 +230,7 @@ public class InventoryApiServlet extends HttpServlet {
             }
             inventoryService.updateInventoryReceiptsStatus(code, status);
             JsonUtils.out(resp, "Inventory transaction status updated successfully", HttpServletResponse.SC_OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             JsonUtils.out(resp, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

@@ -2,13 +2,15 @@ package com.example.bookshopwebapplication.service;
 
 import com.example.bookshopwebapplication.dao.*;
 import com.example.bookshopwebapplication.entities.*;
+import com.example.bookshopwebapplication.http.response_admin.DataTable;
+import com.example.bookshopwebapplication.http.response_admin.invetory.InventoryReceiptDTO;
+import com.example.bookshopwebapplication.http.response_admin.invetory.ProductInventoryDTO;
+import com.example.bookshopwebapplication.http.response_admin.invetory.ReceiptItemDetailDTO;
 import com.example.bookshopwebapplication.utils.RequestContext;
 
+import javax.xml.crypto.Data;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -259,6 +261,11 @@ public class InventoryService {
             }
             // 3. Cập nhật trạng thái phiếu từ "draft" sang "pending"
             inventoryReceipts.setStatus("pending");
+
+            // cập nhập số lượng totalItems, totalQuantity
+            inventoryReceipts.setTotalItems(items.size());
+            inventoryReceipts.setTotalQuantity(items.stream().mapToInt(InventoryReceiptItems::getQuantity).sum());
+
             boolean isUpdated = inventoryReceiptsDao.updateWithConnection(conn, inventoryReceipts);
             if (!isUpdated) {
                 throw new RuntimeException("Lỗi khi cập nhật trạng thái phiếu sang 'pending'");
@@ -392,6 +399,41 @@ public class InventoryService {
         }
 
         return true;
+    }
+
+    public DataTable<InventoryReceiptDTO> getInventoryReceipts(
+            int draw, int start,
+            int length, String searchValue,
+            int orderColumnIndex, String orderDirection,
+            String receiptType, String supplier,
+            Date startDate, Date endDate,
+            String userFilter, String statusFilter
+    ) {
+        return inventoryReceiptsDao.getInventoryReceipts(
+                draw, start, length, searchValue,
+                orderColumnIndex, orderDirection,
+                receiptType, supplier,
+                startDate, endDate,
+                userFilter, statusFilter
+        );
+    }
+
+    public DataTable<ProductInventoryDTO> getProductsForInventory(
+            int draw, int start, int length,
+            String searchValue, int orderColumnIndex,
+            String orderDirection, Long categoryId,
+            String stockFilter
+    ){
+        return inventoryReceiptsDao.getProductsForInventory(
+                draw, start, length,
+                searchValue, orderColumnIndex,
+                orderDirection, categoryId,
+                stockFilter
+        );
+    }
+
+    public List<ReceiptItemDetailDTO> getItemDetailsByReceiptCode(String receiptCode){
+        return inventoryReceiptsDao.getItemDetailsByReceiptCode(receiptCode);
     }
 
     private String generateReceiptCode(String status) {

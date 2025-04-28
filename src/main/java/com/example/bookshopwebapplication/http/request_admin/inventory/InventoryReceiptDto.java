@@ -3,8 +3,6 @@ package com.example.bookshopwebapplication.http.request_admin.inventory;
 import com.example.bookshopwebapplication.entities.InventoryReceiptItems;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 public class InventoryReceiptDto {
     private Long id;
