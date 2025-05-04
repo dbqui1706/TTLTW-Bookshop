@@ -28,6 +28,10 @@ export class LoginContainer {
         this.backToLoginFromForgot = null;
         this.backToLoginFromRegister = null;
 
+        // GG và FB login
+        this.googleLoginBtn = null;
+        this.facebookLoginBtn = null;
+
         // Sidebar
         this.sidebarTitle = null;
         this.sidebarDescription = null;
@@ -90,6 +94,9 @@ export class LoginContainer {
         this.backToLoginFromRegister = document.getElementById('back-to-login-from-register');
         this.showResetPassword = document.getElementById('show-reset-password');
 
+        // GG và FB login
+        this.googleLoginBtn = document.getElementById('google-login');
+        this.facebookLoginBtn = document.getElementById('facebook-login');
 
         // Sidebar
         this.sidebarTitle = document.getElementById('sidebar-title');
@@ -208,7 +215,7 @@ export class LoginContainer {
         const password = this.registerPassword.value;
         const strength = this.calculatePasswordStrength(password);
 
-        // Cập nhật progress bar 
+        // Cập nhật progress bar
         this.passwordStrengthBar.style.width = strength + '%';
 
 
@@ -226,7 +233,7 @@ export class LoginContainer {
         const password = this.resetPassword.value;
         const strength = this.calculatePasswordStrength(password);
 
-        // Cập nhật progress bar 
+        // Cập nhật progress bar
         this.resetPasswordStrengthBar.style.width = strength + '%';
 
         // Đổi màu dựa trên độ mạnh
@@ -288,9 +295,9 @@ export class LoginContainer {
                 if (this.cart.length > 0) {
                     this.saveCart();
                 }
-                
+
                 // Chuyển hướng
-                window.location.href = '/bookshop/index.html';
+                window.location.href = '/client/index.html';
             } else {
                 this.showNotification(response.message || 'Đăng nhập thất bại', 'error');
             }
@@ -422,20 +429,8 @@ export class LoginContainer {
 
     async handleGoogleLogin() {
         try {
-            const response = await this.userService.googleLogin();
-
-            if (response.success) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-                localStorage.setItem('token', response.token);
-
-                this.showNotification('Đăng nhập bằng Google thành công!', 'success');
-
-                setTimeout(() => {
-                    window.location.href = '/bookshop/index.html';
-                }, 1500);
-            } else {
-                this.showNotification(response.message || 'Đăng nhập bằng Google thất bại', 'error');
-            }
+            const googleAuthUrl = "https://accounts.google.com/o/oauth2/auth?scope=email profile openid&redirect_uri=http://localhost:8080/login-gg&response_type=code&client_id=667119401869-ogo3ocfarpnq0bl00pckbdahuq6ith2a.apps.googleusercontent.com&approval_prompt=force"
+            window.location.href = googleAuthUrl;
         } catch (error) {
             console.error('Lỗi đăng nhập Google:', error);
             this.showNotification('Có lỗi xảy ra khi đăng nhập bằng Google', 'error');
@@ -444,20 +439,8 @@ export class LoginContainer {
 
     async handleFacebookLogin() {
         try {
-            const response = await this.userService.facebookLogin();
-
-            if (response.success) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-                localStorage.setItem('token', response.token);
-
-                this.showNotification('Đăng nhập bằng Facebook thành công!', 'success');
-
-                setTimeout(() => {
-                    window.location.href = '/bookshop/index.html';
-                }, 1500);
-            } else {
-                this.showNotification(response.message || 'Đăng nhập bằng Facebook thất bại', 'error');
-            }
+            const facebookAuthUrl = "https://www.facebook.com/v20.0/dialog/oauth?client_id=1541850213137840&redirect_uri=http://localhost:8080/login-fb";
+            window.location.href = facebookAuthUrl;
         } catch (error) {
             console.error('Lỗi đăng nhập Facebook:', error);
             this.showNotification('Có lỗi xảy ra khi đăng nhập bằng Facebook', 'error');

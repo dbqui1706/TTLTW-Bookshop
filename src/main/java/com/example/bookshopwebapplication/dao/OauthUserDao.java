@@ -20,11 +20,11 @@ public class OauthUserDao extends AbstractDao<OauthUser> implements IOauthUserDa
         clearSQL();
         // Step 1: Save to table user.
         String query1 = "INSERT INTO user (username, password, fullname, email," +
-                " phoneNumber, gender, address, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                " phoneNumber, gender, address, role, is_email_verified ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String email = oauthUser.getProvider().equals("GOOGLE") ? oauthUser.getEmail() : "";
 
         Long userID = insert(query1, "", "", oauthUser.getFullName(),
-                email, "", 0, "", oauthUser.getRole()
+                email, "", 0, "", oauthUser.getRole(), 1
         );
 
         // Step 2: Save to table oauth_user;

@@ -1,17 +1,20 @@
 package com.example.bookshopwebapplication.servlet.client2.api;
 
 import com.example.bookshopwebapplication.dto.UserDto;
-import com.example.bookshopwebapplication.entities.User;
+import com.example.bookshopwebapplication.entities.OauthUser;
 import com.example.bookshopwebapplication.entities.UserAddress;
 import com.example.bookshopwebapplication.http.request.user.LoginDTO;
 import com.example.bookshopwebapplication.http.request.user.RegisterDTO;
-import com.example.bookshopwebapplication.service.PermissionService;
+import com.example.bookshopwebapplication.service.OauthUserService;
 import com.example.bookshopwebapplication.service.UserAddressService;
 import com.example.bookshopwebapplication.service.UserService;
 import com.example.bookshopwebapplication.utils.CookieUtil;
 import com.example.bookshopwebapplication.utils.JsonUtils;
 import com.example.bookshopwebapplication.utils.MultiPart;
+import com.example.bookshopwebapplication.utils.login_api.EOAuthProvider;
+import com.example.bookshopwebapplication.utils.login_api.OauthLoginService;
 import com.example.bookshopwebapplication.utils.mail.EmailUtils;
+import com.google.gson.Gson;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.servlet.ServletException;
@@ -36,6 +39,8 @@ import java.util.UUID;
                 "/api/auth/forgot-password",
                 "/api/auth/reset-password",
                 "/api/auth/change-password",
+                "/login-gg",
+                "/login-fb",
         }
 )
 public class UserController extends HttpServlet {
@@ -62,8 +67,59 @@ public class UserController extends HttpServlet {
             case "/api/auth/change-password":
                 changePassword(request, response);
                 break;
+            case "/login-gg", "/login-fb":
+                loginApiProvider(request, response);
+                break;
             default:
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                JsonUtils.out(
+                        response,
+                        "Method not allowed",
+                        HttpServletResponse.SC_NOT_IMPLEMENTED
+                );
+        }
+    }
+    private void loginApiProvider(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String code = request.getParameter("code");
+            if (code == null || code.isEmpty()) {
+                request.getRequestDispatcher("/bookshop/login.html").forward(request, response);
+            } else {
+                OauthUser oauthUser = request.getRequestURI().equals("/login-gg")
+                        ? OauthLoginService.login(EOAuthProvider.GOOGLE.getName(), code).get()
+                        : OauthLoginService.login(EOAuthProvider.FACEBOOK.getName(), code).get();
+                OauthUserService oauthUserService = new OauthUserService();
+                Optional<OauthUser> insertOauth = oauthUserService.insert(oauthUser);
+
+                if (insertOauth.isPresent()) {
+                    Optional<UserDto> userFromServer = userService.getById(insertOauth.get().getUserID());
+                    request.getSession().setAttribute("currentUser", userFromServer.get());
+
+                    UserDto user= userFromServer.get();
+                    user.setPassword(null);
+                    user.setCreatedAt(null);
+                    user.setUpdatedAt(null);
+                    user.setUsername(null);
+
+                    String token = UUID.randomUUID().toString();
+
+                    response.setContentType("text/html;charset=UTF-8");
+                    response.getWriter().write(
+                            "<!DOCTYPE html><html><head><title>Đăng nhập thành công</title></head><body>" +
+                                    "<script>" +
+                                    "  localStorage.setItem('token', '" + token + "');" +
+                                    "  localStorage.setItem('user', '" + new Gson().toJson(user) + "');" +
+                                    "  window.location.href = '/bookshop/index.html';" +
+                                    "</script>" +
+                                    "</body></html>"
+                    );
+                }
+            }
+        }catch (Exception e) {
+            JsonUtils.out(
+                    response,
+                    e.getMessage(),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
         }
     }
 

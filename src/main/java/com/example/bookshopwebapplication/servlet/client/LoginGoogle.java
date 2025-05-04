@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = {"/login-gg", "/login-fb"})
+//@WebServlet(urlPatterns = {"/login-gg", "/login-fb"})
 public class LoginGoogle extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final OauthUserService oauthUserService = new OauthUserService();
