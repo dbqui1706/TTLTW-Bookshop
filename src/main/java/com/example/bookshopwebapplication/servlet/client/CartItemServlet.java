@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@WebServlet("/cartItem")
+//@WebServlet("/cartItem")
 public class CartItemServlet extends HttpServlet {
     private final CartService cartService = new CartService();
     private final CartItemService cartItemService = new CartItemService();

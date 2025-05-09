@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@WebServlet("/checkout")
+//@WebServlet("/checkout")
 public class Checkout extends HttpServlet {
     private final OrderService orderService = OrderService.getInstance();
     private final OrderItemService orderItemService = OrderItemService.getInstance();

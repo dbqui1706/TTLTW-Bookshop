@@ -169,7 +169,7 @@ export class LoginModal {
     // Xử lý khi người dùng nhấn đăng nhập
     handleLogin() {
         // Chuyển hướng đến trang login
-        window.location.href = '/client/login.html';
+        window.location.href = '/login';
     }
 
     // Xử lý khi người dùng nhấn đăng ký
@@ -177,7 +177,7 @@ export class LoginModal {
         // Đặt một flag trong localStorage để cho biết muốn hiển thị form đăng ký
         localStorage.setItem('showRegisterForm', 'true');
         // Chuyển hướng đến trang login
-        window.location.href = '/client/login.html';
+        window.location.href = '/login';
     }
 
     // Phương thức tiện ích để hiển thị một form và ẩn các form khác

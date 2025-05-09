@@ -13,13 +13,6 @@ import java.io.IOException;
 public class Home extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        response.getWriter().write(
-                "<!DOCTYPE html><html><head><title>Bookstore HomePage</title></head><body>" +
-                        "<script>" +
-                        "  window.location.href = '/bookshop/index.html';" +
-                        "</script>" +
-                        "</body></html>"
-        );
+        req.getRequestDispatcher("/WEB-INF/views/client2/index.jsp").forward(req, response);
     }
 }

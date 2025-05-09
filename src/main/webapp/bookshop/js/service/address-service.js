@@ -226,9 +226,7 @@ export class AddressService {
         try {
             const response = await fetch(`${API_BASE_URL.UPDATE_USER_ADDRESS}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'  
-                },
+                headers: HEADERS,
                 body: JSON.stringify(address)
             });
             if (!response.ok) {

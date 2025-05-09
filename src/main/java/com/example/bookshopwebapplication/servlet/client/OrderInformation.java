@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet(value = {"/order-info", "/order-fetch-data", "/order-submit"})
+//@WebServlet(value = {"/order-info", "/order-fetch-data", "/order-submit"})
 public class OrderInformation extends HttpServlet {
     private final ProductService productService = new ProductService();
     private OrderInfoRequest orderInfoRequest;

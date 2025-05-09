@@ -355,7 +355,7 @@ export class ProductContainer {
 
         return `
         <div class="col">
-            <div class="book-card" onclick="window.location.href='/bookshop/product.html?id=${product.id}'">
+            <div class="book-card" onclick="window.location.href='/product?id=${product.id}'">
                 <img src="${imageUrl}" alt="${product.name}" onerror="this.src='/asset/images/image.png'">
                 <div class="book-info">
                     ${shippingBadge}

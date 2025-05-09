@@ -21,11 +21,6 @@ export class CartContainer {
         // Kiểm tra xem người dùng đã đăng nhập hay chưa
         this.isLoggedIn = this.user !== null;
 
-        // Ẩn Delivery address và Coupon nếu người dùng chưa đăng nhập
-        if (!this.isLoggedIn) {
-            document.querySelector('.delivery-address').classList.add('d-none');
-            document.querySelector('.checkout-coupon').classList.add('d-none');
-        }
 
         // Các phần tử DOM
         this.initDOMElements();
@@ -35,9 +30,6 @@ export class CartContainer {
 
         // Tải giỏ hàng từ server or local storage
         this.loadCart();
-
-        // Khởi tạo các popover và modal
-        // this.initPopoversAndModals();
     }
 
     initDOMElements() {
@@ -427,7 +419,7 @@ export class CartContainer {
         localStorage.setItem('cartOrderDetail', JSON.stringify(cartOrderDetail));
 
         // chuyển đến trang thanh toán
-        window.location.href = '/bookshop/checkout.html';
+        window.location.href = '/checkout';
     }
 
     handleOpenCouponModal() {

@@ -1,5 +1,7 @@
 import { AddressService } from "../service/address-service.js";
 import { openAddressModal } from "../components/address-modal.js";
+import {STORAGE_KEYS} from "../constants/index.js";
+import loginModal from "../components/login-modal.js";
 
 export class AddressInfoContainer {
     constructor() {
@@ -18,6 +20,18 @@ export class AddressInfoContainer {
     }
 
     async init() {
+        // Lấy thông tin người dùng từ local storage
+        this.token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
+        // Nếu không có thông tin, thử lấy từ server
+        if (!this.token || this.token === 'undefined' || this.token === 'null') {
+            // Ẩn thẻ main
+            const mainElement = document.querySelector('main');
+            mainElement.style.display = 'none';
+            loginModal.show();
+            return;
+        }
+
         // Nếu không có user, hiển thị thông báo đăng nhập
         if (!this.user) {
             this.renderLoginRequired();

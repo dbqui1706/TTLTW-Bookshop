@@ -1,5 +1,7 @@
-import { OrderService } from "../service/order-service.js";
-import { formatDate } from "../utils/formatter.js";
+import {OrderService} from "../service/order-service.js";
+import {formatDate} from "../utils/formatter.js";
+import {STORAGE_KEYS} from "../constants/index.js";
+import loginModal from "../components/login-modal.js";
 
 // OrderDetail.js
 export class OrderDetailContainer {
@@ -31,6 +33,18 @@ export class OrderDetailContainer {
      * Initialize the order detail page
      */
     async init() {
+        // Lấy thông tin người dùng từ local storage
+        this.token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
+        // Nếu không có thông tin, thử lấy từ server
+        if (!this.token || this.token === 'undefined' || this.token === 'null') {
+            // Ẩn thẻ main
+            const mainElement = document.querySelector('main');
+            mainElement.style.display = 'none';
+            loginModal.show();
+            return;
+        }
+
         if (!this.orderCode) {
             this.showError('Mã đơn hàng không hợp lệ');
             return;

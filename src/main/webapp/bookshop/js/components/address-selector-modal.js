@@ -79,7 +79,7 @@ export class AddressSelectorModal {
                 ${this.renderAddressList()}
                 
                 <div class="address-actions">
-                    <a href="/client/address-info.html" target="_blank" class="btn-manage-address">
+                    <a href="/address-info" target="_blank" class="btn-manage-address">
                         <i class="fas fa-plus-circle"></i> Thêm địa chỉ mới
                     </a>
                 </div>

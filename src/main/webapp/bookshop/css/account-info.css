@@ -295,12 +295,12 @@
     .account-content {
         margin-top: 20px;
     }
-    
+
     .personal-info {
         padding-right: 0;
         margin-bottom: 30px;
     }
-    
+
     .contact-info {
         border-left: none;
         padding-left: 0;
@@ -314,25 +314,25 @@
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .gender-options {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .contact-item {
         flex-wrap: wrap;
     }
-    
+
     .contact-detail {
         margin-bottom: 10px;
         width: calc(100% - 55px);
     }
-    
+
     .btn-outline-primary {
         margin-left: 55px;
     }
-    
+
     .user-avatar-large {
         margin: 0 auto 20px;
     }

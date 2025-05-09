@@ -11,6 +11,7 @@ import {
     isValidPhone 
 } from "../utils/validations-utils.js";
 import { STORAGE_KEYS } from "../constants/index.js";
+import loginModal from "../components/login-modal.js";
 
 export class AccountInfo {
     constructor() {
@@ -24,9 +25,19 @@ export class AccountInfo {
     async init() {
         // Lấy thông tin người dùng từ local storage
         this.userInfo = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{}');
-        
+        this.token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
         // Nếu không có thông tin, thử lấy từ server
-        if (!this.userInfo || Object.keys(this.userInfo).length === 0) {
+        if (!this.userInfo || Object.keys(this.userInfo).length === 0
+            || !this.token || this.token === 'undefined' || this.token === 'null'
+        ) {
+            // Ẩn thẻ main
+            const mainElement = document.querySelector('main');
+            if (mainElement) {
+                mainElement.style.display = 'none';
+            }
+            loginModal.show();
+        }else {
             const response = await this.userProfileService.getUserProfile();
             if (response.success) {
                 this.userInfo = response.user;
@@ -37,14 +48,13 @@ export class AccountInfo {
                 }
                 return;
             }
+            // Thiết lập các trường dữ liệu
+            // this.setupDateSelects();
+            this.populateUserInfo();
+
+            // Thiết lập sự kiện cho các nút
+            this.setupEventListeners();
         }
-        
-        // Thiết lập các trường dữ liệu
-        // this.setupDateSelects();
-        this.populateUserInfo();
-        
-        // Thiết lập sự kiện cho các nút
-        this.setupEventListeners();
     }
     
     /**

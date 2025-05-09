@@ -297,7 +297,7 @@ export class LoginContainer {
                 }
 
                 // Chuyển hướng
-                window.location.href = '/client/index.html';
+                window.location.href = '/';
             } else {
                 this.showNotification(response.message || 'Đăng nhập thất bại', 'error');
             }

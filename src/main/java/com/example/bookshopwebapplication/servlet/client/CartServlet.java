@@ -23,7 +23,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/cart")
+//@WebServlet("/cart")
 public class CartServlet extends HttpServlet {
     private final CartService cartService = new CartService();
     private final OrderItemService orderItemService = new OrderItemService();

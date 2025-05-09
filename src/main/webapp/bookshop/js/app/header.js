@@ -49,9 +49,9 @@ function setupDropdownMenu(dropdownMenu) {
     
     // Ánh xạ các mục menu với đường dẫn tương ứng
     const menuLinks = {
-        'Thông tin tài khoản': '/bookshop/account-info.html',
-        'Đơn hàng của tôi': '/bookshop/order-info.html',
-        'Trung tâm hỗ trợ': '/bookshop/support.html',
+        'Thông tin tài khoản': '/account-info',
+        'Đơn hàng của tôi': '/order-info',
+        'Trung tâm hỗ trợ': '#',
         'Đăng xuất': '#'
     };
 
@@ -67,8 +67,10 @@ function setupDropdownMenu(dropdownMenu) {
                     e.preventDefault();
                     // Xóa thông tin người dùng khỏi localStorage (không phải sessionStorage)
                     localStorage.removeItem('user');
+                    localStorage.removeItem('cart');
+                    localStorage.removeItem('token')
                     // Chuyển hướng về trang đăng nhập
-                    window.location.href = '/bookshop/login.html';
+                    window.location.href = '/login';
                 });
             }
         }
@@ -117,7 +119,7 @@ export async function updateCartFromServer(cartCountElement) {
  */
 function setupForLoggedOutUser(accountMenu, accountDropdown, dropdownMenu, cartCountElement) {
     // Thiết lập link đăng nhập
-    accountMenu.href = '/bookshop/login.html';
+    accountMenu.href = '/login';
     accountMenu.innerHTML = `
         <i class="fas fa-user-circle"></i>
         <span>Đăng nhập</span>

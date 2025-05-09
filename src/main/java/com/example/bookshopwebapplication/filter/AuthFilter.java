@@ -93,6 +93,7 @@ public class AuthFilter implements Filter {
                     )),
                     HttpServletResponse.SC_UNAUTHORIZED
             );
+            ((HttpServletResponse) response).sendRedirect(httpRequest.getContextPath() + "/login");
             return;
         }
 
