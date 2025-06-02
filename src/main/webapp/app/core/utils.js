@@ -9,9 +9,9 @@
  */
 export function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', { 
-        day: '2-digit', 
-        month: '2-digit', 
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
@@ -97,7 +97,7 @@ export function capitalizeFirstLetter(text) {
  */
 export function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         const context = this;
         clearTimeout(timeout);
         timeout = setTimeout(() => {
@@ -117,9 +117,9 @@ export const formatCurrency = (amount, currency = 'VND', showSymbol = true) => {
     if (amount === null || amount === undefined || isNaN(amount)) {
         return '0 ₫';
     }
-    
+
     let formattedAmount;
-    
+
     if (currency === 'VND') {
         // Định dạng tiền Việt
         formattedAmount = new Intl.NumberFormat('vi-VN').format(Math.round(amount));
@@ -146,7 +146,7 @@ export const formatQuantity = (quantity) => {
     if (quantity === null || quantity === undefined || isNaN(quantity)) {
         return '0';
     }
-    
+
     return new Intl.NumberFormat('vi-VN').format(quantity);
 };
 
@@ -160,7 +160,7 @@ export const formatPercent = (percent, decimal = 1) => {
     if (percent === null || percent === undefined || isNaN(percent)) {
         return '0%';
     }
-    
+
     return `${percent.toFixed(decimal)}%`;
 };
 
@@ -205,20 +205,20 @@ export const generateSampleData = (count, generator) => {
  */
 export const hexToRgba = (hex, alpha = 1) => {
     if (!hex) return 'rgba(0, 0, 0, ' + alpha + ')';
-    
+
     // Loại bỏ ký tự # nếu có
     hex = hex.replace('#', '');
-    
+
     // Kiểm tra độ dài của hex
     if (hex.length === 3) {
         hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
     }
-    
+
     // Chuyển đổi sang RGB
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
-    
+
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
@@ -231,7 +231,7 @@ export const getProductImageUrl = (imageName) => {
     if (!imageName) {
         return '/assets/images/image.png';
     }
-    
+
     return `/assets/images/${imageName}`;
 };
 
@@ -243,19 +243,19 @@ export const getProductImageUrl = (imageName) => {
  */
 export const formatFilename = (filename, maxLength = 20) => {
     if (!filename) return '';
-    
+
     if (filename.length <= maxLength) {
         return filename;
     }
-    
+
     // Tách tên file và phần mở rộng
     const lastDot = filename.lastIndexOf('.');
     const extension = filename.substring(lastDot);
     const name = filename.substring(0, lastDot);
-    
+
     // Cắt tên file để đảm bảo tổng độ dài không vượt quá maxLength
     const truncatedName = name.substring(0, maxLength - 3 - extension.length);
-    
+
     return `${truncatedName}...${extension}`;
 };
 
@@ -279,4 +279,160 @@ export const generateColorFromString = (str) => {
     }
 
     return color;
+};
+
+/**
+ * Hàm thiết lập Select2 cho select box
+ * @param {string} selectId - ID của select box
+ * @param {string} parentSelector - Selector của phần tử cha cho dropdown
+ */
+export const setupSelect2 = (selectId, parentSelector) => {
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+        $(`#${selectId}`).select2({
+            dropdownParent: $(parentSelector),
+            width: '100%'
+        });
+    }
+};
+
+
+/**
+ * Hiển thị overlay loading
+ */
+export const showLoadingOverlay = () => {
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+    loadingOverlay.id = 'modalLoadingOverlay';
+    loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    loadingOverlay.style.zIndex = '9999';
+    loadingOverlay.innerHTML = `
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Đang xử lý...</span>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+};
+
+/**
+ * Ẩn overlay loading
+ */
+export const hideLoadingOverlay = () => {
+    const loadingOverlay = document.getElementById('modalLoadingOverlay');
+    if (loadingOverlay) {
+        document.body.removeChild(loadingOverlay);
+    }
+};
+
+/**
+ * Hàm hiển thị  SweetAlert theo status
+ * @param {boolean} status - Trạng thái thành công
+ * @param {string} message - Nội dung thông báo
+ */
+export const showAlert = (status, message) => {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: status ? 'success' : 'error',
+            title: status ? 'Thành công' : 'Lỗi',
+            text: message
+        });
+    } else {
+        alert(message);
+    }
+};
+
+/**
+ * Hàm khởi tạo các tooltip
+ * @param {string} selector - Selector của các tooltip
+ */
+export const initializeTooltip = (selector) => {
+    if (typeof bootstrap !== 'undefined' && typeof bootstrap.Tooltip !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(
+            document.querySelectorAll(selector)
+        );
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+}
+
+/**
+ * Hàm tạo Loading Overlay
+ */
+export const initializeLoadingOverlay = (tableSelector) => {
+    if (!document.getElementById('loadingOverlay')) {
+        const loadingHTML = `
+        <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+             style="z-index: 1000; background-color: rgba(255, 255, 255, 0.8); display: none;">
+            <div class="d-flex flex-column align-items-center">
+                <div class="spinner-border text-primary mb-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>Đang tải dữ liệu...</div>
+            </div>
+        </div>`;
+
+        const tableContainer = document.querySelector(tableSelector);
+        if (tableContainer) {
+            tableContainer.style.position = 'relative';
+            const loadingElement = document.createElement('div');
+            loadingElement.innerHTML = loadingHTML;
+            tableContainer.appendChild(loadingElement.firstElementChild);
+        }
+    }
+}
+
+/**
+ * Chuyển đổi định dạng ngày tháng cho input datetime-local
+ * @param {string} dateString Chuỗi ngày tháng
+ * @returns {string} Chuỗi ngày tháng định dạng cho input datetime-local
+ */
+export const formatDateForInput = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+};
+
+/**
+ * Hàm thiết lập Froala Editor
+ * @param {string} editorId - ID của phần tử editor
+ * @param {function} contentChangedCallback - Callback khi nội dung thay đổi
+ */
+export const setupFroalaEditor = (editorId, contentChangedCallback = null, initialContent = null) => {
+    if (typeof FroalaEditor !== 'undefined') {
+        const froalaEditor = new FroalaEditor(`#${editorId}`, {
+            height: 200,
+            placeholderText: 'Nhập mô tả sản phẩm...',
+            charCounterCount: true,
+            toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'fontFamily', 'fontSize', 'color', 'paragraphFormat',
+                'align', 'formatOL', 'formatUL', 'indent', 'outdent', 'insertLink', 'insertImage', 'insertTable',
+                'html', 'clearFormatting', 'undo', 'redo'],
+            events: {
+                'initialized': function () {
+                    // Đặt nội dung ban đầu nếu có
+                    if (initialContent) {
+                        this.html.set(initialContent);
+                    }
+                },
+                'contentChanged': contentChangedCallback
+            }
+        });
+
+        return froalaEditor;
+    }
+    return null;
+};
+
+export const initializeSelect2 = () => {
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+        $('.form-select').each(function () {
+            $(this).select2({
+                minimumResultsForSearch: Infinity,
+                dropdownAutoWidth: true,
+                width: '100%'
+            });
+        });
+
+        $('.select2-results__options').css('max-height', '300px');
+    } else {
+        console.error("jQuery hoặc Select2 chưa được tải!");
+    }
 };

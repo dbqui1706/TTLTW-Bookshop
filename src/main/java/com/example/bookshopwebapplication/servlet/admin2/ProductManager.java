@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(name = "ProductManager", urlPatterns = "/admin2/product-manager")
+@WebServlet(name = "ProductManager", urlPatterns = "/admin/product-manager")
 public class ProductManager extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

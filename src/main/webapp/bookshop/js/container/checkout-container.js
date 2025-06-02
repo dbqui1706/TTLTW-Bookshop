@@ -138,7 +138,7 @@ export class CheckoutContainer {
 
             productItem.innerHTML = `
                 <div class="product-image">
-                    <img src="${item.productImage || '/asset/images/image.png'}" alt="${item.productName}">
+                    <img src="/asset/images/${item.productImage || '/asset/images/image.png'}" alt="${item.productName}">
                 </div>
                 <div class="product-details">
                     <div class="product-name">${item.productName}</div>

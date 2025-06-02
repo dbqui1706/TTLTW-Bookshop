@@ -252,7 +252,6 @@ export class OrderDetailContainer {
 
         items.forEach(item => {
             const row = document.createElement('tr');
-
             // Product cell
             const productCell = document.createElement('td');
             productCell.innerHTML = `
@@ -260,12 +259,17 @@ export class OrderDetailContainer {
                     <img src="/asset/images/${item.productImage}" alt="${item.productName}" class="product-image">
                     <div>
                         <div class="product-title">                                            
-                            <a href="/bookshop/product.html?id=${item.id}" target="_blank" class="text-decoration-none">
+                            <a href="/product?id=${item.id}" target="_blank" class="text-decoration-none">
                                 ${item.productName}
                             </a>
                         </div>
                         <div class="product-author">${item.author}</div>
-                        <button class="btn-review" data-product-id="${item.productId}" data-product-name="${item.productName}" data-product-author="${item.author}" data-product-image="${item.productImage}">Đánh giá</button>
+                        ${
+                this.orderData.order.status === 'delivered'
+                    ? `<button class="btn btn-review" data-product-id="${item.id}" data-product-name="${item.productName}" data-product-author="${item.author}" data-product-image="${item.productImage}">Đánh giá</button>`
+                    : 
+            ''
+            }
                     </div>
                 </div>
             `;
@@ -386,6 +390,7 @@ export class OrderDetailContainer {
      * @param {HTMLElement} button The clicked button
      */
     handleReviewButtonClick(button) {
+        console.log(button)
         const productId = button.dataset.productId;
         const productName = button.dataset.productName;
         const productAuthor = button.dataset.productAuthor;
@@ -396,21 +401,21 @@ export class OrderDetailContainer {
         document.getElementById('reviewOrderId').value = this.orderData.order.id;
         document.getElementById('reviewProductTitle').textContent = productName;
         document.getElementById('reviewProductAuthor').textContent = productAuthor;
-        document.getElementById('reviewProductImage').src = `/uploads/${productImage}`;
+        document.getElementById('reviewProductImage').src = `/asset/images/${productImage}`;
 
         // Clear previous inputs
         document.getElementById('reviewForm').reset();
         document.getElementById('photoPreviewContainer').innerHTML = '';
 
-        // Open modal
-        document.getElementById('reviewModalOverlay').classList.add('visible');
+        // Show review modal
+        document.getElementById('reviewModalOverlay').classList.remove('d-none');
     }
 
     /**
      * Close review modal
      */
     closeReviewModal() {
-        document.getElementById('reviewModalOverlay').classList.remove('visible');
+        document.getElementById('reviewModalOverlay').classList.add('d-none');
     }
 
     /**

@@ -30,11 +30,14 @@ public class UserDao extends AbstractDao<User> implements IUserDao {
     public void update(User user) {
         clearSQL();
         builderSQL.append("UPDATE user SET username = ?, password = ?, fullname = ?, email = ?, ");
-        builderSQL.append("phoneNumber = ?, gender = ?, address = ?, role = ? , is_active_email = ? ");
+        builderSQL.append("phoneNumber = ?, gender = ?, address = ?, role = ? , is_email_verified = ? ");
         builderSQL.append("WHERE id = ?");
+        // Cập nhật thông tin người dùng trong cơ sở dữ liệu
+
         update(builderSQL.toString(), user.getUsername(), user.getPassword(), user.getFullName(),
                 user.getEmail(), user.getPhoneNumber(), user.getGender(), user.getAddress(), user.getRole(),
-                user.getIsActiveEmail(), user.getId()
+                user.getIsActiveEmail() ? 1 : 0
+                , user.getId()
         );
     }
 

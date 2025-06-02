@@ -1,5 +1,5 @@
 import { Order } from '../../models/order.js';
-import { orderService } from '../../services/orderService.js';
+import { orderService } from '../../services/OrderService.js';
 import { EventBus } from '../../core/eventBus.js';
 import { formatDate, showNotification, showConfirmDialog } from '../../core/utils.js';
 import { getToken } from '../../core/storage.js';
@@ -364,7 +364,7 @@ export class OrderComponent {
             const viewButton = e.target.closest('.view-order');
             if (viewButton) {
                 const orderId = viewButton.getAttribute('data-id');
-                window.location.href = `/app/public/order-detail.html?code=${orderId}`
+                window.location.href = `/admin/order-manager/order-detail?code=${orderId}`
             }
 
             const updateButton = e.target.closest('.update-status');

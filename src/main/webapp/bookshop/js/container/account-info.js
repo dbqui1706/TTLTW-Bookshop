@@ -38,16 +38,7 @@ export class AccountInfo {
             }
             loginModal.show();
         }else {
-            const response = await this.userProfileService.getUserProfile();
-            if (response.success) {
-                this.userInfo = response.user;
-            } else {
-                // Hiển thị thông báo lỗi nếu cần
-                if (response.message) {
-                    showToast(response.message, 'error');
-                }
-                return;
-            }
+
             // Thiết lập các trường dữ liệu
             // this.setupDateSelects();
             this.populateUserInfo();

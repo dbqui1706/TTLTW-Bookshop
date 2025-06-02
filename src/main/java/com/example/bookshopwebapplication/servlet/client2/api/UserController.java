@@ -108,7 +108,7 @@ public class UserController extends HttpServlet {
                                     "<script>" +
                                     "  localStorage.setItem('token', '" + token + "');" +
                                     "  localStorage.setItem('user', '" + new Gson().toJson(user) + "');" +
-                                    "  window.location.href = '/bookshop/index.html';" +
+                                    "  window.location.href = '/';" +
                                     "</script>" +
                                     "</body></html>"
                     );
@@ -135,7 +135,7 @@ public class UserController extends HttpServlet {
                 userService.setActiveEmail(email.get());
 
                 request.getSession().removeAttribute("userSignUp");
-                response.sendRedirect(request.getContextPath() + "/signin");
+                response.sendRedirect(request.getContextPath() + "/login");
             } else {
                 response.sendRedirect(request.getContextPath() + "/");
             }

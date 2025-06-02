@@ -1,5 +1,6 @@
 // components/address-modal.js
 import { AddressService } from '../service/address-service.js';
+import {STORAGE_KEYS} from "../constants/index.js";
 
 export class AddressModal {
     constructor() {
@@ -634,7 +635,8 @@ export class AddressModal {
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${localStorage.getItem(STORAGE_KEYS.TOKEN)}`,
                 },
                 body: JSON.stringify(addressData)
             });

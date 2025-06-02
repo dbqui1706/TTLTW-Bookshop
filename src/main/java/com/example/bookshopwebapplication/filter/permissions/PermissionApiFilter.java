@@ -49,7 +49,8 @@ public class PermissionApiFilter implements Filter {
                 "/api/delivery-methods",
                 "/api/payment-methods",
                 "/api/coupons",
-                "/api/payment/vnpay-callback"
+                "/api/payment/vnpay-callback",
+                "/api/auth/active-account"
         ));
 
         // Đọc file cấu hình permission
@@ -104,7 +105,7 @@ public class PermissionApiFilter implements Filter {
         // Lấy token từ request
         String token = StringUtils.extractToken(httpRequest);
         if (token == null) {
-            sendUnauthorizedResponse(httpResponse, "Bạn chưa đăng nhập");
+            ((HttpServletResponse) response).sendRedirect(((HttpServletRequest) request).getContextPath() + "/404");
             return;
         }
 
@@ -112,7 +113,7 @@ public class PermissionApiFilter implements Filter {
         UserSessionDao sessionDAO = new UserSessionDao();
         UserSession userSession = sessionDAO.getUserIdFromSession(token);
         if (userSession == null) {
-            sendUnauthorizedResponse(httpResponse, "Phiên làm việc hết hạn");
+            ((HttpServletResponse) response).sendRedirect(((HttpServletRequest) request).getContextPath() + "/404");
             return;
         }
 

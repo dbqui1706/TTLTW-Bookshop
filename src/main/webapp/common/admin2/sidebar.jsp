@@ -9,67 +9,91 @@
 
     <ul class="components">
         <li>
-            <a href="${pageContext.request.contextPath}/admin2" class="${param.active == 'HOME' ? 'active' : ''}">
+            <a href="index.html" class="">
                 <i class="bi bi-speedometer2"></i>
                 <span>Trang Chủ</span>
             </a>
         </li>
         <li>
             <a href="#productSubmenu" data-bs-toggle="collapse" aria-expanded="false"
-               class="dropdown-toggle ${param.active == 'PRODUCT' || param.active == 'CATEGORY' ?
-                    'active': ''}">
+               class="dropdown-toggle ${param.sidebar.split("-")[0] == 'PRODUCT' ? 'active' : ''}">
                 <i class="bi bi-box-seam"></i>
                 <span>Sản Phẩm</span>
             </a>
-            <ul class="collapse submenu submenu" id="productSubmenu">
+            <ul id="productSubmenu"
+                class="collapse submenu ${param.sidebar.split("-")[0] == 'PRODUCT' ? 'show' : ''}">
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/product-manager" class="${param.active == 'PRODUCT' ? 'active' : ''}">
+                    <a href="/admin/product-manager"
+                       class="${param.sidebar == 'PRODUCT-MANAGER' ? 'active' : ''}">
                         Danh Sách Sản Phẩm
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/category-manager" class="${param.active == 'CATEGORY' ? 'active' : ''}">
+                    <a href="product-categories.html"
+                       class="${param.sidebar == 'PRODUCT-CATEGORIES' ? 'active' : ''}">
                         Danh Mục Sản Phẩm
                     </a>
                 </li>
             </ul>
         </li>
         <li>
-            <a href="#orderSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                <i class="bi bi-cart3"></i>
-                <span>Đơn Hàng</span>
-                <span class="badge bg-danger rounded-pill">5</span>
+            <a href="#inventorySubmenu" data-bs-toggle="collapse" aria-expanded="true"
+               class="dropdown-toggle ${param.sidebar.split("-")[0] == 'INVENTORY' ? 'active' : ''}">
+                <i class="bi bi-stack"></i>
+                <span>Quản Lý Kho</span>
             </a>
-            <ul class="collapse submenu" id="orderSubmenu">
+            <ul id="inventorySubmenu"
+                class="collapse submenu ${param.sidebar.split("-")[0] == 'INVENTORY' ? 'show' : ''}">
                 <li>
-                    <a href="#">Tất Cả Đơn Hàng</a>
+                    <a href="/admin/inventory-manager/dashboard"
+                       class="${param.sidebar == 'INVENTORY-DASHBOARD' ? 'active' : ''}">
+                        Tổng Quan Tồn Kho
+                    </a>
                 </li>
                 <li>
-                    <a href="#">Đơn Hàng Mới</a>
+                    <a href="/admin/inventory-manager/management"
+                       class="${param.sidebar == 'INVENTORY-MANAGEMENT' ? 'active' : ''}">
+                        Nhập/Xuất Kho
+                    </a>
                 </li>
                 <li>
-                    <a href="#">Đơn Đang Xử Lý</a>
-                </li>
-                <li>
-                    <a href="#">Đơn Đã Hoàn Thành</a>
+                    <a href="/admin/inventory-manager/report"
+                       class="${param.sidebar == 'INVENTORY-REPORT' ? 'active' : ''}">
+                        Báo Cáo Thống Kê
+                    </a>
                 </li>
             </ul>
         </li>
         <li>
-            <a href="#customerSubmenu" data-bs-toggle="collapse" aria-expanded="false"
-               class="dropdown-toggle ${param.active == 'USER' || param.active == 'FEEDBACK' ?
-                    'active': ''}">
+            <a href="#orderSubmenu" data-bs-toggle="collapse" aria-expanded="false"
+               class="dropdown-toggle ${param.sidebar.split("-")[0] == 'ORDER' ? 'active' : ''}">
+                <i class="bi bi-cart3"></i>
+                <span>Đơn Hàng</span>
+                <span class="badge bg-danger rounded-pill">5</span>
+            </a>
+            <ul id="orderSubmenu"
+                class="collapse submenu ${param.sidebar.split("-")[0] == 'ORDER' ? 'show' : ''}">
+                <li>
+                    <a href="/admin/order-manager/orders"
+                       class="${param.sidebar == 'ORDER-ORDERS' ? 'active' : ''}">
+                        Tất Cả Đơn Hàng
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#customerSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="">
                 <i class="bi bi-people"></i>
                 <span>Khách Hàng</span>
             </a>
             <ul class="collapse submenu" id="customerSubmenu">
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/user-manager" class="${param.active == 'USER' ? 'active' : ''}">
+                    <a href="#" class="">
                         Danh Sách Khách Hàng
                     </a>
                 </li>
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin2/feedback-manager" class="${param.active == 'FEEDBACK' ? 'active' : ''}">
+                    <a href="#" class="">
                         Phản Hồi Khách Hàng
                     </a>
                 </li>
@@ -104,13 +128,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
-                <i class="bi bi-person-badge"></i>
-                <span>Quản Lý Người Dùng</span>
-            </a>
-        </li>
-        <li>
-            <a href="#">
+            <a href="/admin/permissions" class="${param.sidebar == 'PERMISSIONS' ? 'active' : ''}">
                 <i class="bi bi-shield-lock"></i>
                 <span>Phân Quyền</span>
             </a>

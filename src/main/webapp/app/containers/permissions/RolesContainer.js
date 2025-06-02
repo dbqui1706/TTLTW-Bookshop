@@ -39,7 +39,7 @@ export class RolesContainer {
      */
     async loadTemplate() {
         try {
-            const templatePath = '../templates/permissions/roles.html';
+            const templatePath = '../app/templates/permissions/roles.html';
             const response = await fetch(templatePath);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

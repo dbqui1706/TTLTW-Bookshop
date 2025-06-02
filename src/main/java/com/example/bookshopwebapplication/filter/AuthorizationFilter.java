@@ -41,7 +41,7 @@ public class AuthorizationFilter implements Filter {
                 filterChain.doFilter(request, response);
             }
         }else {
-            response.sendRedirect(loginURI);
+            response.sendRedirect(request.getContextPath() + "/404");
         }
     }
 }

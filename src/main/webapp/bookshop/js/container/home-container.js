@@ -353,6 +353,8 @@ export class ProductContainer {
             return count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
         };
 
+        const price = product.price - (product.price * product.discount / 100);
+
         return `
         <div class="col">
             <div class="book-card" onclick="window.location.href='/product?id=${product.id}'">
@@ -362,7 +364,7 @@ export class ProductContainer {
                     ${authenticBadge}
                     <h5 class="book-title">${product.name}</h5>
                     <div class="book-author">${product.author}</div>
-                    <div class="book-price">${formatPrice(product.price - (product.price * product.discount / 100))}đ ${discountBadge}</div>
+                    <div class="book-price">${formatPrice(price.toFixed(0))}đ ${discountBadge}</div>
                     <div class="rating">${renderStars(product.rating)}</div>
                     <div class="sold-count">Đã bán ${formatSoldCount(product.totalBuy)}</div>
                 </div>

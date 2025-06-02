@@ -1,8 +1,8 @@
-import { ProductDetailService } from '../service/product-detail-service.js';
-import { UserService } from '../service/user-service.js';
-import { CartService } from '../service/cart-service.js';
-import { Utils } from '../utils/index.js';
-import { updateCartFromServer } from '../app/header.js';
+import {ProductDetailService} from '../service/product-detail-service.js';
+import {UserService} from '../service/user-service.js';
+import {CartService} from '../service/cart-service.js';
+import {Utils} from '../utils/index.js';
+import {updateCartFromServer} from '../app/header.js';
 
 
 export class ProductDetailContainer {
@@ -181,10 +181,12 @@ export class ProductDetailContainer {
         // Cập nhật tiêu đề
         document.title = this.product.name;
         this.titleElement.textContent = this.product.name;
-
+        console.log(this.product)
         // Cập nhật hình ảnh
-        // this.mainImage.src = this.product.images[0];
-        // this.renderThumbnails(this.product.images);
+        this.mainImage.src = "/asset/images/" + this.product.imageName;
+        this.renderThumbnails([
+            this.mainImage.src, this.mainImage.src, this.mainImage.src
+        ]);
 
         // Cập nhập thông tin chi tiết 
         this.authorElement.textContent = this.product.author;
@@ -529,9 +531,9 @@ export class ProductDetailContainer {
                 <div class="reviewer-info">
                     <div class="reviewer-avatar">
                         ${review.avatar
-                ? `<img src="https://avatar.iran.liara.run/public" alt="${review.userName}">`
-                : `<span class="avatar-placeholder">${Utils.getInitials(review.userName)}</span>`
-            }
+            ? `<img src="https://avatar.iran.liara.run/public" alt="${review.userName}">`
+            : `<span class="avatar-placeholder">${Utils.getInitials(review.userName)}</span>`
+        }
                     </div>
                     <div class="reviewer-details">
                         <div class="reviewer-name">${review.userName}</div>
@@ -604,6 +606,7 @@ export class ProductDetailContainer {
             message.style.display = 'none';
         }, 2500);
     }
+
     async updateCartCount() {
         // Cập nhật số lượng sản phẩm trong giỏ hàng
         const cartCountElement = document.getElementById('cart-count');

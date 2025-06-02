@@ -3,7 +3,6 @@ import { OrderDetail } from '../models/orderDetail.js';
 import { EventBus } from '../core/eventBus.js';
 import { api } from '../core/api.js';
 import { formatDate } from '../core/utils.js';
-import { getToken } from '../core/storage.js';
 
 /**
  * Class OrderService - Service xử lý logic liên quan đến đơn hàng

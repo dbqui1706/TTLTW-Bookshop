@@ -33,7 +33,8 @@ public class AuthFilter implements Filter {
             "/api/coupons",
             "/api/payment/vnpay-callback",
             "/login-gg",
-            "/login-fb"
+            "/login-fb",
+            "/api/auth/active-account"
     );
 
     @Override
@@ -71,11 +72,9 @@ public class AuthFilter implements Filter {
 
         if (token == null) {
             System.out.println("AuthFilter: No token found in request");
-            JsonUtils.out(
-                    httpResponse,
-                    new Gson().toJson(Map.of("error", "Vui lòng đăng nhập")),
-                    HttpServletResponse.SC_UNAUTHORIZED
-            );
+            HttpServletResponse resp = (HttpServletResponse) response;
+            HttpServletRequest req = (HttpServletRequest) httpRequest;
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 

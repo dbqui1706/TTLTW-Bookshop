@@ -1,5 +1,5 @@
-import {  OrderComponent } from '../../components/orders/OrderComponent.js';
-import { showNotification } from '../../core/utils.js';
+import {OrderComponent} from '../../components/orders/OrderComponent.js';
+import {showNotification} from '../../core/utils.js';
 
 /**
  * Class OrderContainer - Container điều phối cho phần quản lý đơn hàng
@@ -39,7 +39,7 @@ export class OrderContainer {
      */
     async loadTemplate() {
         try {
-           
+
         } catch (error) {
             console.error('Error loading order template:', error);
             throw error;

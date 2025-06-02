@@ -205,7 +205,7 @@ export class CartContainer {
                     </div>
                     <div class="item-content">
                         <div class="item-image">
-                            <img src="${item.productImage}" alt="${item.productName}">
+                            <img src="/asset/images/${item.productImage}" alt="${item.productName}">
                         </div>
                         <div class="item-details">
                             <div class="item-title">

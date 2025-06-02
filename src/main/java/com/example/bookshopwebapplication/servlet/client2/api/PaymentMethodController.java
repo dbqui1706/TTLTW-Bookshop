@@ -88,7 +88,7 @@ public class PaymentMethodController extends HttpServlet {
                 // Thanh toán thành công - cập nhật trạng thái đơn hàng trong DB
                boolean success = orderService2.updateVNPAYTransactionStatus(vnpTxnRef, vnpParams);
             }  // Chuyển hướng đến trang thành công
-            response.sendRedirect("http://127.0.0.1:5500/client/payment-status.html?orderCode="
+            response.sendRedirect("/payment-status?orderCode="
                     + vnpTxnRef + "&vnp_ResponseCode=" + vnpResponseCode + "&vnp_Amount=" + vnpParams.get("vnp_Amount"));
         } catch (Exception e) {
             e.printStackTrace();

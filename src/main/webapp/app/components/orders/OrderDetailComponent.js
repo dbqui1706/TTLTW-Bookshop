@@ -1,5 +1,5 @@
 import { Order } from '../../models/order.js';
-import { orderService } from '../../services/orderService.js';
+import { orderService } from '../../services/OrderService.js';
 import { EventBus } from '../../core/eventBus.js';
 import { formatDate, showNotification, showConfirmDialog } from '../../core/utils.js';
 import { getToken } from '../../core/storage.js';
@@ -398,7 +398,9 @@ export class OrderDetailComponent {
             'Quay lại danh sách đơn hàng?',
             "Các thay đổi chưa lưu sẽ bị mất!",
             'Đồng ý',
-            () => {window.location.href = '/app/public/orders.html';}
+            () => {
+                window.history.back();
+            }
         );
     }
 

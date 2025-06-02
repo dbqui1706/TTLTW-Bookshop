@@ -443,7 +443,7 @@ export class OrdersContainer {
         detailButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const orderId = button.getAttribute('data-order-id');
-                window.location.href = `/bookshop/order-detail.html?code=${orderId}`; // Chuyển đến trang chi tiết đơn hàng
+                window.location.href = `/order-detail?code=${orderId}`; // Chuyển đến trang chi tiết đơn hàng
             });
         });
 
