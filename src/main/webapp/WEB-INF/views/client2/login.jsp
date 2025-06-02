@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/bookshop/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/bookshop/css/login.css">
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -77,6 +79,12 @@
                                             <input type="checkbox" class="form-check-input" id="rememberMe">
                                             <label class="form-check-label" for="rememberMe">Ghi nhớ đăng
                                                 nhập</label>
+                                        </div>
+
+                                        <!-- reCAPTCHA cho form đăng nhập -->
+                                        <div class="mb-3">
+                                            <div class="g-recaptcha" data-sitekey="6LdiJlMrAAAAALhL5Uka6_kUv9wXv1WlP7xR5MS6" id="login-recaptcha"></div>
+                                            <div class="invalid-feedback" id="login-recaptcha-error"></div>
                                         </div>
 
                                         <div class="d-grid gap-2 mb-4">

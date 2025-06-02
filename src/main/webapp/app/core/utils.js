@@ -299,29 +299,29 @@ export const setupSelect2 = (selectId, parentSelector) => {
 /**
  * Hiển thị overlay loading
  */
-export const showLoadingOverlay = () => {
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
-    loadingOverlay.id = 'modalLoadingOverlay';
-    loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    loadingOverlay.style.zIndex = '9999';
-    loadingOverlay.innerHTML = `
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Đang xử lý...</span>
-        </div>
-    `;
-    document.body.appendChild(loadingOverlay);
-};
+// export const showLoadingOverlay = () => {
+//     const loadingOverlay = document.createElement('div');
+//     loadingOverlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+//     loadingOverlay.id = 'modalLoadingOverlay';
+//     loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+//     loadingOverlay.style.zIndex = '9999';
+//     loadingOverlay.innerHTML = `
+//         <div class="spinner-border text-light" role="status">
+//             <span class="visually-hidden">Đang xử lý...</span>
+//         </div>
+//     `;
+//     document.body.appendChild(loadingOverlay);
+// };
 
 /**
  * Ẩn overlay loading
  */
-export const hideLoadingOverlay = () => {
-    const loadingOverlay = document.getElementById('modalLoadingOverlay');
-    if (loadingOverlay) {
-        document.body.removeChild(loadingOverlay);
-    }
-};
+// export const hideLoadingOverlay = () => {
+//     const loadingOverlay = document.getElementById('modalLoadingOverlay');
+//     if (loadingOverlay) {
+//         document.body.removeChild(loadingOverlay);
+//     }
+// };
 
 /**
  * Hàm hiển thị  SweetAlert theo status
@@ -358,28 +358,28 @@ export const initializeTooltip = (selector) => {
 /**
  * Hàm tạo Loading Overlay
  */
-export const initializeLoadingOverlay = (tableSelector) => {
-    if (!document.getElementById('loadingOverlay')) {
-        const loadingHTML = `
-        <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
-             style="z-index: 1000; background-color: rgba(255, 255, 255, 0.8); display: none;">
-            <div class="d-flex flex-column align-items-center">
-                <div class="spinner-border text-primary mb-2" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <div>Đang tải dữ liệu...</div>
-            </div>
-        </div>`;
-
-        const tableContainer = document.querySelector(tableSelector);
-        if (tableContainer) {
-            tableContainer.style.position = 'relative';
-            const loadingElement = document.createElement('div');
-            loadingElement.innerHTML = loadingHTML;
-            tableContainer.appendChild(loadingElement.firstElementChild);
-        }
-    }
-}
+// export const initializeLoadingOverlay = (tableSelector) => {
+//     if (!document.getElementById('loadingOverlay')) {
+//         const loadingHTML = `
+//         <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+//              style="z-index: 1000; background-color: rgba(255, 255, 255, 0.8); display: none;">
+//             <div class="d-flex flex-column align-items-center">
+//                 <div class="spinner-border text-primary mb-2" role="status">
+//                     <span class="visually-hidden">Loading...</span>
+//                 </div>
+//                 <div>Đang tải dữ liệu...</div>
+//             </div>
+//         </div>`;
+//
+//         const tableContainer = document.querySelector(tableSelector);
+//         if (tableContainer) {
+//             tableContainer.style.position = 'relative';
+//             const loadingElement = document.createElement('div');
+//             loadingElement.innerHTML = loadingHTML;
+//             tableContainer.appendChild(loadingElement.firstElementChild);
+//         }
+//     }
+// }
 
 /**
  * Chuyển đổi định dạng ngày tháng cho input datetime-local

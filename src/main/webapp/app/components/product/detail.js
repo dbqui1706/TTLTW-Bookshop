@@ -18,7 +18,7 @@ export const renderDetailProduct = (productDetails) => {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-4 text-center">
-                                <img id="viewProductImage" src="${productDetails.imageName || 'https://via.placeholder.com/300x300'}" 
+                                <img id="viewProductImage" src="/asset/images/${productDetails.imageName || 'https://via.placeholder.com/300x300'}" 
                                     alt="${productDetails.name}" class="img-fluid rounded mb-3" style="max-height: 200px" />
                                 <div class="mb-3 p-2">
                                     <span class="badge bg-primary" id="viewProductCategory">${productDetails.categoryName}</span>

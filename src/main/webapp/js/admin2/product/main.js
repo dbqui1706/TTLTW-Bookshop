@@ -38,9 +38,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         const tableContainer = document.querySelector('.table-responsive');
         if (tableContainer) {
             tableContainer.style.position = 'relative';
-            const loadingElement = document.createElement('div');
-            loadingElement.innerHTML = loadingHTML;
-            tableContainer.appendChild(loadingElement.firstElementChild);
+            // const loadingElement = document.createElement('div');
+            // loadingElement.innerHTML = loadingHTML;
+            // tableContainer.appendChild(loadingElement.firstElementChild);
         }
     }
 

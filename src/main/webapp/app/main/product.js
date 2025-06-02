@@ -2,7 +2,7 @@
 // main.js - File chính kết nối tất cả module cho trang quản lý sản phẩm
 // =======================================================================
 import { getCategory } from '../services/ProductService.js'
-import { initializeLoadingOverlay, initializeSelect2 } from "../core/utils.js";
+import {  initializeSelect2 } from "../core/utils.js";
 import {
     filterInitialize,
     loadProducts,
@@ -38,9 +38,6 @@ export const sortOptionMap = {
 };
 
 document.addEventListener("DOMContentLoaded", async function () {
-
-    // Tạo loading overlay nếu chưa có
-    initializeLoadingOverlay('.table-responsive');
 
     // Lấy và hiển thị danh mục
     const categories = await getCategory();

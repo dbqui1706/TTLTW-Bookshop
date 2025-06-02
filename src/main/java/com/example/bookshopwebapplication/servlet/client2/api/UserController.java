@@ -23,7 +23,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -172,6 +177,19 @@ public class UserController extends HttpServlet {
             boolean isMultipart = ServletFileUpload.isMultipartContent(request);
             if (!isMultipart) return;
             LoginDTO loginDTO = MultiPart.get(request, LoginDTO.class);
+
+            // Validate reCAPTCHA
+            if (loginDTO.getRecaptcha() == null
+                    || loginDTO.getRecaptcha().isEmpty()
+            || !verifyRecaptcha(loginDTO.getRecaptcha())) {
+                JsonUtils.out(
+                        response,
+                        "reCAPTCHA is required",
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+
             Optional<UserDto> user = userService.login(loginDTO.getEmail(), loginDTO.getPassword());
 
             // Check if user is present
@@ -285,7 +303,34 @@ public class UserController extends HttpServlet {
             );
         }
     }
+    private boolean verifyRecaptcha(String recaptchaResponse) {
+        String secretKey = "6LdiJlMrAAAAAIyAy58tJVagNSkEVlWKlqxIPSme";
+        String verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
 
+        try {
+            URL url = new URL(verifyUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+
+            String postParams = "secret=" + secretKey + "&response=" + recaptchaResponse;
+
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.writeBytes(postParams);
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
     private void logout(HttpServletRequest request, HttpServletResponse response) {
     }
 

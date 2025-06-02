@@ -14,8 +14,7 @@ import {
     setupFroalaEditor,
     formatDateForInput,
     setupSelect2,
-    showLoadingOverlay,
-    hideLoadingOverlay,
+    // hideLoadingOverlay,
     showAlert
 } from '../../core/utils.js';
 
@@ -229,8 +228,6 @@ const handleAddProduct = async (modal) => {
     }
 
     try {
-        // Hiển thị overlay loading
-        showLoadingOverlay();
 
         // Lấy nội dung từ Froala Editor và cập nhật vào hidden input
         const editorContent = FroalaEditor.INSTANCES[0].html.get();
@@ -275,7 +272,6 @@ const handleAddProduct = async (modal) => {
         showAlert('error', 'Đã xảy ra lỗi khi thêm sản phẩm!');
     } finally {
         // Ẩn overlay loading
-        hideLoadingOverlay();
     }
 };
 
@@ -294,8 +290,6 @@ const handleUpdateProduct = async (productId, modal) => {
         return;
     }
 
-    // Hiển thị loading
-    showLoadingOverlay();
 
     try {
         // Tạo FormData từ form
@@ -341,7 +335,7 @@ const handleUpdateProduct = async (productId, modal) => {
         showAlert('error', 'Đã xảy ra lỗi khi cập nhật sản phẩm!');
     } finally {
         // Ẩn loading dù thành công hay thất bại
-        hideLoadingOverlay();
+        // hideLoadingOverlay();
     }
 };
 
@@ -352,7 +346,6 @@ const handleUpdateProduct = async (productId, modal) => {
  */
 const handleDeleteProduct = async (productId, modal) => {
     // Hiển thị loading
-    showLoadingOverlay();
 
     try {
         // Gọi API xóa sản phẩm
@@ -383,6 +376,5 @@ const handleDeleteProduct = async (productId, modal) => {
     
     finally {
         // Ẩn loading dù thành công hay thất bại
-        hideLoadingOverlay();
     }
 };

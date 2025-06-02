@@ -1,6 +1,7 @@
-import { SWAL_STYLE } from '../constants/login-contats.js';
-import { UserService } from '../service/user-service.js';
-import { CartService } from '../service/cart-service.js';
+import {SWAL_STYLE} from '../constants/login-contats.js';
+import {UserService} from '../service/user-service.js';
+import {CartService} from '../service/cart-service.js';
+
 export class LoginContainer {
     constructor() {
         this.userService = new UserService();
@@ -39,6 +40,10 @@ export class LoginContainer {
         // Local storage
         this.cart = JSON.parse(localStorage.getItem('cart')) || [];
         this.user = null;
+
+        // Captcha
+        this.loginRecaptcha = null;
+
     }
 
     init() {
@@ -62,6 +67,7 @@ export class LoginContainer {
             document.getElementById('show-register')?.click();
         }
     }
+
     initElements() {
         // Forms
         this.loginFormContainer = document.getElementById('login-form');
@@ -112,6 +118,8 @@ export class LoginContainer {
         // Social buttons
         this.googleLoginBtn = document.querySelector('.social-btn:nth-child(2)');
         this.facebookLoginBtn = document.querySelector('.social-btn:nth-child(1)');
+
+        this.loginRecaptcha = document.getElementById('login-recaptcha');
     }
 
     bindEvents() {
@@ -147,6 +155,40 @@ export class LoginContainer {
 
         if (this.facebookLoginBtn) {
             this.facebookLoginBtn.addEventListener('click', this.handleFacebookLogin.bind(this));
+        }
+
+        // Render reCAPTCHA khi trang load xong
+        window.addEventListener('load', () => {
+            this.initRecaptcha();
+        });
+    }
+
+    renderRecaptchaWidgets() {
+        try {
+            // Render login reCAPTCHA
+            const loginElement = document.getElementById('login-recaptcha');
+            if (loginElement && !loginElement.hasChildNodes()) {
+                this.loginRecaptchaWidgetId = grecaptcha.render('login-recaptcha', {
+                    'sitekey': '6LdiJlMrAAAAALhL5Uka6_kUv9wXv1WlP7xR5MS6', // Thay bằng site key thật của bạn
+                    'theme': 'light',
+                    'size': 'normal'
+                });
+            }
+        } catch (error) {
+            console.error('Error rendering reCAPTCHA:', error);
+        }
+    }
+
+// Thêm method để khởi tạo reCAPTCHA
+    initRecaptcha() {
+        // Đợi grecaptcha sẵn sàng
+        if (typeof grecaptcha !== 'undefined' && grecaptcha.render) {
+            this.renderRecaptchaWidgets();
+        } else {
+            // Retry sau 500ms nếu grecaptcha chưa sẵn sàng
+            setTimeout(() => {
+                this.initRecaptcha();
+            }, 500);
         }
     }
 
@@ -186,6 +228,13 @@ export class LoginContainer {
         this.sidebarDescription.textContent = 'Khám phá thế giới sách cùng BookStore';
 
         this.fadeInForm(this.loginFormContainer);
+
+        // Reset reCAPTCHA khi chuyển form
+        setTimeout(() => {
+            if (this.loginRecaptchaWidgetId !== null) {
+                grecaptcha.reset(this.loginRecaptchaWidgetId);
+            }
+        }, 100);
     }
 
     // Hiệu ứng fade in cho form
@@ -281,6 +330,12 @@ export class LoginContainer {
             formData.append('email', this.loginEmail.value);
             formData.append('password', CryptoJS.MD5(this.loginPassword.value).toString().toUpperCase());
 
+            // FIX: Lấy reCAPTCHA response đúng cách
+            if (this.loginRecaptchaWidgetId !== null) {
+                const recaptchaResponse = grecaptcha.getResponse(this.loginRecaptchaWidgetId);
+                formData.append('recaptcha', recaptchaResponse);
+            }
+
             const response = await this.userService.login(formData);
 
             if (response.success) {
@@ -300,10 +355,44 @@ export class LoginContainer {
                 window.location.href = '/';
             } else {
                 this.showNotification(response.message || 'Đăng nhập thất bại', 'error');
+                // Reset reCAPTCHA on failure
+                grecaptcha.reset(this.getRecaptchaWidgetId('login-recaptcha'));
             }
         } catch (error) {
             console.error('Lỗi đăng nhập:', error);
             this.showNotification('Có lỗi xảy ra khi đăng nhập', 'error');
+            // Reset reCAPTCHA on error
+            if (this.loginRecaptchaWidgetId !== null) {
+                grecaptcha.reset(this.loginRecaptchaWidgetId);
+            }
+        }
+    }
+
+    // Helper methods cho reCAPTCHA
+    getRecaptchaWidgetId(elementId) {
+        const element = document.getElementById(elementId);
+        return element ? element.getAttribute('data-widget-id') : null;
+    }
+
+    showRecaptchaError(recaptchaId, message) {
+        const recaptchaElement = document.getElementById(recaptchaId);
+        const errorElement = document.getElementById(recaptchaId + '-error');
+
+        if (recaptchaElement && errorElement) {
+            recaptchaElement.classList.add('recaptcha-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    }
+
+    clearRecaptchaError(recaptchaId) {
+        const recaptchaElement = document.getElementById(recaptchaId);
+        const errorElement = document.getElementById(recaptchaId + '-error');
+
+        if (recaptchaElement && errorElement) {
+            recaptchaElement.classList.remove('recaptcha-error');
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
         }
     }
 
@@ -350,7 +439,7 @@ export class LoginContainer {
                     showConfirmButton: true,
                     confirmButtonText: 'Đã hiểu',
                     confirmButtonColor: '#4caf50',
-                    backdrop: `rgba(0,0,0,0.4)`,
+                    backdrop: `rgba(0, 0, 0, 0.4)`,
                     allowOutsideClick: false,
                     showClass: {
                         popup: 'animate__animated animate__fadeInDown'
@@ -359,7 +448,10 @@ export class LoginContainer {
                         popup: 'animate__animated animate__fadeOutUp'
                     }
                 }).then(() => {
-                    this.switchToLogin({ preventDefault: () => { } });
+                    this.switchToLogin({
+                        preventDefault: () => {
+                        }
+                    });
                 });
             } else {
                 this.showNotification(response.message || 'Đăng ký thất bại', 'error');
@@ -385,7 +477,7 @@ export class LoginContainer {
             // const response = await this.userService.forgotPassword(email);
 
             // Giả lập response thành công
-            const response = { success: true };
+            const response = {success: true};
 
             if (response.success) {
                 this.showNotification('Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn!', 'success');
@@ -395,7 +487,10 @@ export class LoginContainer {
 
                 // Chuyển về form đăng nhập
                 setTimeout(() => {
-                    this.switchToLogin({ preventDefault: () => { } });
+                    this.switchToLogin({
+                        preventDefault: () => {
+                        }
+                    });
                 }, 2000);
             } else {
                 this.showNotification(response.message || 'Yêu cầu đặt lại mật khẩu thất bại', 'error');
@@ -465,6 +560,17 @@ export class LoginContainer {
             isValid = false;
         } else {
             this.clearInputError(this.loginPassword);
+        }
+
+        // Validate reCAPTCHA - FIX: Sử dụng widget ID đã lưu
+        if (this.loginRecaptchaWidgetId !== null) {
+            const recaptchaResponse = grecaptcha.getResponse(this.loginRecaptchaWidgetId);
+            if (!recaptchaResponse) {
+                this.showRecaptchaError('login-recaptcha', 'Vui lòng xác thực reCAPTCHA');
+                isValid = false;
+            } else {
+                this.clearRecaptchaError('login-recaptcha');
+            }
         }
 
         return isValid;

@@ -209,9 +209,9 @@ export const deleteProduct = async (productId) => {
 export const exportExcelProduct = async () => {
     try {
         // Hiển thị loading nếu có
-        if (typeof showLoadingOverlay === 'function') {
-            showLoadingOverlay();
-        }
+        // if (typeof showLoadingOverlay === 'function') {
+        //     showLoadingOverlay();
+        // }
 
         const response = await fetch(`${API_URLS.EXPORT_PRODUCT}`, {
             method: "GET",
@@ -224,7 +224,7 @@ export const exportExcelProduct = async () => {
 
         // Ẩn loading khi đã nhận được response
         if (typeof hideLoadingOverlay === 'function') {
-            hideLoadingOverlay();
+            // hideLoadingOverlay();
         }
 
         // Kiểm tra response

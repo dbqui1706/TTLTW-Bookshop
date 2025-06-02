@@ -49,7 +49,7 @@ export const renderProductTable = (products) => {
         row.innerHTML = `
         <td>#${product.id}</td>
         <td>
-            <img src="${product.imageName ? product.imageName : 'https://via.placeholder.com/300x300'}" 
+            <img src="${product.imageName ? "/asset/images/" + product.imageName : 'https://via.placeholder.com/300x300'}" 
                  alt="${product.name}" width="50" height="50" class="rounded"/>
         </td>
         <td>${product.name}</td>
