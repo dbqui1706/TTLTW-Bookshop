@@ -34,7 +34,8 @@ public class AuthFilter implements Filter {
             "/api/payment/vnpay-callback",
             "/login-gg",
             "/login-fb",
-            "/api/auth/active-account"
+            "/api/auth/active-account",
+            "/api/auth/verify-reset-token"
     );
 
     @Override

@@ -44,6 +44,7 @@ import java.util.UUID;
                 "/api/auth/forgot-password",
                 "/api/auth/reset-password",
                 "/api/auth/change-password",
+                "/api/auth/verify-reset-token",
                 "/login-gg",
                 "/login-fb",
         }
@@ -66,15 +67,16 @@ public class UserController extends HttpServlet {
             case "/api/auth/forgot-password":
                 forgotPassword(request, response);
                 break;
-            case "/api/auth/reset-password":
-                resetPassword(request, response);
-                break;
             case "/api/auth/change-password":
                 changePassword(request, response);
                 break;
             case "/login-gg", "/login-fb":
                 loginApiProvider(request, response);
                 break;
+            case "/api/auth/verify-reset-token":
+                verifyResetToken(request, response);
+                break;
+
             default:
                 JsonUtils.out(
                         response,
@@ -83,11 +85,55 @@ public class UserController extends HttpServlet {
                 );
         }
     }
+
+    private void verifyResetToken(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String email = request.getParameter("email");
+            String code = request.getParameter("code");
+
+            if (email == null || code == null || email.isEmpty() || code.isEmpty()) {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", false, "message", "Thiếu thông tin xác thực"),
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+
+            // Verify token với EmailUtils
+            boolean isValid = EmailUtils.isValidVerificationCode(email, code);
+
+            if (isValid) {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", true, "message", "Token hợp lệ"),
+                        HttpServletResponse.SC_OK
+                );
+            } else {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", false, "message", "Token không hợp lệ hoặc đã hết hạn"),
+                        HttpServletResponse.SC_UNAUTHORIZED
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JsonUtils.out(
+                    response,
+                    Map.of("success", false, "message", "Có lỗi xảy ra: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     private void loginApiProvider(HttpServletRequest request, HttpServletResponse response) {
         try {
             String code = request.getParameter("code");
             if (code == null || code.isEmpty()) {
-                request.getRequestDispatcher("/bookshop/login.html").forward(request, response);
+                response.sendRedirect(
+                        request.getContextPath() + "/login"
+                );
             } else {
                 OauthUser oauthUser = request.getRequestURI().equals("/login-gg")
                         ? OauthLoginService.login(EOAuthProvider.GOOGLE.getName(), code).get()
@@ -99,7 +145,7 @@ public class UserController extends HttpServlet {
                     Optional<UserDto> userFromServer = userService.getById(insertOauth.get().getUserID());
                     request.getSession().setAttribute("currentUser", userFromServer.get());
 
-                    UserDto user= userFromServer.get();
+                    UserDto user = userFromServer.get();
                     user.setPassword(null);
                     user.setCreatedAt(null);
                     user.setUpdatedAt(null);
@@ -119,7 +165,7 @@ public class UserController extends HttpServlet {
                     );
                 }
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             JsonUtils.out(
                     response,
                     e.getMessage(),
@@ -163,6 +209,9 @@ public class UserController extends HttpServlet {
             case "/api/auth/register":
                 register(request, response);
                 break;
+            case "/api/auth/reset-password":
+                resetPassword(request, response);
+                break;
             default:
                 JsonUtils.out(
                         response,
@@ -181,7 +230,7 @@ public class UserController extends HttpServlet {
             // Validate reCAPTCHA
             if (loginDTO.getRecaptcha() == null
                     || loginDTO.getRecaptcha().isEmpty()
-            || !verifyRecaptcha(loginDTO.getRecaptcha())) {
+                    || !verifyRecaptcha(loginDTO.getRecaptcha())) {
                 JsonUtils.out(
                         response,
                         "reCAPTCHA is required",
@@ -303,6 +352,7 @@ public class UserController extends HttpServlet {
             );
         }
     }
+
     private boolean verifyRecaptcha(String recaptchaResponse) {
         String secretKey = "6LdiJlMrAAAAAIyAy58tJVagNSkEVlWKlqxIPSme";
         String verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
@@ -331,13 +381,106 @@ public class UserController extends HttpServlet {
 
         return false;
     }
+
     private void logout(HttpServletRequest request, HttpServletResponse response) {
     }
 
     private void forgotPassword(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String email = request.getParameter("email");
+            if (email == null || email.isEmpty()) {
+                JsonUtils.out(
+                        response,
+                        "Email is required",
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+
+            // Kiểm tra xem email có tồn tại trong hệ thống không
+            Optional<UserDto> user = userService.getByEmail(email);
+            if (user.isEmpty()) {
+                JsonUtils.out(
+                        response,
+                        "Email not found",
+                        HttpServletResponse.SC_NOT_FOUND
+                );
+                return;
+            }
+
+            // Gửi email reset password
+            EmailUtils.sendPasswordResetEmail(user.get());
+            JsonUtils.out(
+                    response,
+                    "Reset password email sent successfully",
+                    HttpServletResponse.SC_OK
+            );
+        } catch (Exception e) {
+            JsonUtils.out(
+                    response,
+                    e.getMessage(),
+                    HttpServletResponse.SC_BAD_REQUEST
+            );
+        }
     }
 
     private void resetPassword(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+
+            String email, code, password;
+
+            if (isMultipart) {
+                // Handle multipart form data
+                Map<String, String> params = MultiPart.get(request, Map.class);
+                email = params.get("email");
+                code = params.get("code");
+                password = params.get("password");
+            } else {
+                // Handle regular form data
+                email = request.getParameter("email");
+                code = request.getParameter("code");
+                password = request.getParameter("password");
+            }
+
+            if (email == null || code == null || password == null ||
+                    email.isEmpty() || code.isEmpty() || password.isEmpty()) {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", false, "message", "Thiếu thông tin bắt buộc"),
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+                return;
+            }
+
+            // Update password in database
+            UserDto user = userService.getByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Email not found"));
+            user.setPassword(password);
+            UserDto updated = userService.update(user).orElseThrow(() -> new IllegalArgumentException("Không thể cập nhật mật khẩu"));
+
+            if (updated != null) {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", true, "message", "Mật khẩu đã được đặt lại thành công"),
+                        HttpServletResponse.SC_OK
+                );
+            } else {
+                JsonUtils.out(
+                        response,
+                        Map.of("success", false, "message", "Không thể cập nhật mật khẩu"),
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JsonUtils.out(
+                    response,
+                    Map.of("success", false, "message", "Có lỗi xảy ra: " + e.getMessage()),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     private void changePassword(HttpServletRequest request, HttpServletResponse response) {

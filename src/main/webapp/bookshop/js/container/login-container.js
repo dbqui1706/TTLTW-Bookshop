@@ -477,11 +477,35 @@ export class LoginContainer {
             // const response = await this.userService.forgotPassword(email);
 
             // Giả lập response thành công
-            const response = {success: true};
+            const response = await this.userService.forgotPassword(email)
 
             if (response.success) {
                 this.showNotification('Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn!', 'success');
 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Gửi email thành công!',
+                    html: '<div class="swal-email-msg">Hướng dẫn đặt lại mật khẩu đã được gửi đến <strong>' + this.registerEmail.value + '</strong> </div>' +
+                        '<div class="swal-email-tip">Vui lòng kiểm tra hộp thư đến và thư rác</div>',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Đã hiểu',
+                    confirmButtonColor: '#4caf50',
+                    backdrop: `rgba(0, 0, 0, 0.4)`,
+                    allowOutsideClick: false,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
+                }).then(() => {
+                    this.switchToLogin({
+                        preventDefault: () => {
+                        }
+                    });
+                });
                 // Xóa form
                 this.forgotPasswordForm.reset();
 
@@ -491,7 +515,7 @@ export class LoginContainer {
                         preventDefault: () => {
                         }
                     });
-                }, 2000);
+                }, 3000);
             } else {
                 this.showNotification(response.message || 'Yêu cầu đặt lại mật khẩu thất bại', 'error');
             }
@@ -651,10 +675,7 @@ export class LoginContainer {
         } else if (!this.isValidEmail(this.forgotEmail.value)) {
             this.showInputError(this.forgotEmail, 'Email không hợp lệ');
             isValid = false;
-        } else {
-            this.clearInputError(this.forgotEmail);
         }
-
         return isValid;
     }
 

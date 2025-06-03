@@ -83,7 +83,7 @@
 
                                         <!-- reCAPTCHA cho form đăng nhập -->
                                         <div class="mb-3">
-                                            <div class="g-recaptcha" data-sitekey="6LdiJlMrAAAAALhL5Uka6_kUv9wXv1WlP7xR5MS6" id="login-recaptcha"></div>
+                                            <div class="g-recaptcha d-flex justify-content-center" data-sitekey="6LdiJlMrAAAAALhL5Uka6_kUv9wXv1WlP7xR5MS6" id="login-recaptcha"></div>
                                             <div class="invalid-feedback" id="login-recaptcha-error"></div>
                                         </div>
 

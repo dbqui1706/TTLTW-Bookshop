@@ -50,7 +50,8 @@ public class PermissionApiFilter implements Filter {
                 "/api/payment-methods",
                 "/api/coupons",
                 "/api/payment/vnpay-callback",
-                "/api/auth/active-account"
+                "/api/auth/active-account",
+                "/api/auth/verify-reset-token"
         ));
 
         // Đọc file cấu hình permission

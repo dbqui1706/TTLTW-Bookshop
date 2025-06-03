@@ -15,7 +15,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/reset-password", "/reset-password-confirm"})
+//@WebServlet(urlPatterns = {"/reset-password", "/reset-password-confirm"})
 public class ResetPassword extends HttpServlet {
     private final Gson gson = new Gson();
 

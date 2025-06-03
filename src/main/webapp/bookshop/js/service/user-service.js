@@ -88,12 +88,12 @@ export class UserService {
      */
     async forgotPassword(email) {
         try {
-            const formData = new FormData();
-            formData.append('email', email);
 
-            const response = await fetch(API_URL.FORGOT_PASSWORD, {
-                method: 'POST',
-                body: formData
+            const response = await fetch(API_URL.FORGOT_PASSWORD + `?email=${encodeURIComponent(email)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
             });
 
             // Xử lý lỗi HTTP

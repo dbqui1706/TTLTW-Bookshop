@@ -59,6 +59,17 @@ public class EmailUtils {
                     code,
                     System.currentTimeMillis() + 5 * 60 * 1000 // expirationTime = 5 minutes
             ));
+            // THÊM LOGGING
+            System.out.println("=== ADDING TOKEN ===");
+            System.out.println("Email: " + user.getEmail());
+            System.out.println("Code: " + code);
+            System.out.println("Token count after add: " + verificationTokenSet.size());
+            System.out.println("All tokens:");
+            for (VerificationToken token : verificationTokenSet) {
+                System.out.println("  - " + token.getEmail() + " : " + token.getCode() + " (expires: " +
+                        new Date(token.getExpirationTime()) + ")");
+            }
+            System.out.println("==================");
 
             String emailContent = funcContent.getContent(user.getEmail(), user.getFullName(), code);
             String subject = "Thư xác nhận Email từ BookShopWeb Application";
@@ -128,19 +139,56 @@ public class EmailUtils {
         // Gửi email chứa mã xác minh
         sendEmail(user, code, (email, fullName, hashCode) -> {
             String resetLink = "http://localhost:8080/reset-password?email=" + email + "&code=" + code;
-            return "<html><body>" +
-                    "<p>Xin chào, " + fullName + "</p>" +
-                    "<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại BookShopWeb. Để đặt lại mật khẩu, vui lòng nhấn vào liên kết bên dưới:</p>" +
-                    "<p><a href=\"" + resetLink + "\" style=\"text-decoration:none; color: #3498db; font-weight: bold;\">Đặt lại mật khẩu</a></p>" +
-                    "<p>Liên kết này sẽ hết hạn sau 5 phút.</p>" +
-                    "<p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua thư này và đảm bảo rằng bạn vẫn có thể đăng nhập vào tài khoản của mình.</p>" +
-                    "<p>Trân trọng,</p>" +
-                    "<p>BookShopWeb Team</p>" +
-                    "</body></html>";
+            return "<!DOCTYPE html>" +
+                    "<html>" +
+                    "<head>" +
+                    "    <meta charset=\"UTF-8\">" +
+                    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                    "    <title>Đặt lại mật khẩu BookStore</title>" +
+                    "</head>" +
+                    "<body style=\"margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; color: #333;\">" +
+                    "    <div style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); margin-top: 20px; margin-bottom: 20px;\">" +
+                    "        <div style=\"background-color: #dc3545; padding: 30px 20px; text-align: center;\">" +
+                    "            <h1 style=\"color: #ffffff; margin: 0; font-size: 24px;\">📧 Đặt lại mật khẩu</h1>" +
+                    "            <p style=\"color: #ffffff; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;\">BookStore Application</p>" +
+                    "        </div>" +
+                    "        <div style=\"padding: 30px 40px;\">" +
+                    "            <p style=\"font-size: 16px; line-height: 1.6; margin-bottom: 20px;\">Xin chào, <strong style=\"color: #dc3545;\">" + fullName + "</strong>!</p>" +
+                    "            <p style=\"font-size: 16px; line-height: 1.6; margin-bottom: 20px;\">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại BookStore Application.</p>" +
+                    "            <p style=\"font-size: 16px; line-height: 1.6; margin-bottom: 25px;\">Để đặt lại mật khẩu, vui lòng nhấn vào nút bên dưới:</p>" +
+                    "            <div style=\"text-align: center; margin: 30px 0;\">" +
+                    "                <a href=\"" + resetLink + "\" style=\"display: inline-block; background-color: #dc3545; color: #ffffff; font-weight: bold; padding: 15px 35px; text-decoration: none; border-radius: 25px; font-size: 16px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3); letter-spacing: 0.5px;\">🔑 Đặt lại mật khẩu</a>" +
+                    "            </div>" +
+                    "            <div style=\"background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 25px 0;\">" +
+                    "                <h3 style=\"color: #856404; margin: 0 0 10px 0; font-size: 16px;\">⚠️ Lưu ý bảo mật:</h3>" +
+                    "                <ul style=\"color: #856404; margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5;\">" +
+                    "                    <li>Liên kết này sẽ hết hạn sau <strong>5 phút</strong></li>" +
+                    "                    <li>Chỉ sử dụng liên kết này nếu bạn đã yêu cầu đặt lại mật khẩu</li>" +
+                    "                    <li>Không chia sẻ liên kết này với bất kỳ ai</li>" +
+                    "                </ul>" +
+                    "            </div>" +
+                    "            <p style=\"font-size: 14px; line-height: 1.6; color: #777; margin-bottom: 20px;\">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng <strong>bỏ qua email này</strong> và mật khẩu của bạn sẽ không thay đổi.</p>" +
+                    "            <div style=\"border-top: 1px solid #eee; margin-top: 30px; padding-top: 20px;\">" +
+                    "                <p style=\"font-size: 15px; margin-bottom: 10px;\">Trân trọng,</p>" +
+                    "                <p style=\"font-size: 15px; font-weight: bold; color: #dc3545; margin: 0;\">🏪 BookShopWeb Team</p>" +
+                    "            </div>" +
+                    "        </div>" +
+                    "        <div style=\"background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #777;\">" +
+                    "            <p style=\"margin: 0 0 5px 0;\">🔐 Email này được gửi tự động từ hệ thống bảo mật. Vui lòng không trả lời email này.</p>" +
+                    "            <p style=\"margin: 0;\">&copy; 2025 BookStore. Tất cả các quyền được bảo lưu.</p>" +
+                    "        </div>" +
+                    "    </div>" +
+                    "</body>" +
+                    "</html>";
         });
     }
 
     public static boolean isValidVerificationCode(String email, String code) {
+        System.out.println("=== VALIDATING TOKEN ===");
+        System.out.println("Looking for - Email: " + email + ", Code: " + code);
+        System.out.println("Current token count: " + verificationTokenSet.size());
+        System.out.println("All tokens:");
+
         for (VerificationToken token : verificationTokenSet) {
             if (token.getEmail().equals(email)
                     && token.getCode().equals(code)
@@ -151,6 +199,7 @@ public class EmailUtils {
         }
         return false;
     }
+
 
     // Sử dụng để custom nội dung trong mail
     @FunctionalInterface
